@@ -1,0 +1,3 @@
+Birch is a language model evaluated on the Cedar dataset.
+Birch is evaluated using the Accuracy metric.
+Birch uses the Quartz encoder.

@@ -37,3 +37,46 @@ def test_installed_module_runs_outside_repository(fixture_root, tmp_path):
     )
     assert result.returncode == 0, result.stderr
     assert json.loads(result.stdout)["status"] == "valid"
+
+
+def test_ingest_cli_overrides_toml_without_loading_gold(tmp_path, capsys, monkeypatch):
+    def fail_gold(*args, **kwargs):
+        raise AssertionError("ingestion must not read gold annotations")
+
+    monkeypatch.setattr("graphrag_bench.cli.load_fixture", fail_gold)
+    source = tmp_path / "source"
+    source.mkdir()
+    (source / "a.txt").write_text("Alpha. Beta. Gamma.")
+    config = tmp_path / "config.toml"
+    config.write_text("[chunking]\nmax_units = 2\noverlap_units = 1\n")
+    output = tmp_path / "output"
+    status = main(
+        [
+            "ingest",
+            str(source),
+            "--output",
+            str(output),
+            "--config",
+            str(config),
+            "--max-units",
+            "1",
+            "--overlap-units",
+            "0",
+        ]
+    )
+    assert status == 0
+    summary = json.loads(capsys.readouterr().out)
+    assert (summary["documents"], summary["chunks"], summary["status"]) == (1, 3, "ingested")
+    manifest = json.loads((output / "manifest.json").read_text())
+    assert manifest["chunking"]["max_units"] == 1
+
+
+def test_ingest_cli_invalid_config_fails_without_traceback(tmp_path, capsys):
+    assert (
+        main(["ingest", str(tmp_path), "--output", str(tmp_path / "out"), "--max-chars", "0"]) == 1
+    )
+    output = capsys.readouterr()
+    assert output.out == ""
+    assert "max_chars" in output.err
+    assert "Traceback" not in output.err
+    assert not (tmp_path / "out").exists()

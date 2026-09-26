@@ -1,0 +1,5 @@
+# Character limits are not model token limits.
+[chunking]
+max_chars = 800
+max_units = 5
+overlap_units = 1

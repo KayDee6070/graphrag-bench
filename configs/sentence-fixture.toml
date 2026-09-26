@@ -1,0 +1,5 @@
+# One detected sentence per chunk, unless a sentence exceeds max_chars.
+[chunking]
+max_chars = 800
+max_units = 1
+overlap_units = 0

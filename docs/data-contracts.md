@@ -10,7 +10,7 @@ The document checksum is SHA-256 over the exact UTF-8 encoded `Document.text`. N
 
 ## Coordinates and provenance
 
-`Chunk` and `EvidenceSpan` use half-open `[start, end)` Unicode character offsets into the stored document text. Offsets are not UTF-8 byte offsets or offsets into a PDF binary. A future parser must preserve a mapping from this stored text to source pages and sections where available.
+`Chunk` and `EvidenceSpan` use half-open `[start, end)` Unicode character offsets into the stored document text. Offsets are not UTF-8 byte offsets or offsets into a PDF binary. M2 preserves text after optional UTF-8 BOM removal, records raw-file hashes and section ranges in `SourceRecord`, and keeps Markdown headings in the stored text. Original byte offsets can be recovered using the BOM size and UTF-8 encoded text prefixes. Page numbers remain unknown. A future PDF parser will need an explicit mapping to source pages and layout.
 
 Span text must have exactly `end - start` characters. The fixture audit additionally requires `document.text[start:end] == span.text`. Evidence with a `chunk_id` must refer to a chunk in the same document and fit completely inside that chunk. Chunk ordinals start at zero and must be unique within each document. Overlapping chunks are allowed.
 
@@ -28,7 +28,7 @@ Entity and predicate labels are open strings in the reusable contracts. `ontolog
 
 Each fact includes a statement for later answer evaluation. Its ID must be unique within its evidence set. Repeated alternative spans must not inflate future coverage scores. Future metrics will evaluate unique facts and source-span coverage, not counts of overlapping retrieved chunks.
 
-Gold evidence normally omits `chunk_id`. This keeps relevance labels independent of a particular chunking scheme. The fixture's reference chunk boundaries are manually specified expected outputs for future ingestion tests; no chunker is implemented in M1.
+Gold evidence normally omits `chunk_id`. This keeps relevance labels independent of a particular chunking scheme. M1 introduced manually specified reference chunk boundaries. M2's sentence configuration reproduces all 25 reference spans; generated chunk IDs fingerprint content and configuration, while the fixture's manual IDs and `Overview` labels remain unchanged.
 
 `relevant_document_ids` is exactly the union of documents across all gold alternatives. `required_document_count` is the minimum number of distinct documents among the annotated sufficient sets. This is an annotation claim, not a proof that no unannotated shortcut exists. `relevant_entity_ids` includes bridge and answer entities and is evaluation-only metadata.
 
@@ -42,7 +42,9 @@ Retrieval results contain an ordered tuple of unique chunk hits. Tuple position 
 
 Traversal paths retain entity IDs and assertion IDs. A path has one more entity than assertions. M1 validates path shape only; checking graph connectivity and traversal direction belongs to the graph implementation.
 
-Run manifests record a timezone-aware timestamp, seed, package/Python versions, optional Git commit, input checksums, configuration, artifact checksums, and provider versions. They establish the format for future experiment outputs; M1 does not execute experiments or populate manifests. Never store secrets in configuration or manifests.
+Run manifests record a timezone-aware timestamp, seed, package/Python versions, optional Git commit, input checksums, configuration, artifact checksums, and provider versions. They establish the format for future experiment outputs; M2 does not execute retrieval experiments or populate `RunManifest`. Its separate `IngestionManifest` records deterministic source metadata, configuration, implementation versions, and output hashes without timestamps. Never store secrets in configuration or manifests.
+
+M2 uses `ChunkingConfig` to validate positive character/unit limits and an overlap smaller than the unit limit. `Section` spans must partition the document when passed to the chunker. Every emitted chunk is a nonempty exact slice with a finite character bound; source text and all non-whitespace characters remain recoverable. See the [M2 walkthrough](ingestion.md) for algorithm details and limitations.
 
 ## Fixture audit boundary
 
