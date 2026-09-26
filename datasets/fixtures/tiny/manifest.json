@@ -1,0 +1,12 @@
+{
+  "files": {
+    "corpus/documents.jsonl": "87c71f8b88c58a41085d66fb528a59848ce6ef4318cd16b100ac32de37a6163a",
+    "gold/chunks.jsonl": "f6723d25cface02e195c18e8cd180656a1cb9e1cdbb4e05649256806b89d6b8a",
+    "gold/entities.jsonl": "eabbdf3cab72ae1cac56434c899cd5afc8f41ed6459016ba825ce7669b48bc3a",
+    "gold/questions.jsonl": "f7f31104779f93b8762bd19c8e2fd32230c8f5f3a0a32b4b2e5ba4bceb85cf32",
+    "gold/relations.jsonl": "7b66a81d9481285fa42b15cc92c8b3bc1e59cfa7f472019911bc5e5169f114a8",
+    "ontology.json": "0ab9aa699c08cce21c35e931e9327b07ad2976abfbbec0f29b7d070963f0cdb1"
+  },
+  "fixture_id": "tiny-v1",
+  "schema_version": "1.0"
+}

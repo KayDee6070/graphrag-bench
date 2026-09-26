@@ -1,0 +1,21 @@
+{
+  "entity_types": [
+    "Dataset",
+    "Encoder",
+    "Method",
+    "Metric",
+    "Model",
+    "Reranker",
+    "Task"
+  ],
+  "relation_types": [
+    "BASED_ON",
+    "EVALUATED_ON",
+    "MEASURED_BY",
+    "REPORTS",
+    "SUPPORTS_TASK",
+    "TARGETS",
+    "USES"
+  ],
+  "schema_version": "1.0"
+}
