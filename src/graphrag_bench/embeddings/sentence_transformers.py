@@ -30,7 +30,7 @@ class SentenceTransformerProvider:
                 "Neural embeddings require the optional embeddings dependencies. "
                 "See requirements-embeddings-cpu.txt and docs/vector-retrieval.md."
             ) from error
-        self.config = config
+        self._config = config
         try:
             # A small explicit thread count avoids severe oversubscription on laptop CPUs.
             torch.set_num_threads(config.cpu_threads)
@@ -77,6 +77,10 @@ class SentenceTransformerProvider:
                 "Use --allow-download once if the pinned model is not cached. "
                 f"Provider error: {error}"
             ) from error
+
+    @property
+    def config(self) -> EmbeddingConfig:
+        return self._config
 
     @property
     def spec(self) -> EmbeddingSpec:

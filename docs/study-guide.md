@@ -1,6 +1,6 @@
 # Study guide: understanding the project incrementally
 
-The project currently implements M1–M4. In everyday terms: M1 defines our record cards, M2 divides documents into traceable pieces, M3 draws connections while keeping source receipts, and M4 finds pieces by comparing numerical representations of their text with a question. Start with the working data flow rather than reading every model at once. The order below separates what exists from later research work.
+The project currently implements M1–M5. In everyday terms: M1 defines our record cards, M2 divides documents into traceable pieces, M3 draws connections, M4 finds pieces by comparing numerical text representations, and M5 follows the connections to collect evidence. Every method keeps the source receipts. Start with the working data flow rather than reading every model at once.
 
 ## First session: what the project is testing
 
@@ -71,13 +71,19 @@ Then follow the walkthrough's graph CLI commands and inspect `graph.json`, `issu
 
 Read [the M4 walkthrough](vector-retrieval.md), starting with its cards-and-coordinates explanation. Run `.venv/bin/python scripts/study_m4.py` to work through cosine arithmetic and a lexical comparison. After the optional local model setup, add `--semantic` to inspect real embeddings and retrieved quotes.
 
-Explain why chunks are encoded once, why questions must use the same embedding space, why 0.6 is not a probability of correctness, and why a high-ranked result can discuss a metric when the question asks for a dataset. Compare the direct Birch question with the two-step Alder question. Do not interpret the example as a measured graph-versus-vector result; graph retrieval is still future work.
+Explain why chunks are encoded once, why questions must use the same embedding space, why 0.6 is not a probability of correctness, and why a high-ranked result can discuss a metric when the question asks for a dataset. Compare the direct Birch question with the two-step Alder question. This example demonstrates vector mechanics; it is not a measured graph-versus-vector result.
+
+## Seventh session: follow connections and audit the evidence
+
+Read [the M5 walkthrough](graph-retrieval.md) and run `.venv/bin/python scripts/study_m5.py`. Trace Orion, Nova, and Harbor across two sources. Compare zero, one, and two hops with mentions disabled, then enable mentions and explain why one hop can expose both facts.
+
+Inspect the full fixture's top-five miss. Distinguish failing to link a name, failing to reach evidence, and failing to rank reached evidence high enough. Explain why walking an edge backward does not reverse its assertion. Check a returned path against the graph and source quotes before claiming the evidence supports an answer.
 
 ## Explain the current system in an interview
 
-A precise description at M4 is:
+A precise description at M5 is:
 
-> I implemented source-preserving ingestion, a deterministic graph builder, and a local vector retrieval baseline. A pinned retrieval encoder embeds chunks, and exact cosine search returns ranked source evidence. A separate BM25 baseline checks lexical matching. Tests cover provenance, ranking arithmetic, model compatibility, and reproducible artifacts. Graph traversal retrieval and the controlled comparison remain future work.
+> I implemented vector, lexical, and bounded graph retrieval over shared source chunks. The graph retriever links query names, preserves alias ambiguity, follows explicit assertions, and returns auditable evidence paths. Tests cover ranking, provenance, model compatibility, and reproducible artifacts. The study examples expose both successful traversal and top-K misses. Hybrid fusion and the controlled benchmark remain future work.
 
 Avoid claiming a complete GraphRAG system or measured retrieval improvements at this stage. Later milestones will add those capabilities and their evidence.
 
@@ -90,7 +96,9 @@ Avoid claiming a complete GraphRAG system or measured retrieval improvements at 
 - **Extraction:** identify entities and explicit relation assertions with source evidence; limited deterministic rules exist in M3.
 - **Embedding/vector:** a numerical representation of text produced by a model.
 - **Cosine similarity:** a comparison of vector directions; it becomes a dot product after unit normalization.
-- **Retrieval:** select evidence for a question; vector and lexical baselines exist in M4, with graph/hybrid retrieval planned for M5–M6.
+- **Seed:** a graph entity identified from the question as a traversal starting point.
+- **Hop/path:** one followed edge / an ordered record of followed entities and assertions.
+- **Retrieval:** select evidence for a question; vector, lexical, and graph baselines exist through M5. Hybrid fusion belongs to M6.
 - **Generation:** produce a cited answer from selected evidence; planned later.
 - **Provenance:** the references and coordinates connecting an output back to its source.
 - **Determinism:** the same specified inputs and implementation produce the same result.

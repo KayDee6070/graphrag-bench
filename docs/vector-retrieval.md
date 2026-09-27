@@ -246,4 +246,4 @@ CI runs the full offline suite and the default study script on Python 3.11/3.12/
 7. **Why reject long input instead of silently shortening it?** Otherwise the saved or returned source could contain material the embedding model never saw.
 8. **Why not declare BM25 or vector retrieval the winner now?** A couple of teaching questions are neither a representative dataset nor a controlled experiment.
 
-M4 establishes the working vector and lexical baselines. M5 is the separate milestone for query linking, bounded graph traversal, and evidence ranking. No graph retrieval, hybrid fusion, or answer generation is implemented here.
+M4 establishes the working vector and lexical baselines. The subsequent [M5 milestone](graph-retrieval.md) implements query linking, bounded graph traversal, and evidence ranking. Hybrid fusion and answer generation remain future work.

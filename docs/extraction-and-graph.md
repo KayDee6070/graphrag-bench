@@ -155,7 +155,7 @@ Before adding edges, the builder validates unique entity/assertion IDs, known en
 
 The builder accepts the open M1 contracts, including parallel predicates and qualifiers. Default extraction emits no qualifiers. A source condition, uncertainty, negation, or contradiction must not be silently discarded to fit a positive relation. The narrow default syntax leaves such unsupported statements unextracted; it does not understand those linguistic features.
 
-The graph validates structural consistency, not semantic entailment. It cannot prove that a supplied quote truly supports its relation, reconcile contradictions, or establish which source is correct. `TraversalPath` still validates only record shape; query-driven traversal and path verification are future M5 work.
+The graph validates structural consistency, not semantic entailment. It cannot prove that a supplied quote truly supports its relation, reconcile contradictions, or establish which source is correct. `TraversalPath` validates record shape; the subsequent [M5 milestone](graph-retrieval.md) adds query-driven traversal and checks paths against the concrete graph and source chunks.
 
 ## 8. Stable IDs and reproducible artifacts
 
@@ -223,6 +223,6 @@ To experiment safely, copy the example files into a new source directory. Add a 
 - Matching uses deterministic names and types, not semantic identity. Same-name entities can merge incorrectly, and differently named references can remain disconnected.
 - Whole-line evidence must fit in one chunk. Mention evidence can be smaller. Neither provides a guarantee that the eventual retrieval system will find the needed source.
 - The graph and name matching operate in memory and scan records. No scale or latency claims are made for a real-paper corpus.
-- M3 itself adds no vector embeddings, query interpretation, graph retrieval ranking, hybrid fusion, answer generation, or measured GraphRAG benefit. The subsequent [M4 milestone](vector-retrieval.md) adds the vector baseline; M5 will add graph traversal retrieval; later milestones expand extraction and evaluation.
+- M3 itself adds no vector embeddings, query interpretation, graph retrieval ranking, hybrid fusion, answer generation, or measured GraphRAG benefit. The subsequent [M4 milestone](vector-retrieval.md) adds the vector baseline and [M5](graph-retrieval.md) adds bounded graph traversal; later milestones expand extraction and evaluation.
 
 M3 establishes a source-backed map we can inspect and test. Keep that construction result separate from the future research question of when following the map actually retrieves better evidence.

@@ -77,6 +77,12 @@ def test_download_flag_is_explicit(model_stub, tmp_path):
     assert model_stub[0][2]["cache_folder"] == str(tmp_path)
 
 
+def test_provider_settings_cannot_change_after_specification_is_recorded(model_stub):
+    provider = SentenceTransformerProvider(config())
+    with pytest.raises(AttributeError):
+        provider.config = config(query_prefix="changed: ")
+
+
 def test_prefix_and_special_tokens_count_toward_limit(model_stub):
     provider = SentenceTransformerProvider(config(query_prefix="query prefix: "))
     provider.embed_query("one two three four")

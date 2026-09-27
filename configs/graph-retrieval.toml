@@ -1,0 +1,10 @@
+[graph_retrieval]
+max_hops = 2
+direction = "both"
+max_neighbors = 16
+max_assertions_per_neighbor = 4
+max_paths = 256
+max_seeds = 16
+include_mentions = true
+# Empty means all predicates. Labels stay configurable; no query/gold-specific rules.
+predicates = []

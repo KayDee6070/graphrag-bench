@@ -19,7 +19,7 @@ from graphrag_bench.embeddings.sentence_transformers import SentenceTransformerP
 from graphrag_bench.extraction.config import ExtractionError
 from graphrag_bench.fixtures import FixtureError, load_fixture
 from graphrag_bench.graph.builder import GraphError
-from graphrag_bench.graph.pipeline import build_graph_to_directory
+from graphrag_bench.graph.pipeline import build_graph_to_directory, load_graph
 from graphrag_bench.ingestion.pipeline import ingest_to_directory
 from graphrag_bench.ingestion.reader import load_ingestion
 from graphrag_bench.ingestion.types import IngestionError
@@ -29,6 +29,8 @@ from graphrag_bench.retrieval.artifacts import (
     validate_output,
 )
 from graphrag_bench.retrieval.bm25 import BM25Config, BM25Retriever
+from graphrag_bench.retrieval.graph import GraphRetriever
+from graphrag_bench.retrieval.graph_config import load_graph_retrieval_config
 from graphrag_bench.retrieval.vector import RetrievalError, validate_request
 
 
@@ -124,6 +126,45 @@ def _query_bm25(args: argparse.Namespace) -> dict:
     }
 
 
+def _query_graph(args: argparse.Namespace) -> dict:
+    validate_request(args.query, args.top_k)
+    overrides = {
+        name: getattr(args, name)
+        for name in ("max_hops", "direction")
+        if getattr(args, name) is not None
+    }
+    config = load_graph_retrieval_config(args.config, overrides=overrides)
+    batch, _ = load_ingestion(args.source)
+    graph = load_graph(args.graph, args.source)
+    retriever = GraphRetriever(graph, batch.documents, batch.chunks, config)
+    trace = retriever.retrieve_with_trace(args.query, top_k=args.top_k)
+    assertion_ids = {
+        identifier
+        for hit in trace.result.hits
+        for path in hit.paths
+        for identifier in path.assertion_ids
+    }
+    entity_ids = {identifier for link in trace.links for identifier in link.candidate_entity_ids}
+    entity_ids.update(
+        identifier
+        for hit in trace.result.hits
+        for path in hit.paths
+        for identifier in path.entity_ids
+    )
+    return trace.model_dump(mode="json") | {
+        "evidence": [
+            retriever.chunk(hit.chunk_id).model_dump(mode="json") for hit in trace.result.hits
+        ],
+        "assertions": [
+            graph.assertion(identifier).model_dump(mode="json")
+            for identifier in sorted(assertion_ids)
+        ],
+        "entities": [
+            graph.entity(identifier).model_dump(mode="json") for identifier in sorted(entity_ids)
+        ],
+    }
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="GraphRAG Bench development tools")
     parser.add_argument("--version", action="version", version=__version__)
@@ -167,6 +208,18 @@ def main(argv: list[str] | None = None) -> int:
     bm25.add_argument("--top-k", type=int, default=5)
     bm25.add_argument("--k1", type=float, default=1.5)
     bm25.add_argument("--b", type=float, default=0.75)
+    query_graph = commands.add_parser(
+        "query-graph", help="link names and traverse source-backed edges"
+    )
+    query_graph.add_argument("graph", type=Path, help="M3 graph artifact directory")
+    query_graph.add_argument(
+        "--source", type=Path, required=True, help="original ingestion directory"
+    )
+    query_graph.add_argument("--query", required=True)
+    query_graph.add_argument("--top-k", type=int, default=5)
+    query_graph.add_argument("--config", type=Path, help="TOML graph traversal settings")
+    query_graph.add_argument("--max-hops", type=int, help="override hop limit: 0, 1, or 2")
+    query_graph.add_argument("--direction", choices=("outgoing", "incoming", "both"))
     args = parser.parse_args(argv)
     try:
         if args.command == "ingest":
@@ -179,6 +232,8 @@ def main(argv: list[str] | None = None) -> int:
             summary = _query_vector(args)
         elif args.command == "query-bm25":
             summary = _query_bm25(args)
+        elif args.command == "query-graph":
+            summary = _query_graph(args)
         else:
             summary = _validate(args.path)
     except (

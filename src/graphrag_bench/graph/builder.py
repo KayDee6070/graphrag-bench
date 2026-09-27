@@ -1,12 +1,21 @@
 """Validate first, then construct a NetworkX directed multigraph."""
 
 from collections.abc import Iterable
+from typing import Literal
 
 import networkx as nx
 
 from graphrag_bench.corpus import CorpusError, CorpusIndex
 from graphrag_bench.extraction.registry import normalize_name
-from graphrag_bench.models import Chunk, Document, Entity, Record, RelationAssertion, require_unique
+from graphrag_bench.models import (
+    Chunk,
+    Document,
+    Entity,
+    Record,
+    RelationAssertion,
+    TraversalPath,
+    require_unique,
+)
 
 GRAPH_VERSION = "assertion-multidigraph-v1"
 
@@ -30,6 +39,10 @@ class KnowledgeGraph:
     def __init__(self, snapshot: GraphSnapshot, corpus: CorpusIndex) -> None:
         _validate(snapshot, corpus)
         self._graph = nx.MultiDiGraph()
+        self._endpoints = {
+            relation.assertion_id: (relation.subject_id, relation.object_id)
+            for relation in snapshot.relations
+        }
         for entity in snapshot.entities:
             self._graph.add_node(entity.entity_id, entity=entity.model_copy(deep=True))
         for relation in snapshot.relations:
@@ -55,6 +68,39 @@ class KnowledgeGraph:
         if entity_id not in self._graph:
             raise GraphError(f"unknown entity: {entity_id}")
         return self._graph.nodes[entity_id]["entity"].model_copy(deep=True)
+
+    def assertion(self, assertion_id: str) -> RelationAssertion:
+        if assertion_id not in self._endpoints:
+            raise GraphError(f"unknown assertion: {assertion_id}")
+        subject, object_id = self._endpoints[assertion_id]
+        return self._graph[subject][object_id][assertion_id]["assertion"].model_copy(deep=True)
+
+    def validate_path(
+        self,
+        path: TraversalPath,
+        *,
+        direction: Literal["outgoing", "incoming", "both"] = "outgoing",
+    ) -> None:
+        """Verify connectivity and traversal direction without inventing inverse assertions."""
+        if direction not in {"outgoing", "incoming", "both"}:
+            raise GraphError(f"unsupported traversal direction: {direction}")
+        if len(path.entity_ids) != len(path.assertion_ids) + 1:
+            raise GraphError("path must have one more entity than assertions")
+        for entity_id in path.entity_ids:
+            self.entity(entity_id)
+        for source, target, assertion_id in zip(
+            path.entity_ids[:-1], path.entity_ids[1:], path.assertion_ids, strict=True
+        ):
+            assertion = self.assertion(assertion_id)
+            forward = (source, target) == (assertion.subject_id, assertion.object_id)
+            backward = (target, source) == (assertion.subject_id, assertion.object_id)
+            if not (
+                (direction in {"outgoing", "both"} and forward)
+                or (direction in {"incoming", "both"} and backward)
+            ):
+                raise GraphError(
+                    f"assertion does not connect this path in {direction} direction: {assertion_id}"
+                )
 
     def snapshot(self) -> GraphSnapshot:
         return GraphSnapshot(

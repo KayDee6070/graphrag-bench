@@ -4,7 +4,7 @@ When does graph-based retrieval outperform vector retrieval for questions requir
 
 GraphRAG Bench is a small research-engineering project for comparing vector, graph, and hybrid retrieval under the same evidence budget. Retrieval quality will be measured independently of answer generation.
 
-**Current milestone: M4 — vector retrieval baseline.** A local retrieval-trained encoder embeds source chunks, and exact cosine search ranks them for a question. Saved indexes preserve chunk identity, model configuration, and input hashes. A separate BM25 baseline provides a lexical sanity check. M1–M3 ingestion and source-backed graph construction remain available. Graph retrieval, hybrid fusion, answer generation, and comparative benchmark results are not implemented yet.
+**Current milestone: M5 — graph traversal retrieval.** Query names and aliases identify graph seeds; bounded traversal collects source evidence with validated paths. The vector and BM25 baselines remain available on the same chunks. Configuration, ambiguity, ranking criteria, and traversal caps are inspectable. Hybrid fusion, answer generation, and comparative benchmark results are not implemented yet.
 
 ## Quick start
 
@@ -86,6 +86,20 @@ For a lexical comparison or a study session without model setup:
 
 Start with the [M4 vector-retrieval walkthrough](docs/vector-retrieval.md). It explains embeddings, cosine similarity, saved indexes, source evidence, the observed retrieval misses, and what remains unmeasured. The synthetic fixture demonstrates mechanics; it does not establish retrieval superiority.
 
+## Retrieve through graph relationships
+
+Using the existing ingestion and graph directories from above:
+
+```bash
+.venv/bin/graphrag-bench query-graph datasets/processed/m3-example \
+  --source datasets/processed/m2-example \
+  --config configs/graph-retrieval.toml \
+  --query "Which dataset evaluates the model that Alder is based on?" --top-k 5
+.venv/bin/python scripts/study_m5.py
+```
+
+Graph retrieval needs no neural model. The output includes ranked source chunks, query-link candidates, paths, ranking details, and any traversal caps reached. The [M5 graph-retrieval walkthrough](docs/graph-retrieval.md) explains hops, direction, ambiguity, mention evidence, and why reaching a useful source does not guarantee it appears in the top K.
+
 ## Development checks
 
 ```bash
@@ -106,11 +120,12 @@ GitHub Actions defines these checks for Python 3.11, 3.12, and 3.13. Fixture fil
 - `src/graphrag_bench/extraction/`: configurable statement rules, conservative name resolution, mentions, and diagnostics.
 - `src/graphrag_bench/graph/`: validated NetworkX multigraph construction, inspection, and portable graph artifacts.
 - `src/graphrag_bench/embeddings/`: replaceable provider contract and optional CPU Sentence Transformers adapter.
-- `src/graphrag_bench/retrieval/`: exact vector ranking, verified index artifacts, and a separate BM25 sanity baseline.
+- `src/graphrag_bench/retrieval/`: vector ranking and artifacts, BM25, query-name linking, and bounded graph evidence traversal.
 - `src/graphrag_bench/config.py` and `configs/`: validated chunking settings and TOML examples.
 - `scripts/study_m2.py`: an executable explanation of chunk overlap and source coordinates.
 - `scripts/study_m3.py`: an executable explanation of nodes, directed edges, aliases, and source evidence.
 - `scripts/study_m4.py`: cosine arithmetic, lexical retrieval, and an opt-in real neural retrieval demonstration.
+- `scripts/study_m5.py`: graph paths, hop/mention ablations, ambiguity, and ranking limits.
 - `datasets/fixtures/tiny/corpus/`: eight fictional technical documents.
 - `datasets/fixtures/tiny/gold/`: manually specified reference chunks, entities, assertions, and 20 questions.
 - `tests/`: contract validation, provenance failures, fixture integration, and CLI tests.
@@ -120,7 +135,7 @@ The fixture has 25 chunks, 15 entities, and 23 relation assertions. It includes 
 
 ## Architecture
 
-The diagram shows both implemented and planned boundaries. Ingestion, deterministic rule extraction, graph construction, local embeddings, vector retrieval, BM25, and verified artifacts exist through M4. Graph traversal retrieval, hybrid fusion, evaluation metrics, and generation remain planned.
+The diagram shows both implemented and planned boundaries. Ingestion, deterministic rule extraction, graph construction, local embeddings, vector/BM25 retrieval, bounded graph traversal, and verified artifacts exist through M5. Hybrid fusion, evaluation metrics, and generation remain planned.
 
 ```mermaid
 flowchart TD
@@ -157,9 +172,10 @@ Read the [M0 design and experiment plan](docs/design.md), [data contracts](docs/
 3. **M2:** Text/Markdown ingestion, provenance-preserving chunking, reproducible exports, and study documentation — complete.
 4. **M3:** Deterministic extraction, graph construction, verified artifacts, and study documentation — complete.
 5. **M4:** Local neural embeddings, exact vector retrieval, verified indexes, lexical sanity baseline, and study documentation — complete.
-6. **M5–M7:** Graph traversal, hybrid retrieval, and retrieval evaluation.
-7. **M8–M10:** Real-paper pilot, validated extraction, cited generation, and corpus expansion.
-8. **M11–M12:** Comparative experiments, ablations, and error analysis.
-9. **M13–M14:** CLI polish, documentation, charts, and release preparation; optional demonstration UI.
+6. **M5:** Query linking, bounded graph traversal, source/path validation, ranking traces, and study documentation — complete.
+7. **M6–M7:** Hybrid retrieval and retrieval evaluation.
+8. **M8–M10:** Real-paper pilot, validated extraction, cited generation, and corpus expansion.
+9. **M11–M12:** Comparative experiments, ablations, and error analysis.
+10. **M13–M14:** CLI polish, documentation, charts, and release preparation; optional demonstration UI.
 
 Work proceeds one milestone at a time. MIT licensed, including the original fictional fixture corpus.
