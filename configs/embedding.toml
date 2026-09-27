@@ -1,0 +1,11 @@
+[embedding]
+# Retrieval-trained English model; full immutable Hugging Face commit, not "main".
+model_id = "sentence-transformers/msmarco-MiniLM-L6-cos-v5"
+revision = "14ca9be4bbcf1402eac0f43a2e2ccb6e0f994ba3"
+max_seq_length = 384
+batch_size = 16
+cpu_threads = 4
+device = "cpu"
+# This model requires no prefixes. Other supported text encoders may require them.
+query_prefix = ""
+document_prefix = ""

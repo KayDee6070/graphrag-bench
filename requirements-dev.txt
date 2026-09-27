@@ -1,8 +1,9 @@
-# Resolved with Python 3.12.3 for the M1 toolchain; keep pyproject.toml ranges portable.
+# Lightweight development dependencies; neural embeddings have a separate optional lock.
 annotated-types==0.8.0
 build==1.6.1
 iniconfig==2.3.0
 networkx==3.6.1
+numpy==2.3.5
 packaging==26.3
 pluggy==1.6.0
 pydantic==2.13.5

@@ -1,6 +1,6 @@
 # Study guide: understanding the project incrementally
 
-The project currently implements M1, M2, and M3. In everyday terms: M1 defines our record cards, M2 divides documents into traceable pieces, and M3 draws connections between named things while keeping the source receipts. Start with the working data flow rather than reading every model at once. The order below separates what exists from later research work.
+The project currently implements M1–M4. In everyday terms: M1 defines our record cards, M2 divides documents into traceable pieces, M3 draws connections while keeping source receipts, and M4 finds pieces by comparing numerical representations of their text with a question. Start with the working data flow rather than reading every model at once. The order below separates what exists from later research work.
 
 ## First session: what the project is testing
 
@@ -67,11 +67,17 @@ Describe Alder, Birch, and Cedar as boxes connected by two labeled arrows. Locat
 
 Then follow the walkthrough's graph CLI commands and inspect `graph.json`, `issues.jsonl`, and `manifest.json`. Complete its exercises before reading the full extractor. A source quote, a graph assertion, and a verified fact are different things.
 
+## Sixth session: understand vector retrieval
+
+Read [the M4 walkthrough](vector-retrieval.md), starting with its cards-and-coordinates explanation. Run `.venv/bin/python scripts/study_m4.py` to work through cosine arithmetic and a lexical comparison. After the optional local model setup, add `--semantic` to inspect real embeddings and retrieved quotes.
+
+Explain why chunks are encoded once, why questions must use the same embedding space, why 0.6 is not a probability of correctness, and why a high-ranked result can discuss a metric when the question asks for a dataset. Compare the direct Birch question with the two-step Alder question. Do not interpret the example as a measured graph-versus-vector result; graph retrieval is still future work.
+
 ## Explain the current system in an interview
 
-A precise description at M3 is:
+A precise description at M4 is:
 
-> I implemented deterministic ingestion and a source-backed graph builder. Configurable rules extract explicit relations from controlled text. A directed multigraph preserves exact source quotes, separate claims from different documents, and ambiguous aliases. Tests compare source-only extraction against manual fixture annotations and check reproducible artifacts. General paper extraction and the retrieval comparison remain future work.
+> I implemented source-preserving ingestion, a deterministic graph builder, and a local vector retrieval baseline. A pinned retrieval encoder embeds chunks, and exact cosine search returns ranked source evidence. A separate BM25 baseline checks lexical matching. Tests cover provenance, ranking arithmetic, model compatibility, and reproducible artifacts. Graph traversal retrieval and the controlled comparison remain future work.
 
 Avoid claiming a complete GraphRAG system or measured retrieval improvements at this stage. Later milestones will add those capabilities and their evidence.
 
@@ -82,7 +88,9 @@ Avoid claiming a complete GraphRAG system or measured retrieval improvements at 
 - **Entity/node:** a named thing represented in the graph, such as a model or dataset.
 - **Relation assertion/edge:** a source's claim connecting two entities, with a label and direction.
 - **Extraction:** identify entities and explicit relation assertions with source evidence; limited deterministic rules exist in M3.
-- **Retrieval:** select evidence for a question; planned for M4–M6.
+- **Embedding/vector:** a numerical representation of text produced by a model.
+- **Cosine similarity:** a comparison of vector directions; it becomes a dot product after unit normalization.
+- **Retrieval:** select evidence for a question; vector and lexical baselines exist in M4, with graph/hybrid retrieval planned for M5–M6.
 - **Generation:** produce a cited answer from selected evidence; planned later.
 - **Provenance:** the references and coordinates connecting an output back to its source.
 - **Determinism:** the same specified inputs and implementation produce the same result.

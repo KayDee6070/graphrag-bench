@@ -179,7 +179,7 @@ Output is written only after input validation and graph construction. The manife
 
 ## 9. Verification and code-reading map
 
-M3's complete local suite passes **185 tests**, including the original 130 M1/M2 tests. The teaching scripts and CLI commands also run in CI, whose matrix is Python 3.11, 3.12, and 3.13. Local execution during this milestone used Python 3.12; the other interpreters require CI or equivalent environments.
+At M3 completion, the local suite passed **185 tests**, including the original 130 M1/M2 tests. The teaching scripts and CLI commands also run in CI, whose matrix is Python 3.11, 3.12, and 3.13. Local execution during that milestone used Python 3.12; the other interpreters require CI or equivalent environments.
 
 Read the implementation in this order:
 
@@ -223,6 +223,6 @@ To experiment safely, copy the example files into a new source directory. Add a 
 - Matching uses deterministic names and types, not semantic identity. Same-name entities can merge incorrectly, and differently named references can remain disconnected.
 - Whole-line evidence must fit in one chunk. Mention evidence can be smaller. Neither provides a guarantee that the eventual retrieval system will find the needed source.
 - The graph and name matching operate in memory and scan records. No scale or latency claims are made for a real-paper corpus.
-- No vector embeddings, query interpretation, graph retrieval ranking, hybrid fusion, answer generation, or measured GraphRAG benefit exist yet. M4 adds the vector baseline; M5 adds graph traversal retrieval; later milestones expand extraction and evaluation.
+- M3 itself adds no vector embeddings, query interpretation, graph retrieval ranking, hybrid fusion, answer generation, or measured GraphRAG benefit. The subsequent [M4 milestone](vector-retrieval.md) adds the vector baseline; M5 will add graph traversal retrieval; later milestones expand extraction and evaluation.
 
 M3 establishes a source-backed map we can inspect and test. Keep that construction result separate from the future research question of when following the map actually retrieves better evidence.
