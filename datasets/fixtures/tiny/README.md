@@ -31,3 +31,5 @@ Reference chunks and graph annotations remain test expectations. M3 independentl
 M2's reproduction test compares document IDs, ordinals, offsets, and exact text. The fixture's manual chunk IDs and `Overview` section labels are not inferred from the plain source text. Runtime chunks instead receive IDs derived from document identity, content, algorithm version, configuration, source bounds, and section labels.
 
 Gold data is isolated from source data. Production extractors and retrievers must not read `gold/questions.jsonl` or its relevant-entity labels. Every question has `split: "fixture"`; these examples are not development/test partitions for the real experiment.
+
+M7's evaluator reads `corpus/documents.jsonl` and `gold/questions.jsonl` directly. It constructs runtime chunks, graph assertions, and embeddings from source documents, then uses the gold source spans only to score retrieval/context output. It does not load the gold chunks/entities/relations for production construction. See the [M7 study guide](../../../docs/benchmark.md) and [fixture observation report](../../../reports/m7-fixture.md).

@@ -11,12 +11,19 @@ from time import perf_counter
 from pydantic import ValidationError
 
 from graphrag_bench import __version__
+from graphrag_bench.benchmark.config import load_benchmark_config
+from graphrag_bench.benchmark.dataset import BenchmarkError, load_benchmark
+from graphrag_bench.benchmark.pipeline import (
+    run_benchmark,
+    validate_run_output,
+    verify_benchmark_run,
+)
 from graphrag_bench.config import ConfigurationError, load_chunking_config
 from graphrag_bench.corpus import CorpusError
 from graphrag_bench.embeddings.base import EmbeddingError
 from graphrag_bench.embeddings.config import EmbeddingConfig, load_embedding_config
 from graphrag_bench.embeddings.sentence_transformers import SentenceTransformerProvider
-from graphrag_bench.extraction.config import ExtractionError
+from graphrag_bench.extraction.config import ExtractionError, load_rules
 from graphrag_bench.fixtures import FixtureError, load_fixture
 from graphrag_bench.graph.builder import GraphError, KnowledgeGraph
 from graphrag_bench.graph.pipeline import build_graph_to_directory, load_graph
@@ -209,6 +216,33 @@ def _query_hybrid(args: argparse.Namespace) -> dict:
     )
 
 
+def _benchmark(args: argparse.Namespace) -> dict:
+    validate_run_output(args.output)
+    config = load_benchmark_config(args.config)
+    dataset = load_benchmark(args.documents, args.questions, split=args.split)
+    rules = load_rules(args.rules)
+    embedding = load_embedding_config(args.embedding_config)
+    started = perf_counter()
+    provider = SentenceTransformerProvider(
+        embedding,
+        allow_download=args.allow_download,
+        cache_folder=args.cache_folder,
+    )
+    model_load_ms = (perf_counter() - started) * 1000
+    summary = run_benchmark(
+        dataset, args.output, config, rules, provider, model_load_ms=model_load_ms
+    )
+    return {
+        "status": "benchmarked",
+        "output": str(args.output),
+        "questions": summary.question_count,
+        "records": summary.record_count,
+        "split": summary.split,
+        "repeatable": summary.repeatable,
+        "evaluation_sha256": summary.evaluation_sha256,
+    }
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="GraphRAG Bench development tools")
     parser.add_argument("--version", action="version", version=__version__)
@@ -275,6 +309,26 @@ def main(argv: list[str] | None = None) -> int:
     query_graph.add_argument("--config", type=Path, help="TOML graph traversal settings")
     query_graph.add_argument("--max-hops", type=int, help="override hop limit: 0, 1, or 2")
     query_graph.add_argument("--direction", choices=("outgoing", "incoming", "both"))
+    benchmark = commands.add_parser(
+        "benchmark", help="compare retrieval against annotated source evidence"
+    )
+    benchmark.add_argument("documents", type=Path, help="source Document JSONL, with original IDs")
+    benchmark.add_argument("--questions", type=Path, required=True, help="BenchmarkQuestion JSONL")
+    benchmark.add_argument("--split", choices=("fixture", "dev", "test"), required=True)
+    benchmark.add_argument("--output", type=Path, required=True, help="new run directory")
+    benchmark.add_argument("--config", type=Path, help="TOML comparison settings")
+    benchmark.add_argument("--rules", type=Path, required=True, help="extraction grammar")
+    benchmark.add_argument(
+        "--embedding-config", type=Path, required=True, help="pinned model/tokenizer"
+    )
+    benchmark.add_argument(
+        "--allow-download", action="store_true", help="fetch pinned model if needed"
+    )
+    benchmark.add_argument("--cache-folder", type=Path)
+    verify_run = commands.add_parser(
+        "verify-benchmark", help="verify saved run checksums without a model"
+    )
+    verify_run.add_argument("directory", type=Path)
     args = parser.parse_args(argv)
     try:
         if args.command == "ingest":
@@ -291,6 +345,16 @@ def main(argv: list[str] | None = None) -> int:
             summary = _query_graph(args)
         elif args.command == "query-hybrid":
             summary = _query_hybrid(args)
+        elif args.command == "benchmark":
+            summary = _benchmark(args)
+        elif args.command == "verify-benchmark":
+            checked = verify_benchmark_run(args.directory)
+            summary = {
+                "status": "valid",
+                "questions": checked.question_count,
+                "records": checked.record_count,
+                "evaluation_sha256": checked.evaluation_sha256,
+            }
         else:
             summary = _validate(args.path)
     except (
@@ -303,6 +367,7 @@ def main(argv: list[str] | None = None) -> int:
         GraphError,
         EmbeddingError,
         RetrievalError,
+        BenchmarkError,
     ) as error:
         print(f"error: {error}", file=sys.stderr)
         return 1

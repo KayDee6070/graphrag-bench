@@ -132,3 +132,23 @@ class SentenceTransformerProvider:
 
     def embed_query(self, text: str) -> NDArray[np.float32]:
         return self._encode((text,), query=True)[0]
+
+    def count_tokens(self, text: str) -> int:
+        """Count rendered context without prefixes, special tokens, or encoder truncation.
+
+        This measures the pinned tokenizer's tokens, not a future answer model's bill.
+        No neural encoding occurs, so context may exceed the embedding input limit.
+        """
+        if not isinstance(text, str):
+            raise EmbeddingError("token counting requires a string")
+        try:
+            return len(
+                self._model.tokenizer(
+                    [text],
+                    truncation=False,
+                    padding=False,
+                    add_special_tokens=False,
+                )["input_ids"][0]
+            )
+        except Exception as error:
+            raise EmbeddingError(f"token counting failed: {error}") from error

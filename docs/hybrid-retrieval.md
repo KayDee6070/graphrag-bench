@@ -236,4 +236,4 @@ Try answering before reading the explanation after each question.
 9. **What does an empty graph branch mean?** The graph contributed no candidates. If vector results exist, their order survives with one-list RRF scores. It does not mean the question is unanswerable.
 10. **What can we honestly claim after M6?** We built an auditable hybrid retrieval mechanism and verified its implementation. Whether it improves retrieval remains to be measured in M7 and later comparative experiments.
 
-M6 is complete. The next milestone is M7: benchmark data and retrieval metrics, with evidence coverage evaluated separately from answer generation.
+M6 is complete. Continue with the implemented [M7 walkthrough](benchmark.md): benchmark data and retrieval metrics, with evidence coverage evaluated separately from answer generation. Earlier statements in this guide describe the M6 milestone boundary; M7 now supplies context-budget selection and the first fixture comparison.

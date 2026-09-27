@@ -20,6 +20,8 @@ Hybrid retrieval will fuse chunk rankings using reciprocal rank fusion. For each
 
 Implementation status through M6: this fusion rule now exists with configurable `c` and separate candidate windows. The initial settings are `c=60` and 20 candidates per branch; they are starting values, not development-set selections. No strategy weights or reranker have been added. The [M6 walkthrough](hybrid-retrieval.md) records the implementation, sensitivity examples, and observed misses; development/test tuning and evidence metrics remain M7 work.
 
+Implementation status through M7: the [benchmark runner](benchmark.md) now measures complete source evidence and fact coverage at K=5/10, selects context under a shared 2,000-token budget, records repeats/timings, and exports verified experiment records. Its fixed comparison tokenizer is the pinned M4 encoder's tokenizer, with source headers included and special tokens excluded. Precision, MRR, confidence intervals, and automatic development-set tuning remain deferred. The existing twenty questions remain fixtures; [their observed results](../reports/m7-fixture.md) are diagnostics rather than held-out evidence for the hypothesis.
+
 The primary experiment will omit reranking. A later ablation can apply the same reranker to every strategy. Context assembly will deduplicate evidence and enforce the same token budget for every strategy. All generation runs will share the provider, prompt, and decoding configuration.
 
 This project studies local evidence traversal. The original Microsoft GraphRAG paper instead emphasizes global question-focused summarization with community summaries, so its results do not directly validate this hypothesis: <https://arxiv.org/abs/2404.16130>.

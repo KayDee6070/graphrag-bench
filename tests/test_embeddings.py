@@ -29,7 +29,8 @@ def model_stub(monkeypatch):
 
         def tokenizer(self, texts, **kwargs):
             calls.append(("tokenize", texts, kwargs))
-            return {"input_ids": [[0] * (len(t.split()) + 2) for t in texts]}
+            extra = 2 if kwargs.get("add_special_tokens", True) else 0
+            return {"input_ids": [[0] * (len(t.split()) + extra) for t in texts]}
 
         def encode_query(self, texts, **kwargs):
             calls.append(("query", texts, kwargs))
@@ -124,3 +125,16 @@ def test_example_config_and_invalid_toml(tmp_path):
     invalid.write_text('[wrong]\nmodel_id="example"\n', encoding="utf-8")
     with pytest.raises(EmbeddingError, match="embedding.*table"):
         load_embedding_config(invalid)
+
+
+def test_context_token_count_uses_whole_text_without_encoding_or_special_tokens(model_stub):
+    provider = SentenceTransformerProvider(config(query_prefix="query: ", document_prefix="text: "))
+    assert provider.count_tokens("word " * 20) == 20
+    assert provider.count_tokens("") == 0
+    tokenization = [call for call in model_stub if call[0] == "tokenize"]
+    assert all(
+        call[2] == {"truncation": False, "padding": False, "add_special_tokens": False}
+        for call in tokenization
+    )
+    assert tokenization[0][1] == ["word " * 20]
+    assert not any(call[0] in {"query", "document"} for call in model_stub)

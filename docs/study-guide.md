@@ -1,6 +1,6 @@
 # Study guide: understanding the project incrementally
 
-The project currently implements M1–M6. In everyday terms: M1 defines our record cards, M2 divides documents into traceable pieces, M3 draws connections, M4 finds pieces by comparing numerical text representations, M5 follows the connections to collect evidence, and M6 combines the two search lists. Every method keeps the source receipts. Start with the working data flow rather than reading every model at once.
+The project currently implements M1–M7. In everyday terms: M1 defines our record cards, M2 divides documents into traceable pieces, M3 draws connections, M4 finds pieces by comparing numerical text representations, M5 follows the connections to collect evidence, M6 combines the two search lists, and M7 checks whether the selected passages contain the facts needed to answer. Every method keeps the source receipts. Start with the working data flow rather than reading every model at once.
 
 ## First session: what the project is testing
 
@@ -87,11 +87,19 @@ Distinguish the candidate window from the final top K. Predict what happens if a
 
 After the M4 model setup, run `.venv/bin/python scripts/study_m6.py --semantic`. Inspect the actual Birch and Alder outputs. Changing the rank constant changes the Alder fifth result; explain why choosing that setting from a single example would not establish a general improvement. M7 will provide the benchmark and metrics needed to compare retrieval quality.
 
+## Ninth session: measure evidence instead of guessing quality
+
+Read [the M7 walkthrough](benchmark.md) and run `.venv/bin/python scripts/study_m7.py`. Explain why finding one of two necessary facts gives 50% coverage but incomplete evidence. Work through q19's alternative sources and distinguish reasoning hops from required document count.
+
+Run the full benchmark after the optional model setup. Read `report.md`, then inspect one failed question in `results.jsonl`. Compare raw retrieval with the selected context: was a fact never retrieved, or did the context budget remove it? Explain why graph trace quotes do not count as additional evidence.
+
+Inspect the [first fixture observation report](../reports/m7-fixture.md). Vector and hybrid have equal totals, but hybrid improves q10 and regresses on q13 at K=5. Explain why neither that tie nor three repeated runs establishes a general result for real papers. These twenty questions were used during development and remain fixtures.
+
 ## Explain the current system in an interview
 
-A precise description at M6 is:
+A precise description at M7 is:
 
-> I implemented vector, lexical, graph, and hybrid retrieval over shared source chunks. The graph retriever preserves alias ambiguity and returns auditable evidence paths. Hybrid retrieval combines rank positions using reciprocal rank fusion, with explicit candidate limits and per-source contributions. Tests cover the arithmetic, provenance, compatibility, and reproducibility. The study examples expose successes and top-K misses. The controlled benchmark remains future work; I have not yet demonstrated a retrieval improvement.
+> I implemented vector, lexical, graph, and hybrid retrieval, then built a source-evidence benchmark with a shared token budget and reproducible run records. It measures complete evidence and partial fact coverage, accepts alternative sufficient sources, and reports paired gains and losses. On twenty synthetic fixture questions, hybrid tied vector overall while helping one question and hurting another at K=5. The real-paper study remains future work, so I do not yet claim a general retrieval improvement.
 
 Avoid claiming a complete GraphRAG system or measured retrieval improvements at this stage. Later milestones will add those capabilities and their evidence.
 
@@ -109,6 +117,10 @@ Avoid claiming a complete GraphRAG system or measured retrieval improvements at 
 - **Retrieval:** select evidence for a question; vector, lexical, graph, and hybrid retrieval exist through M6.
 - **Candidate window:** how many results from one method enter fusion, before the final selection.
 - **Rank fusion:** combine ordered lists using positions rather than incompatible raw scores.
+- **Gold evidence:** manually annotated source facts used by the evaluator, not supplied as hints to retrieval.
+- **Evidence coverage:** fraction of required facts fully supported within one annotated sufficient set; take the best valid alternative.
+- **Complete evidence:** every necessary fact from at least one sufficient set is present.
+- **Context budget:** a limit on selected evidence under a specified tokenizer and rendering policy.
 - **Generation:** produce a cited answer from selected evidence; planned later.
 - **Provenance:** the references and coordinates connecting an output back to its source.
 - **Determinism:** the same specified inputs and implementation produce the same result.
