@@ -4,7 +4,7 @@ When does graph-based retrieval outperform vector retrieval for questions requir
 
 GraphRAG Bench is a small research-engineering project for comparing vector, graph, and hybrid retrieval under the same evidence budget. Retrieval quality will be measured independently of answer generation.
 
-**Current milestone: M5 — graph traversal retrieval.** Query names and aliases identify graph seeds; bounded traversal collects source evidence with validated paths. The vector and BM25 baselines remain available on the same chunks. Configuration, ambiguity, ranking criteria, and traversal caps are inspectable. Hybrid fusion, answer generation, and comparative benchmark results are not implemented yet.
+**Current milestone: M6 — hybrid retrieval.** Reciprocal rank fusion combines independent vector and graph rankings over identical source chunks. Candidate windows, score contributions, graph paths, and final selected evidence are inspectable. Vector, graph, and BM25 retrieval also remain available separately. Retrieval metrics, shared token-budget context assembly, answer generation, and comparative benchmark results remain future work.
 
 ## Quick start
 
@@ -100,6 +100,24 @@ Using the existing ingestion and graph directories from above:
 
 Graph retrieval needs no neural model. The output includes ranked source chunks, query-link candidates, paths, ranking details, and any traversal caps reached. The [M5 graph-retrieval walkthrough](docs/graph-retrieval.md) explains hops, direction, ambiguity, mention evidence, and why reaching a useful source does not guarantee it appears in the top K.
 
+## Combine vector and graph rankings
+
+After the M4 index and M3 graph are available:
+
+```bash
+.venv/bin/graphrag-bench query-hybrid datasets/processed/m4-example \
+  --graph datasets/processed/m3-example --source datasets/processed/m2-example \
+  --config configs/hybrid-retrieval.toml --graph-config configs/graph-retrieval.toml \
+  --query "Which dataset evaluates the model that Alder is based on?" --top-k 5
+.venv/bin/python scripts/study_m6.py
+# Optional real-model demonstration; uses the cached M4 model by default.
+.venv/bin/python scripts/study_m6.py --semantic
+```
+
+The default takes up to 20 candidates from each method, combines rank positions using `1 / (60 + rank)`, and selects the final top K. Missing candidates contribute zero; shared chunk IDs occur only once. Both artifacts must belong to the same ingestion output. Hybrid retrieval does not require a new index or additional model weights.
+
+Read the [M6 hybrid-retrieval walkthrough](docs/hybrid-retrieval.md) for plain-English explanations, worked arithmetic, configuration, reproducible examples, tests, and exercises. The default full-fixture demonstration still misses one required source in the Alder question's top five. Fusion is implemented; its benefit remains a research question.
+
 ## Development checks
 
 ```bash
@@ -120,12 +138,13 @@ GitHub Actions defines these checks for Python 3.11, 3.12, and 3.13. Fixture fil
 - `src/graphrag_bench/extraction/`: configurable statement rules, conservative name resolution, mentions, and diagnostics.
 - `src/graphrag_bench/graph/`: validated NetworkX multigraph construction, inspection, and portable graph artifacts.
 - `src/graphrag_bench/embeddings/`: replaceable provider contract and optional CPU Sentence Transformers adapter.
-- `src/graphrag_bench/retrieval/`: vector ranking and artifacts, BM25, query-name linking, and bounded graph evidence traversal.
+- `src/graphrag_bench/retrieval/`: vector ranking and artifacts, BM25, query-name linking, bounded graph traversal, and reciprocal rank fusion with candidate traces.
 - `src/graphrag_bench/config.py` and `configs/`: validated chunking settings and TOML examples.
 - `scripts/study_m2.py`: an executable explanation of chunk overlap and source coordinates.
 - `scripts/study_m3.py`: an executable explanation of nodes, directed edges, aliases, and source evidence.
 - `scripts/study_m4.py`: cosine arithmetic, lexical retrieval, and an opt-in real neural retrieval demonstration.
 - `scripts/study_m5.py`: graph paths, hop/mention ablations, ambiguity, and ranking limits.
+- `scripts/study_m6.py`: fusion arithmetic, candidate windows, parameter sensitivity, failure examples, and optional real hybrid retrieval.
 - `datasets/fixtures/tiny/corpus/`: eight fictional technical documents.
 - `datasets/fixtures/tiny/gold/`: manually specified reference chunks, entities, assertions, and 20 questions.
 - `tests/`: contract validation, provenance failures, fixture integration, and CLI tests.
@@ -135,7 +154,7 @@ The fixture has 25 chunks, 15 entities, and 23 relation assertions. It includes 
 
 ## Architecture
 
-The diagram shows both implemented and planned boundaries. Ingestion, deterministic rule extraction, graph construction, local embeddings, vector/BM25 retrieval, bounded graph traversal, and verified artifacts exist through M5. Hybrid fusion, evaluation metrics, and generation remain planned.
+The diagram shows both implemented and planned boundaries. Ingestion, deterministic rule extraction, graph construction, local embeddings, vector/BM25 retrieval, bounded graph traversal, hybrid rank fusion, and verified artifacts exist through M6. Evaluation metrics, shared context assembly, and generation remain planned.
 
 ```mermaid
 flowchart TD
@@ -173,9 +192,10 @@ Read the [M0 design and experiment plan](docs/design.md), [data contracts](docs/
 4. **M3:** Deterministic extraction, graph construction, verified artifacts, and study documentation — complete.
 5. **M4:** Local neural embeddings, exact vector retrieval, verified indexes, lexical sanity baseline, and study documentation — complete.
 6. **M5:** Query linking, bounded graph traversal, source/path validation, ranking traces, and study documentation — complete.
-7. **M6–M7:** Hybrid retrieval and retrieval evaluation.
-8. **M8–M10:** Real-paper pilot, validated extraction, cited generation, and corpus expansion.
-9. **M11–M12:** Comparative experiments, ablations, and error analysis.
-10. **M13–M14:** CLI polish, documentation, charts, and release preparation; optional demonstration UI.
+7. **M6:** Reciprocal rank fusion, explicit candidate windows, contribution traces, source validation, and study documentation — complete.
+8. **M7:** Benchmark dataset and retrieval metrics.
+9. **M8–M10:** Real-paper pilot, validated extraction, cited generation, and corpus expansion.
+10. **M11–M12:** Comparative experiments, ablations, and error analysis.
+11. **M13–M14:** CLI polish, documentation, charts, and release preparation; optional demonstration UI.
 
 Work proceeds one milestone at a time. MIT licensed, including the original fictional fixture corpus.

@@ -18,11 +18,12 @@ from graphrag_bench.embeddings.config import EmbeddingConfig, load_embedding_con
 from graphrag_bench.embeddings.sentence_transformers import SentenceTransformerProvider
 from graphrag_bench.extraction.config import ExtractionError
 from graphrag_bench.fixtures import FixtureError, load_fixture
-from graphrag_bench.graph.builder import GraphError
+from graphrag_bench.graph.builder import GraphError, KnowledgeGraph
 from graphrag_bench.graph.pipeline import build_graph_to_directory, load_graph
 from graphrag_bench.ingestion.pipeline import ingest_to_directory
 from graphrag_bench.ingestion.reader import load_ingestion
 from graphrag_bench.ingestion.types import IngestionError
+from graphrag_bench.models import RetrievalResult
 from graphrag_bench.retrieval.artifacts import (
     build_vector_to_directory,
     load_vector_index,
@@ -31,6 +32,9 @@ from graphrag_bench.retrieval.artifacts import (
 from graphrag_bench.retrieval.bm25 import BM25Config, BM25Retriever
 from graphrag_bench.retrieval.graph import GraphRetriever
 from graphrag_bench.retrieval.graph_config import load_graph_retrieval_config
+from graphrag_bench.retrieval.hybrid import HybridRetriever
+from graphrag_bench.retrieval.hybrid_config import load_hybrid_retrieval_config
+from graphrag_bench.retrieval.linking import QueryLink
 from graphrag_bench.retrieval.vector import RetrievalError, validate_request
 
 
@@ -138,23 +142,28 @@ def _query_graph(args: argparse.Namespace) -> dict:
     graph = load_graph(args.graph, args.source)
     retriever = GraphRetriever(graph, batch.documents, batch.chunks, config)
     trace = retriever.retrieve_with_trace(args.query, top_k=args.top_k)
-    assertion_ids = {
-        identifier
-        for hit in trace.result.hits
-        for path in hit.paths
-        for identifier in path.assertion_ids
-    }
-    entity_ids = {identifier for link in trace.links for identifier in link.candidate_entity_ids}
-    entity_ids.update(
-        identifier
-        for hit in trace.result.hits
-        for path in hit.paths
-        for identifier in path.entity_ids
+    return (
+        trace.model_dump(mode="json")
+        | {
+            "evidence": [
+                retriever.chunk(hit.chunk_id).model_dump(mode="json") for hit in trace.result.hits
+            ],
+        }
+        | _graph_audit(graph, trace.result, trace.links)
     )
-    return trace.model_dump(mode="json") | {
-        "evidence": [
-            retriever.chunk(hit.chunk_id).model_dump(mode="json") for hit in trace.result.hits
-        ],
+
+
+def _graph_audit(
+    graph: KnowledgeGraph, result: RetrievalResult, links: tuple[QueryLink, ...]
+) -> dict:
+    assertion_ids = {
+        identifier for hit in result.hits for path in hit.paths for identifier in path.assertion_ids
+    }
+    entity_ids = {identifier for link in links for identifier in link.candidate_entity_ids}
+    entity_ids.update(
+        identifier for hit in result.hits for path in hit.paths for identifier in path.entity_ids
+    )
+    return {
         "assertions": [
             graph.assertion(identifier).model_dump(mode="json")
             for identifier in sorted(assertion_ids)
@@ -163,6 +172,41 @@ def _query_graph(args: argparse.Namespace) -> dict:
             graph.entity(identifier).model_dump(mode="json") for identifier in sorted(entity_ids)
         ],
     }
+
+
+def _query_hybrid(args: argparse.Namespace) -> dict:
+    validate_request(args.query, args.top_k)
+    overrides = {
+        name: getattr(args, name)
+        for name in ("rank_constant", "vector_candidates", "graph_candidates")
+        if getattr(args, name) is not None
+    }
+    config = load_hybrid_retrieval_config(args.config, overrides=overrides)
+    graph_config = load_graph_retrieval_config(args.graph_config)
+    # Verify both indexes against the same ingestion artifacts before loading the model.
+    batch, input_hashes = load_ingestion(args.source)
+    graph = load_graph(args.graph, args.source)
+    index = load_vector_index(args.index, args.source)
+    graph_retriever = GraphRetriever(graph, batch.documents, batch.chunks, graph_config)
+    provider = SentenceTransformerProvider(
+        EmbeddingConfig.model_validate(index.spec.settings),
+        allow_download=args.allow_download,
+        cache_folder=args.cache_folder,
+    )
+    retriever = HybridRetriever(index, graph_retriever, provider, config)
+    trace = retriever.retrieve_with_trace(args.query, top_k=args.top_k)
+    return (
+        trace.model_dump(mode="json")
+        | {
+            "evidence": [
+                retriever.chunk(hit.chunk_id).model_dump(mode="json") for hit in trace.result.hits
+            ],
+            "embedding": index.spec.model_dump(mode="json"),
+            "input_hashes": input_hashes,
+            "package_version": __version__,
+        }
+        | _graph_audit(graph, trace.result, trace.graph_trace.links)
+    )
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -195,7 +239,18 @@ def main(argv: list[str] | None = None) -> int:
     query.add_argument("--source", type=Path, required=True, help="original ingestion directory")
     query.add_argument("--query", required=True)
     query.add_argument("--top-k", type=int, default=5)
-    for command in (vector, query):
+    hybrid = commands.add_parser("query-hybrid", help="fuse vector and graph ranks with RRF")
+    hybrid.add_argument("index", type=Path, help="M4 vector index directory")
+    hybrid.add_argument("--graph", type=Path, required=True, help="M3 graph artifact directory")
+    hybrid.add_argument("--source", type=Path, required=True, help="original ingestion directory")
+    hybrid.add_argument("--query", required=True)
+    hybrid.add_argument("--top-k", type=int, default=5)
+    hybrid.add_argument("--config", type=Path, help="TOML hybrid fusion settings")
+    hybrid.add_argument("--graph-config", type=Path, help="TOML graph traversal settings")
+    hybrid.add_argument("--rank-constant", type=int, help="override nonnegative RRF constant")
+    hybrid.add_argument("--vector-candidates", type=int, help="override vector candidate count")
+    hybrid.add_argument("--graph-candidates", type=int, help="override graph candidate count")
+    for command in (vector, query, hybrid):
         command.add_argument(
             "--allow-download",
             action="store_true",
@@ -234,6 +289,8 @@ def main(argv: list[str] | None = None) -> int:
             summary = _query_bm25(args)
         elif args.command == "query-graph":
             summary = _query_graph(args)
+        elif args.command == "query-hybrid":
+            summary = _query_hybrid(args)
         else:
             summary = _validate(args.path)
     except (

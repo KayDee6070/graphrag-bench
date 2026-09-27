@@ -1,0 +1,6 @@
+# Starting settings, not benchmark-tuned. Compare c = 10, 60, 100 on development data.
+[hybrid_retrieval]
+method = "rrf"
+rank_constant = 60
+vector_candidates = 20
+graph_candidates = 20

@@ -90,6 +90,10 @@ class GraphRetriever:
     def graph(self) -> KnowledgeGraph:
         return self._graph
 
+    @property
+    def chunks(self) -> tuple[Chunk, ...]:
+        return tuple(self._corpus.chunks.values())
+
     def chunk(self, chunk_id: str) -> Chunk:
         if chunk_id not in self._corpus.chunks:
             raise RetrievalError(f"unknown source chunk: {chunk_id}")

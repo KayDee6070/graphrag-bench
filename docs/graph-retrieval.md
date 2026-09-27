@@ -1,6 +1,6 @@
 # M5: follow graph relationships to retrieve evidence
 
-M5 adds query-name linking, bounded graph traversal, source evidence collection, and an explicit ranking rule. It consumes M2 ingestion artifacts and an M3 graph. It uses neither embeddings nor benchmark labels. M4's vector and BM25 baselines remain separate; combining strategies belongs to M6.
+M5 adds query-name linking, bounded graph traversal, source evidence collection, and an explicit ranking rule. It consumes M2 ingestion artifacts and an M3 graph. It uses neither embeddings nor benchmark labels. M4's vector and BM25 baselines remain independently usable; the subsequent [M6 milestone](hybrid-retrieval.md) combines vector and graph rankings.
 
 ## 1. Start with an everyday picture
 
@@ -219,4 +219,4 @@ No benchmark metric, statistical result, or answer-quality claim is produced by 
 6. **Why is score 19 not stronger evidence than vector score 0.65?** The graph score records ordinal position; the vector score measures cosine similarity. Their scales have different meanings.
 7. **Why not give every retrieved path's quotes to a future answer model?** That could exceed the declared top-K/context budget. Trace metadata is for inspection; context assembly must enforce a shared evidence budget.
 
-M5 is complete. The next milestone is M6: combine independent rankings with an explicit, testable fusion rule.
+M5 is complete. Continue with the implemented [M6 walkthrough](hybrid-retrieval.md): combine independent rankings with an explicit, testable fusion rule.

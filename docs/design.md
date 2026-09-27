@@ -18,6 +18,8 @@ Graph retrieval will link query entity names and aliases, retain ambiguity, trav
 
 Hybrid retrieval will fuse chunk rankings using reciprocal rank fusion. For each ranking containing a chunk, add `1 / (c + rank)`, with ranks starting at one. Missing chunks contribute zero. Compare `c` values 10, 60, and 100 on development questions and freeze the choice before test evaluation. This avoids requiring calibrated similarity and graph scores. Reference: <https://cormack.uwaterloo.ca/cormack/cormacksigir09-rrf.pdf>.
 
+Implementation status through M6: this fusion rule now exists with configurable `c` and separate candidate windows. The initial settings are `c=60` and 20 candidates per branch; they are starting values, not development-set selections. No strategy weights or reranker have been added. The [M6 walkthrough](hybrid-retrieval.md) records the implementation, sensitivity examples, and observed misses; development/test tuning and evidence metrics remain M7 work.
+
 The primary experiment will omit reranking. A later ablation can apply the same reranker to every strategy. Context assembly will deduplicate evidence and enforce the same token budget for every strategy. All generation runs will share the provider, prompt, and decoding configuration.
 
 This project studies local evidence traversal. The original Microsoft GraphRAG paper instead emphasizes global question-focused summarization with community summaries, so its results do not directly validate this hypothesis: <https://arxiv.org/abs/2404.16130>.

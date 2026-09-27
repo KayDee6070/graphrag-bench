@@ -1,6 +1,6 @@
 # Study guide: understanding the project incrementally
 
-The project currently implements M1–M5. In everyday terms: M1 defines our record cards, M2 divides documents into traceable pieces, M3 draws connections, M4 finds pieces by comparing numerical text representations, and M5 follows the connections to collect evidence. Every method keeps the source receipts. Start with the working data flow rather than reading every model at once.
+The project currently implements M1–M6. In everyday terms: M1 defines our record cards, M2 divides documents into traceable pieces, M3 draws connections, M4 finds pieces by comparing numerical text representations, M5 follows the connections to collect evidence, and M6 combines the two search lists. Every method keeps the source receipts. Start with the working data flow rather than reading every model at once.
 
 ## First session: what the project is testing
 
@@ -79,11 +79,19 @@ Read [the M5 walkthrough](graph-retrieval.md) and run `.venv/bin/python scripts/
 
 Inspect the full fixture's top-five miss. Distinguish failing to link a name, failing to reach evidence, and failing to rank reached evidence high enough. Explain why walking an edge backward does not reverse its assertion. Check a returned path against the graph and source quotes before claiming the evidence supports an answer.
 
+## Eighth session: combine two search lists
+
+Read [the M6 walkthrough](hybrid-retrieval.md) and run `.venv/bin/python scripts/study_m6.py`. Calculate one chunk's two contributions by hand. Explain why graph scores and cosine similarities cannot simply be averaged, why a missing candidate contributes zero, and why both methods selecting a chunk does not prove it is correct.
+
+Distinguish the candidate window from the final top K. Predict what happens if a useful chunk appears second in both lists but each list is cut to one item before fusion. Work through the example where noisy graph evidence removes a necessary source from the final selection.
+
+After the M4 model setup, run `.venv/bin/python scripts/study_m6.py --semantic`. Inspect the actual Birch and Alder outputs. Changing the rank constant changes the Alder fifth result; explain why choosing that setting from a single example would not establish a general improvement. M7 will provide the benchmark and metrics needed to compare retrieval quality.
+
 ## Explain the current system in an interview
 
-A precise description at M5 is:
+A precise description at M6 is:
 
-> I implemented vector, lexical, and bounded graph retrieval over shared source chunks. The graph retriever links query names, preserves alias ambiguity, follows explicit assertions, and returns auditable evidence paths. Tests cover ranking, provenance, model compatibility, and reproducible artifacts. The study examples expose both successful traversal and top-K misses. Hybrid fusion and the controlled benchmark remain future work.
+> I implemented vector, lexical, graph, and hybrid retrieval over shared source chunks. The graph retriever preserves alias ambiguity and returns auditable evidence paths. Hybrid retrieval combines rank positions using reciprocal rank fusion, with explicit candidate limits and per-source contributions. Tests cover the arithmetic, provenance, compatibility, and reproducibility. The study examples expose successes and top-K misses. The controlled benchmark remains future work; I have not yet demonstrated a retrieval improvement.
 
 Avoid claiming a complete GraphRAG system or measured retrieval improvements at this stage. Later milestones will add those capabilities and their evidence.
 
@@ -98,7 +106,9 @@ Avoid claiming a complete GraphRAG system or measured retrieval improvements at 
 - **Cosine similarity:** a comparison of vector directions; it becomes a dot product after unit normalization.
 - **Seed:** a graph entity identified from the question as a traversal starting point.
 - **Hop/path:** one followed edge / an ordered record of followed entities and assertions.
-- **Retrieval:** select evidence for a question; vector, lexical, and graph baselines exist through M5. Hybrid fusion belongs to M6.
+- **Retrieval:** select evidence for a question; vector, lexical, graph, and hybrid retrieval exist through M6.
+- **Candidate window:** how many results from one method enter fusion, before the final selection.
+- **Rank fusion:** combine ordered lists using positions rather than incompatible raw scores.
 - **Generation:** produce a cited answer from selected evidence; planned later.
 - **Provenance:** the references and coordinates connecting an output back to its source.
 - **Determinism:** the same specified inputs and implementation produce the same result.
