@@ -1,4 +1,4 @@
-"""Offline fixture validation and document ingestion commands."""
+"""Offline fixture validation, document ingestion, and graph construction commands."""
 
 from __future__ import annotations
 
@@ -11,7 +11,11 @@ from pydantic import ValidationError
 
 from graphrag_bench import __version__
 from graphrag_bench.config import ConfigurationError, load_chunking_config
+from graphrag_bench.corpus import CorpusError
+from graphrag_bench.extraction.config import ExtractionError
 from graphrag_bench.fixtures import FixtureError, load_fixture
+from graphrag_bench.graph.builder import GraphError
+from graphrag_bench.graph.pipeline import build_graph_to_directory
 from graphrag_bench.ingestion.pipeline import ingest_to_directory
 from graphrag_bench.ingestion.types import IngestionError
 
@@ -48,6 +52,17 @@ def _validate(path: Path) -> dict[str, str | int]:
     }
 
 
+def _build_graph(args: argparse.Namespace) -> dict[str, str | int]:
+    manifest = build_graph_to_directory(args.source, args.output, args.rules)
+    return {
+        "status": "built",
+        "entities": manifest.entity_count,
+        "assertions": manifest.assertion_count,
+        "issues": manifest.issue_count,
+        "output": str(args.output),
+    }
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="GraphRAG Bench development tools")
     parser.add_argument("--version", action="version", version=__version__)
@@ -65,10 +80,27 @@ def main(argv: list[str] | None = None) -> int:
     ingest.add_argument(
         "--overlap-units", type=int, help="requested overlap between adjacent windows"
     )
+    graph = commands.add_parser("build-graph", help="extract a graph from M2 ingestion artifacts")
+    graph.add_argument("source", type=Path, help="ingestion artifact directory")
+    graph.add_argument("--output", type=Path, required=True, help="new output directory")
+    graph.add_argument("--rules", type=Path, required=True, help="TOML extraction grammar")
     args = parser.parse_args(argv)
     try:
-        summary = _ingest(args) if args.command == "ingest" else _validate(args.path)
-    except (FixtureError, ConfigurationError, IngestionError, ValidationError) as error:
+        if args.command == "ingest":
+            summary = _ingest(args)
+        elif args.command == "build-graph":
+            summary = _build_graph(args)
+        else:
+            summary = _validate(args.path)
+    except (
+        FixtureError,
+        ConfigurationError,
+        IngestionError,
+        ValidationError,
+        CorpusError,
+        ExtractionError,
+        GraphError,
+    ) as error:
         print(f"error: {error}", file=sys.stderr)
         return 1
     print(json.dumps(summary, sort_keys=True))

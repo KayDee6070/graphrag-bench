@@ -1,6 +1,6 @@
 # Study guide: understanding the project incrementally
 
-The project currently implements M1 and M2. Start with the working data flow rather than reading every model at once. The order below separates what exists from later research work.
+The project currently implements M1, M2, and M3. In everyday terms: M1 defines our record cards, M2 divides documents into traceable pieces, and M3 draws connections between named things while keeping the source receipts. Start with the working data flow rather than reading every model at once. The order below separates what exists from later research work.
 
 ## First session: what the project is testing
 
@@ -55,11 +55,23 @@ For a small focused test run:
 .venv/bin/python -m pytest tests/test_parser.py tests/test_chunker.py -q
 ```
 
+## Fifth session: understand the map and its receipts
+
+Read [the M3 walkthrough](extraction-and-graph.md), starting with its nontechnical explanation. Run:
+
+```bash
+.venv/bin/python scripts/study_m3.py
+```
+
+Describe Alder, Birch, and Cedar as boxes connected by two labeled arrows. Locate the original quote for each arrow. Explain why Birch connects the documents, why `Base` remains ambiguous, and why two sources produce two Cedar–Accuracy assertion edges.
+
+Then follow the walkthrough's graph CLI commands and inspect `graph.json`, `issues.jsonl`, and `manifest.json`. Complete its exercises before reading the full extractor. A source quote, a graph assertion, and a verified fact are different things.
+
 ## Explain the current system in an interview
 
-A precise description at M2 is:
+A precise description at M3 is:
 
-> I implemented deterministic ingestion for UTF-8 text and Markdown. Chunks preserve exact source coordinates and use configurable sentence windows with bounded overlap. Tests reproduce the annotated fixture spans and verify that exported artifacts are identical after moving the source corpus. The retrieval comparison is planned but not implemented yet.
+> I implemented deterministic ingestion and a source-backed graph builder. Configurable rules extract explicit relations from controlled text. A directed multigraph preserves exact source quotes, separate claims from different documents, and ambiguous aliases. Tests compare source-only extraction against manual fixture annotations and check reproducible artifacts. General paper extraction and the retrieval comparison remain future work.
 
 Avoid claiming a complete GraphRAG system or measured retrieval improvements at this stage. Later milestones will add those capabilities and their evidence.
 
@@ -67,7 +79,9 @@ Avoid claiming a complete GraphRAG system or measured retrieval improvements at 
 
 - **Parsing:** turn a source representation into stored text and structural metadata.
 - **Chunking:** choose retrievable spans within that text.
-- **Extraction:** identify entities and supported relation assertions from chunks; planned for M3.
+- **Entity/node:** a named thing represented in the graph, such as a model or dataset.
+- **Relation assertion/edge:** a source's claim connecting two entities, with a label and direction.
+- **Extraction:** identify entities and explicit relation assertions with source evidence; limited deterministic rules exist in M3.
 - **Retrieval:** select evidence for a question; planned for M4–M6.
 - **Generation:** produce a cited answer from selected evidence; planned later.
 - **Provenance:** the references and coordinates connecting an output back to its source.

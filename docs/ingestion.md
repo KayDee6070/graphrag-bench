@@ -160,7 +160,7 @@ Chunk IDs hash document identity, document content checksum, chunker version, a 
 
 Exports use sorted source paths, sorted JSON keys, UTF-8, and explicit LF record separators. They exclude timestamps, absolute paths, and machine-specific timing. With the same relative source files, configuration, and implementation versions, exports are byte-identical after relocating the corpus. The manifest retains parser/chunker/package versions and output hashes; an experiment-level `RunManifest` will later record runtime context and the Git commit.
 
-All sources are parsed before output creation. Existing output directories are refused. The manifest is written last; an I/O failure can leave a partial new output directory. Consumers must require a valid, complete manifest and verify its hashes, not merely check for a directory or filename. M2 writes artifacts; a general artifact loader is not implemented yet.
+All sources are parsed before output creation. Existing output directories are refused. The manifest is written last; an I/O failure can leave a partial new output directory. Consumers must require a valid, complete manifest and verify its hashes, not merely check for a directory or filename. M3 adds `load_ingestion` in `ingestion/reader.py`, which checks artifact hashes, counts, source references, chunk coordinates, and section partitions before graph construction.
 
 ## 9. What the tests prove
 
@@ -190,4 +190,4 @@ Tests establish behavior on specified cases, not perfect sentence segmentation o
 
 Answer check: exact slices preserve auditable coordinates; raw hashes identify bytes while text hashes identify canonical text; repeated units are duplicate evidence; any chunking setting changes chunk IDs; comparing independent direct facts is not a sequential join; PDF parsing needs reading-order validation and a mapping from stored text spans to source pages/layout.
 
-M3 will consume these generated chunks to build deterministic extraction and graph construction. It must preserve their provenance and keep benchmark labels out of extraction inputs.
+M3 now consumes these generated chunks for deterministic extraction and graph construction. It preserves their provenance and keeps benchmark labels out of extraction inputs. Continue with the [M3 walkthrough](extraction-and-graph.md). M2's unit is a sentence window; M3's restricted grammar expects a complete statement on one source line and inside one chunk. Wrapped or fragmented statements may therefore be skipped and reported by M3 even though M2 ingested them correctly.

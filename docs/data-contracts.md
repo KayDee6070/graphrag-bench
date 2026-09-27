@@ -12,11 +12,13 @@ The document checksum is SHA-256 over the exact UTF-8 encoded `Document.text`. N
 
 `Chunk` and `EvidenceSpan` use half-open `[start, end)` Unicode character offsets into the stored document text. Offsets are not UTF-8 byte offsets or offsets into a PDF binary. M2 preserves text after optional UTF-8 BOM removal, records raw-file hashes and section ranges in `SourceRecord`, and keeps Markdown headings in the stored text. Original byte offsets can be recovered using the BOM size and UTF-8 encoded text prefixes. Page numbers remain unknown. A future PDF parser will need an explicit mapping to source pages and layout.
 
-Span text must have exactly `end - start` characters. The fixture audit additionally requires `document.text[start:end] == span.text`. Evidence with a `chunk_id` must refer to a chunk in the same document and fit completely inside that chunk. Chunk ordinals start at zero and must be unique within each document. Overlapping chunks are allowed.
+Span text must have exactly `end - start` characters. The fixture audit and M3's runtime `CorpusIndex` additionally require `document.text[start:end] == span.text`. Evidence with a `chunk_id` must refer to a chunk in the same document and fit completely inside that chunk. Chunk ordinals start at zero and must be contiguous within each document. Overlapping chunks are allowed. M3's graph builder requires source chunks for entity mentions as well as relation evidence; gold evidence can still omit chunks where permitted by its separate contracts.
 
 Relation assertions require at least one evidence span, each with a source chunk. They retain subject, predicate, object, extraction method/version, and optional qualifiers. An assertion records a document's claim, not an automatically established truth. Multiple assertions with the same subject/predicate/object retain separate identities and provenance.
 
-Entity and predicate labels are open strings in the reusable contracts. `ontology.json` supplies the fixture's permitted vocabulary. Entity aliases may overlap across different entities: the fixture deliberately gives both Birch and Elm the alias `Base`. The loader does not merge them. Future resolution must handle this ambiguity explicitly.
+Entity and predicate labels are open strings in the reusable contracts. `ontology.json` supplies the fixture's permitted vocabulary. Entity aliases may overlap across different entities: the fixture deliberately gives both Birch and Elm the alias `Base`. The fixture loader does not merge them. M3's resolver likewise retains both candidates. Runtime extraction uses its own configurable syntax/type rules, not the fixture ontology or gold entity records.
+
+M3 entity IDs fingerprint the exact type and canonical name normalized with NFC, case folding, and collapsed whitespace. Assertion IDs fingerprint the extraction/rules version, resolved triple, and source document/location/text. Assertion IDs exclude chunk IDs: one source statement appearing in multiple overlapping chunks remains one assertion with several evidence references. A second source location remains a distinct assertion. The graph keeps directed parallel edges keyed by assertion ID and rejects duplicate IDs and dangling endpoints. See the [M3 walkthrough](extraction-and-graph.md) for collision limitations and alias behavior.
 
 ## Gold evidence semantics
 
@@ -40,11 +42,13 @@ Question types are `factual`, `relationship`, and `comparison`. Splits are `fixt
 
 Retrieval results contain an ordered tuple of unique chunk hits. Tuple position gives rank; scores need not share a scale between strategies. An empty tuple represents a retrieval miss. Scores and elapsed time must be finite; elapsed time cannot be negative.
 
-Traversal paths retain entity IDs and assertion IDs. A path has one more entity than assertions. M1 validates path shape only; checking graph connectivity and traversal direction belongs to the graph implementation.
+Traversal paths retain entity IDs and assertion IDs. A path has one more entity than assertions. The record still validates path shape only. M3 provides directed edge inspection but does not construct or validate retrieval paths; query-driven path generation and direction checks belong to M5.
 
 Run manifests record a timezone-aware timestamp, seed, package/Python versions, optional Git commit, input checksums, configuration, artifact checksums, and provider versions. They establish the format for future experiment outputs; M2 does not execute retrieval experiments or populate `RunManifest`. Its separate `IngestionManifest` records deterministic source metadata, configuration, implementation versions, and output hashes without timestamps. Never store secrets in configuration or manifests.
 
 M2 uses `ChunkingConfig` to validate positive character/unit limits and an overlap smaller than the unit limit. `Section` spans must partition the document when passed to the chunker. Every emitted chunk is a nonempty exact slice with a finite character bound; source text and all non-whitespace characters remain recoverable. See the [M2 walkthrough](ingestion.md) for algorithm details and limitations.
+
+M3 adds `ExtractionRules`, `ExtractionIssue`, `ExtractionResult`, `GraphSnapshot`, and `GraphManifest`. The graph manifest stores input ingestion hashes, rules and their fingerprint, versions, counts, and graph/issue file hashes without timestamps. `load_ingestion` and `load_graph` verify hashes and cross-record provenance. Counts may be zero for an unsupported corpus; diagnostics explain skipped statements. These are construction artifacts, not retrieval experiments or populated `RunManifest` records.
 
 ## Fixture audit boundary
 

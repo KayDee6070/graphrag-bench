@@ -26,7 +26,7 @@ All fixture IDs and offsets are stored explicitly. The files do not need runtime
 
 Both Birch and Elm have the alias `Base`; their identities and mentions remain separate. Lumen and Quartz connect multiple documents and will exercise shared-neighbor traversal. Cedar's reported Accuracy metric appears in two documents, giving repeated assertions separate provenance. Dataset sizes remain textual facts without artificial numeric entity nodes.
 
-Reference chunks and graph annotations are test expectations, not an implemented extraction pipeline. Numeric questions will also expose the need to retrieve entity mention evidence rather than only relation statements. No claim of real retrieval quality should be drawn from this corpus.
+Reference chunks and graph annotations remain test expectations. M3 independently generates chunks and extracts the 23 assertions from source documents with a limited configurable grammar; gold annotations are used only for comparison in tests. Numeric questions expose the need to retrieve entity mention evidence rather than only relation statements: M3 reports both numeric statements as unsupported while retaining the source chunks and their known entity mentions. No claim of real retrieval quality should be drawn from this corpus.
 
 M2's reproduction test compares document IDs, ordinals, offsets, and exact text. The fixture's manual chunk IDs and `Overview` section labels are not inferred from the plain source text. Runtime chunks instead receive IDs derived from document identity, content, algorithm version, configuration, source bounds, and section labels.
 

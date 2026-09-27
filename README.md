@@ -4,7 +4,7 @@ When does graph-based retrieval outperform vector retrieval for questions requir
 
 GraphRAG Bench is a small research-engineering project for comparing vector, graph, and hybrid retrieval under the same evidence budget. Retrieval quality will be measured independently of answer generation.
 
-**Current milestone: M2 — document ingestion and deterministic chunking.** UTF-8 text and Markdown can be parsed into documents and source-preserving chunks, with reproducible artifact exports. Extraction, graph construction, embeddings, retrieval, and answer generation are not implemented yet. The synthetic fixture is a correctness test, not evidence that one retrieval strategy performs better.
+**Current milestone: M3 — deterministic extraction and graph construction.** A configurable, deliberately limited grammar extracts entities and explicit relations from complete source lines. A directed graph preserves their source quotes and chunk references, repeated claims, and ambiguous aliases. Ingestion and graph artifacts can be exported and verified. Embeddings, query retrieval, and answer generation are not implemented yet. The synthetic fixture is a correctness test, not evidence that one retrieval strategy performs better.
 
 ## Quick start
 
@@ -43,6 +43,21 @@ For a concrete explanation of offsets and overlap:
 
 Start with the [study guide](docs/study-guide.md), then read the [M2 implementation walkthrough](docs/ingestion.md). It includes the algorithm, exact examples, parameter tradeoffs, provenance rules, test map, and limitations.
 
+## Build and inspect a graph
+
+After the ingestion command above:
+
+```bash
+.venv/bin/graphrag-bench build-graph datasets/processed/m2-example \
+  --rules configs/extraction.toml \
+  --output datasets/processed/m3-example
+.venv/bin/python scripts/study_m3.py
+```
+
+The two-file example produces **7 entities, 6 assertion edges, and 0 issues**. The study script uses all eight fixture **source documents**, generates its own chunks, and produces **15 entities, 23 assertion edges, and 2 unsupported numeric statements**. Neither path reads gold annotations for extraction. Graph outputs are `graph.json`, `issues.jsonl`, and `manifest.json`; choose a fresh output directory on repeat runs.
+
+Read the [M3 study walkthrough](docs/extraction-and-graph.md) for a beginner explanation, an evidence-backed two-link example, the exact algorithm, configuration, tests, and limitations. The default grammar expects one statement per line; it is not a general research-paper extractor.
+
 ## Development checks
 
 ```bash
@@ -59,8 +74,12 @@ GitHub Actions defines these checks for Python 3.11, 3.12, and 3.13. Fixture fil
 - `src/graphrag_bench/models.py`: documents, chunks, entities, relation assertions, evidence, benchmark questions, retrieval results, and run manifests.
 - `src/graphrag_bench/fixtures.py`: JSONL loading, integrity validation, and fixture-specific ontology configuration.
 - `src/graphrag_bench/ingestion/`: text/Markdown parsing, sentence-window chunking, and deterministic exports.
+- `src/graphrag_bench/corpus.py` and `ingestion/reader.py`: cross-record source validation and verified ingestion artifact loading.
+- `src/graphrag_bench/extraction/`: configurable statement rules, conservative name resolution, mentions, and diagnostics.
+- `src/graphrag_bench/graph/`: validated NetworkX multigraph construction, inspection, and portable graph artifacts.
 - `src/graphrag_bench/config.py` and `configs/`: validated chunking settings and TOML examples.
 - `scripts/study_m2.py`: an executable explanation of chunk overlap and source coordinates.
+- `scripts/study_m3.py`: an executable explanation of nodes, directed edges, aliases, and source evidence.
 - `datasets/fixtures/tiny/corpus/`: eight fictional technical documents.
 - `datasets/fixtures/tiny/gold/`: manually specified reference chunks, entities, assertions, and 20 questions.
 - `tests/`: contract validation, provenance failures, fixture integration, and CLI tests.
@@ -70,7 +89,7 @@ The fixture has 25 chunks, 15 entities, and 23 relation assertions. It includes 
 
 ## Architecture
 
-The diagram shows both implemented and planned boundaries. Documents, parsing/chunking, source contracts, artifact exports, and fixture validation exist through M2. Embeddings, extraction, graph construction, retrieval, evaluation metrics, and generation remain planned.
+The diagram shows both implemented and planned boundaries. Documents, parsing/chunking, source contracts, deterministic rule extraction, graph construction, artifact exports, and fixture validation exist through M3. Embeddings, query retrieval, evaluation metrics, and generation remain planned.
 
 ```mermaid
 flowchart TD
@@ -105,7 +124,7 @@ Read the [M0 design and experiment plan](docs/design.md), [data contracts](docs/
 1. **M0:** Architecture and experimental hypothesis — complete.
 2. **M1:** Repository, contracts, fixtures, offline tests, and basic CI — complete.
 3. **M2:** Text/Markdown ingestion, provenance-preserving chunking, reproducible exports, and study documentation — complete.
-4. **M3:** Deterministic extraction and graph construction.
+4. **M3:** Deterministic extraction, graph construction, verified artifacts, and study documentation — complete.
 5. **M4–M7:** Vector, graph, hybrid retrieval, and retrieval evaluation.
 6. **M8–M10:** Real-paper pilot, validated extraction, cited generation, and corpus expansion.
 7. **M11–M12:** Comparative experiments, ablations, and error analysis.

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import os
 from dataclasses import dataclass
 from hashlib import sha256
@@ -16,6 +15,7 @@ from graphrag_bench.ingestion.chunker import CHUNKER_VERSION, chunk_document
 from graphrag_bench.ingestion.parser import PARSER_VERSION, SUPPORTED_SUFFIXES, parse_file
 from graphrag_bench.ingestion.types import IngestionError, SourceRecord
 from graphrag_bench.models import Chunk, Document, PositiveInt, Record, Sha256, Text
+from graphrag_bench.serialization import json_bytes
 
 
 @dataclass(frozen=True)
@@ -79,17 +79,6 @@ def ingest_directory(root: Path, config: ChunkingConfig | None = None) -> Ingest
     return IngestionBatch(tuple(documents), tuple(chunks), tuple(sources), ignored, config)
 
 
-def _json_bytes(record: Record) -> bytes:
-    serialized = json.dumps(
-        record.model_dump(mode="json"),
-        sort_keys=True,
-        ensure_ascii=False,
-        separators=(",", ":"),
-        allow_nan=False,
-    )
-    return (serialized + "\n").encode("utf-8")
-
-
 def write_artifacts(batch: IngestionBatch, output: Path) -> IngestionManifest:
     """Create a new directory; write the manifest last as the completion marker.
 
@@ -97,8 +86,8 @@ def write_artifacts(batch: IngestionBatch, output: Path) -> IngestionManifest:
     new directory, which must not be consumed without its completed manifest.
     """
     artifacts = {
-        "documents.jsonl": b"".join(_json_bytes(document) for document in batch.documents),
-        "chunks.jsonl": b"".join(_json_bytes(chunk) for chunk in batch.chunks),
+        "documents.jsonl": b"".join(json_bytes(document) for document in batch.documents),
+        "chunks.jsonl": b"".join(json_bytes(chunk) for chunk in batch.chunks),
     }
     manifest = IngestionManifest(
         package_version=__version__,
@@ -117,7 +106,7 @@ def write_artifacts(batch: IngestionBatch, output: Path) -> IngestionManifest:
             with (output / name).open("xb") as stream:
                 stream.write(content)
         with (output / "manifest.json").open("xb") as stream:
-            stream.write(_json_bytes(manifest))
+            stream.write(json_bytes(manifest))
     except FileExistsError as error:
         raise IngestionError(f"output already exists; choose a new directory: {output}") from error
     except OSError as error:

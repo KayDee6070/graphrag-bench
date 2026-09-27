@@ -28,5 +28,7 @@ jobs:
       - run: python -m pytest
       - run: graphrag-bench validate-fixtures datasets/fixtures/tiny
       - run: python scripts/study_m2.py
+      - run: python scripts/study_m3.py
       - run: graphrag-bench ingest datasets/examples/ingestion --config configs/ingestion.toml --output datasets/processed/ci-example
+      - run: graphrag-bench build-graph datasets/processed/ci-example --rules configs/extraction.toml --output datasets/processed/ci-graph
       - run: python -m build --no-isolation

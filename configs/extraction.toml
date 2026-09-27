@@ -1,0 +1,88 @@
+# M3 controlled English: one complete statement per source line, final period required.
+# Names are single Unicode word/hyphen tokens; task phrases may contain spaces.
+# This configuration contains grammar/type labels, not corpus entity names or answers.
+# Patterns use fullmatch, so negations, extra clauses, and wrapped lines are unsupported.
+
+[[rules]]
+rule_id = "method-base"
+pattern = '(?P<subject>[\w-]+) is a retrieval method built on the (?P<object>[\w-]+) model\.'
+subject_type = "Method"
+object_type = "Model"
+predicate = "BASED_ON"
+declares_subject = true
+
+[[rules]]
+rule_id = "model-evaluation"
+pattern = '(?P<subject>[\w-]+)(?: \((?:also called )?(?P<alias>[\w-]+)\))? is a language model evaluated on the (?P<object>[\w-]+) dataset\.'
+subject_type = "Model"
+object_type = "Dataset"
+predicate = "EVALUATED_ON"
+declares_subject = true
+
+[[rules]]
+rule_id = "encoder-evaluation"
+pattern = '(?P<subject>[\w-]+)(?: \((?:also called )?(?P<alias>[\w-]+)\))? is an encoder evaluated on the (?P<object>[\w-]+) dataset\.'
+subject_type = "Encoder"
+object_type = "Dataset"
+predicate = "EVALUATED_ON"
+declares_subject = true
+
+[[rules]]
+rule_id = "reranker-evaluation"
+pattern = '(?P<subject>[\w-]+) is a reranker evaluated on the (?P<object>[\w-]+) dataset\.'
+subject_type = "Reranker"
+object_type = "Dataset"
+predicate = "EVALUATED_ON"
+declares_subject = true
+
+[[rules]]
+rule_id = "dataset-task"
+pattern = '(?P<subject>[\w-]+) is a dataset for (?P<object>[\w-]+(?: [\w-]+)*)\.'
+subject_type = "Dataset"
+object_type = "Task"
+predicate = "SUPPORTS_TASK"
+declares_subject = true
+
+[[rules]]
+rule_id = "uses-reranker"
+pattern = '(?P<subject>[\w-]+) uses the (?P<object>[\w-]+) reranker\.'
+object_type = "Reranker"
+predicate = "USES"
+
+[[rules]]
+rule_id = "uses-encoder"
+pattern = '(?P<subject>[\w-]+) uses the (?P<object>[\w-]+) encoder\.'
+object_type = "Encoder"
+predicate = "USES"
+
+[[rules]]
+rule_id = "measured-by"
+pattern = '(?P<subject>[\w-]+) is evaluated using the (?P<object>[\w-]+) metric\.'
+object_type = "Metric"
+predicate = "MEASURED_BY"
+
+[[rules]]
+rule_id = "dataset-metric"
+pattern = '(?P<subject>[\w-]+) reports the (?P<object>[\w-]+) metric\.'
+subject_type = "Dataset"
+object_type = "Metric"
+predicate = "REPORTS"
+
+[[rules]]
+rule_id = "targets-task"
+pattern = '(?P<subject>[\w-]+) targets (?P<object>[\w-]+(?: [\w-]+)*)\.'
+object_type = "Task"
+predicate = "TARGETS"
+
+# Standalone definitions allow subjects in later untyped relations to be resolved.
+[[rules]]
+rule_id = "model-definition"
+pattern = '(?P<subject>[\w-]+)(?: \((?:also called )?(?P<alias>[\w-]+)\))? is a language model\.'
+subject_type = "Model"
+declares_subject = true
+
+[[rules]]
+rule_id = "encoder-definition"
+pattern = '(?P<subject>[\w-]+)(?: \((?:also called )?(?P<alias>[\w-]+)\))? is an encoder\.'
+subject_type = "Encoder"
+declares_subject = true
