@@ -32,7 +32,7 @@ M9 adds [local answer generation](answer-generation.md) after any of the four re
 
 ## Experiment protocol
 
-M10 implements a [three-paper development pilot](real-paper-corpus.md) before the planned expansion below. It pins PDF snapshots and licenses, records physical pages and canonical text coordinates, and compiles 12 source-authored draft questions independently of graph extraction. All labels remain development-only and pending independent review. The pilot establishes ingestion/retrieval compatibility, not extraction quality or support for the two-hop hypothesis. It does not replace the study size or held-out protocol below.
+M10 began with a [three-paper development pilot](real-paper-corpus.md), then [expanded to 30 papers and 40 draft dev questions](m10-expansion.md), including five candidate two-hop chains. It pins PDF snapshots and licenses, records physical pages and canonical text coordinates, and compiles annotations independently of graph extraction. Source-coverage audits and bundle-bound reviewer records are implemented. All labels remain development-only and pending independent review. The corpus establishes preparation and ingestion compatibility, not extraction quality or support for the two-hop hypothesis. Independent review and 80 held-out labels are still required by the study protocol below.
 
 Start with approximately 30 papers and 120 manually verified questions: 40 development and 80 held out. Aim for 40 held-out two-hop questions and 40 single-hop controls. Keep related templates and evidence chains in the same split. A shared retrieval corpus is permitted; held-out labels must remain unavailable during tuning and extraction.
 

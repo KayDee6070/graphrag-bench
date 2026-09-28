@@ -50,6 +50,7 @@ from graphrag_bench.models import RetrievalResult
 from graphrag_bench.papers.acquire import fetch_papers
 from graphrag_bench.papers.catalog import PaperError, load_catalog
 from graphrag_bench.papers.pipeline import PaperManifest, prepare_papers, verify_papers
+from graphrag_bench.papers.review import audit_papers, export_review, verify_review
 from graphrag_bench.retrieval.artifacts import (
     build_vector_to_directory,
     load_vector_index,
@@ -479,9 +480,34 @@ def main(argv: list[str] | None = None) -> int:
     verify_paper.add_argument(
         "--raw", type=Path, help="also re-extract original PDFs (requires pypdf)"
     )
+    audit = commands.add_parser(
+        "audit-papers", help="audit source coverage and draft question counts"
+    )
+    audit.add_argument("directory", type=Path)
+    review = commands.add_parser(
+        "export-paper-review", help="create pending source-bound review rows"
+    )
+    review.add_argument("directory", type=Path)
+    review.add_argument("--output", type=Path, required=True, help="new review JSON file")
+    review_check = commands.add_parser(
+        "verify-paper-review", help="check submitted reviewer attestations"
+    )
+    review_check.add_argument("directory", type=Path)
+    review_check.add_argument("--review", type=Path, required=True)
     args = parser.parse_args(argv)
     try:
-        if args.command == "fetch-papers":
+        if args.command == "audit-papers":
+            summary = audit_papers(args.directory)
+        elif args.command == "export-paper-review":
+            sheet = export_review(args.directory, args.output)
+            summary = {
+                "status": "pending",
+                "questions": len(sheet.questions),
+                "output": str(args.output),
+            }
+        elif args.command == "verify-paper-review":
+            summary = verify_review(args.directory, args.review)
+        elif args.command == "fetch-papers":
             summary = {"status": "fetched", **fetch_papers(load_catalog(args.catalog), args.output)}
         elif args.command == "prepare-papers":
             summary = {

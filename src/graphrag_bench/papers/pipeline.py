@@ -40,7 +40,7 @@ BUNDLE_FILES = frozenset(
 
 
 class PaperManifest(Record):
-    bundle_version: Literal["paper-pilot-v1"] = "paper-pilot-v1"
+    bundle_version: Literal["paper-pilot-v1", "paper-corpus-v1"] = "paper-pilot-v1"
     package_version: Text
     parser_version: Literal["pypdf-6.19.0-plain-pages-v1"] = PDF_PARSER_VERSION
     catalog_id: Text
@@ -71,14 +71,26 @@ def build_paper_corpus(
 
 
 def attribution(catalog: PaperCatalog) -> str:
+    if catalog.purpose == "research-corpus":
+        notice = [
+            "This collection contains separately attributed works; their own licenses still apply.",
+            "Each paper's extracted text and quotations retain its listed source license.",
+            "Our original collection metadata and annotation prose are offered under CC BY 4.0.",
+            "Carry the source credits, licenses, and change notices when reusing excerpts.",
+        ]
+    else:
+        # Preserve rendering of already-frozen pilot bundles.
+        notice = [
+            "The combined pilot annotation collection is distributed under CC BY-NC-SA 4.0.",
+            "Original GraphRAG and RAPTOR material remains available under CC BY 4.0.",
+        ]
     lines = [
         "# Third-party paper attribution",
         "",
         "Paper text and excerpts retain the source licenses below, separate from the MIT code.",
         "Changes: pypdf plain text extraction, page separators, chunking, and selected quotations.",
         "Reference answers are our paraphrases; paper authors do not endorse this project.",
-        "The combined pilot annotation collection is distributed under CC BY-NC-SA 4.0.",
-        "Original GraphRAG and RAPTOR material remains available under CC BY 4.0.",
+        *notice,
         "",
     ]
     for paper in sorted(catalog.papers, key=lambda p: p.paper_id):
@@ -130,6 +142,9 @@ def prepare_papers(
         for name, content in artifacts.items():
             (output / name).write_bytes(content)
         manifest = PaperManifest(
+            bundle_version=(
+                "paper-corpus-v1" if catalog.purpose == "research-corpus" else "paper-pilot-v1"
+            ),
             package_version=__version__,
             catalog_id=catalog.catalog_id,
             document_count=len(batch.documents),
@@ -164,6 +179,11 @@ def verify_papers(directory: Path, *, raw_directory: Path | None = None) -> Pape
         } != manifest.artifact_hashes:
             raise PaperError("paper artifact checksum mismatch")
         catalog = load_catalog(directory / "catalog.json")
+        expected_version = (
+            "paper-corpus-v1" if catalog.purpose == "research-corpus" else "paper-pilot-v1"
+        )
+        if manifest.bundle_version != expected_version:
+            raise PaperError("paper catalog purpose and bundle version differ")
         annotations = load_annotations(directory / "annotations.json")
         batch, _ = load_ingestion(directory / "ingestion")
         papers = {paper.filename: paper for paper in catalog.papers}

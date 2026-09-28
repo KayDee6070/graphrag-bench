@@ -1,5 +1,6 @@
 """PDF-page provenance in a fixed, explicitly derived Unicode text representation."""
 
+from importlib.util import find_spec
 from io import BytesIO
 
 from graphrag_bench.config import ChunkingConfig
@@ -22,6 +23,11 @@ def extract_pages(raw: bytes) -> tuple[str, ...]:
         raise PaperError("PDF parsing requires graphrag-bench[papers] (pypdf==6.19.0)") from error
     if pypdf.__version__ != PYPDF_VERSION:
         raise PaperError(f"PDF parser requires pypdf=={PYPDF_VERSION}")
+    if find_spec("fontTools") is not None:
+        raise PaperError(
+            "plain-pages-v1 requires an environment without optional fontTools; "
+            "its presence can change extracted text coordinates"
+        )
     try:
         reader = pypdf.PdfReader(BytesIO(raw), strict=True)
         if reader.is_encrypted or not 1 <= len(reader.pages) <= 100:

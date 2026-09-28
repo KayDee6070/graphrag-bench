@@ -1,6 +1,6 @@
 # Study guide: understanding the project incrementally
 
-The project currently implements M1–M9 and the M10 real-paper pilot. In everyday terms: M1 defines our record cards, M2 divides documents into traceable pieces, M3 draws connections, M4 finds pieces by comparing numerical text representations, M5 follows the connections to collect evidence, M6 combines the two search lists, M7 checks whether the selected passages contain the facts needed to answer, M8 asks a local language model to propose connections with source receipts, M9 asks a local writer to propose an answer with citations, and M10 introduces real research reports with separate draft answer sheets. Start with the working data flow rather than reading every model at once.
+The project currently implements M1–M9 and the M10 real-paper corpus preparation and review tools. In everyday terms: M1 defines our record cards, M2 divides documents into traceable pieces, M3 draws connections, M4 finds pieces by comparing numerical text representations, M5 follows the connections to collect evidence, M6 combines the two search lists, M7 checks whether the selected passages contain the facts needed to answer, M8 asks a local language model to propose connections with source receipts, M9 asks a local writer to propose an answer with citations, and M10 introduces real research reports with separate draft answer sheets. Independent review remains pending. Start with the working data flow rather than reading every model at once.
 
 ## First session: what the project is testing
 
@@ -119,6 +119,8 @@ Open `datasets/papers/pilot/catalog.json` and find a paper's version, fingerprin
 
 Read the [M10 observations](../reports/m10-pilot.md). Explain why the 800-character chunks failed the encoder limit and why 600 characters is only a measured setting for these papers. Distinguish a reproducible corpus from an independently reviewed benchmark and from a demonstrated retrieval improvement.
 
+Continue with the [30-paper expansion](m10-expansion.md) and `.venv/bin/python scripts/study_m10_expansion.py`. Follow REPLUG → Contriever → training details, then explain why another passage could invalidate the two-hop label. Compare the 600-, 512-, and 400-character coverage audits. Explain why smaller chunks do not always improve exact evidence coverage, why a reviewer file is bound to a specific bundle, and why approval cannot make a known question held out.
+
 ## Explain the current system in an interview
 
 A precise description through M7 is:
@@ -135,9 +137,9 @@ The M9 addition is:
 
 > I connected the retrievers to a shared local answer generator with evidence budgeting and claim-level citations. It records the full prompt, response, and exact source coordinates for replay. I documented that a small model can produce an unsupported answer despite citing real text, so I do not equate citation validity with answer quality.
 
-The M10 pilot addition is:
+The M10 corpus addition is:
 
-> I added version-pinned PDF acquisition, page-preserving text extraction, source attribution, and a separate compiler for development questions. I validated a three-paper corpus and documented a real tokenizer-limit failure. I preserve exact source coordinates while keeping draft labels out of the searchable corpus. Independent annotation review and corpus expansion remain necessary before the full comparative study.
+> I added version-pinned PDF acquisition, page-preserving text extraction, source attribution, and a separate compiler for development questions. I expanded the corpus to 30 papers and 40 draft development questions, then added source-coverage audits and review records that become stale when the bundle changes. I preserve exact source coordinates while keeping labels out of the searchable corpus. Independent review and 80 genuinely held-out questions remain necessary before the full comparative study.
 
 ## Terminology to keep distinct
 
@@ -154,7 +156,7 @@ The M10 pilot addition is:
 - **Candidate window:** how many results from one method enter fusion, before the final selection.
 - **Rank fusion:** combine ordered lists using positions rather than incompatible raw scores.
 - **Gold evidence:** manually annotated source facts used by the evaluator, not supplied as hints to retrieval.
-- **Draft evidence labels:** source-authored annotations awaiting independent review; the M10 pilot uses this status.
+- **Draft evidence labels:** source-authored annotations awaiting independent review; the M10 corpus uses this status.
 - **Corpus:** the documents available to retrieval and extraction.
 - **Benchmark:** the questions and reference evidence used to evaluate the system.
 - **Evidence coverage:** fraction of required facts fully supported within one annotated sufficient set; take the best valid alternative.

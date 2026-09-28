@@ -1,0 +1,8 @@
+# Expanded M10 development corpus: 6,996 chunks, maximum 318 model tokens.
+# Chosen after tokenizer and all-source coverage checks, before retrieval evaluation.
+# 600 characters left one annotated whitespace gap; 400 left a different gap.
+# These observations are specific to the pinned corpus and current dev annotations.
+[chunking]
+max_chars = 512
+max_units = 5
+overlap_units = 1

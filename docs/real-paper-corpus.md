@@ -1,5 +1,7 @@
 # M10: from training reports to real research papers
 
+This chapter records the original three-paper pilot. For the current 30-paper corpus, 40 draft development questions, and review workflow, continue with the [M10 expansion chapter](m10-expansion.md). The original pilot files, measurements, and commands remain reproducible.
+
 ## The Scout story
 
 Until now, our Scouts trained with reports that we wrote ourselves. We knew where Eren was, which squad he belonged to, and which gate that squad guarded. Those reports made excellent **software tests**: if a Scout missed an obvious connection, we could find the bug.
