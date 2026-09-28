@@ -34,6 +34,7 @@ jobs:
       - run: python scripts/study_m6.py
       - run: python scripts/study_m7.py
       - run: python scripts/study_m8.py
+      - run: python scripts/study_m9.py
       - run: graphrag-bench ingest datasets/examples/ingestion --config configs/ingestion.toml --output datasets/processed/ci-example
       - run: graphrag-bench build-graph datasets/processed/ci-example --rules configs/extraction.toml --output datasets/processed/ci-graph
       - run: graphrag-bench query-bm25 datasets/processed/ci-example --query "Which model does Alder use?" --top-k 2

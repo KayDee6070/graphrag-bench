@@ -1,6 +1,6 @@
 # Study guide: understanding the project incrementally
 
-The project currently implements M1–M8. In everyday terms: M1 defines our record cards, M2 divides documents into traceable pieces, M3 draws connections, M4 finds pieces by comparing numerical text representations, M5 follows the connections to collect evidence, M6 combines the two search lists, M7 checks whether the selected passages contain the facts needed to answer, and M8 asks a local language model to propose connections with source receipts. Start with the working data flow rather than reading every model at once.
+The project currently implements M1–M9. In everyday terms: M1 defines our record cards, M2 divides documents into traceable pieces, M3 draws connections, M4 finds pieces by comparing numerical text representations, M5 follows the connections to collect evidence, M6 combines the two search lists, M7 checks whether the selected passages contain the facts needed to answer, M8 asks a local language model to propose connections with source receipts, and M9 asks a local writer to propose an answer with citations. Start with the working data flow rather than reading every model at once.
 
 ## First session: what the project is testing
 
@@ -103,17 +103,29 @@ Inspect the [actual local-model observations](../reports/m8-local.md). Separate 
 
 The configured prompt examples are independently written development examples. They teach the output format; they must never be populated from held-out question labels. M8's controlled pilot does not replace the real-paper study.
 
+## Eleventh session: the Scout writer and the missing report
+
+Read the [M9 walkthrough](answer-generation.md) and run `.venv/bin/python scripts/study_m9.py`. Revisit Eren, Lantern Squad, and the east gate. Identify the two separate facts needed for the answer and explain why citing only the gate report misses part of the connection.
+
+Inspect the [actual M9 observations](../reports/m9-local.md). Find the invented score and its genuine source quotes. Explain why a reference check can pass even though the score is absent. Distinguish software abstention with zero context from a model correctly choosing to abstain with incomplete context.
+
+Open one `request.json`, `receipt.json`, and `answer.json`. Follow a citation label to its selected source piece and absolute character coordinates. Explain what replay verifies and what still requires independent human annotation.
+
 ## Explain the current system in an interview
 
 A precise description through M7 is:
 
 > I implemented vector, lexical, graph, and hybrid retrieval, then built a source-evidence benchmark with a shared token budget and reproducible run records. It measures complete evidence and partial fact coverage, accepts alternative sufficient sources, and reports paired gains and losses. On twenty synthetic fixture questions, hybrid tied vector overall while helping one question and hurting another at K=5. The real-paper study remains future work, so I do not yet claim a general retrieval improvement.
 
-Avoid claiming a complete GraphRAG system or measured retrieval improvements at this stage. Later milestones will add those capabilities and their evidence.
+Avoid claiming demonstrated improvements on real papers or independently verified answer correctness. Later milestones will supply the corpus and comparative evidence needed to assess those claims.
 
 The M8 addition is:
 
 > I added a local language-model extractor behind a provider interface. It validates structured proposals, aligns exact source quotes, records failures, and saves requests and responses for offline replay. I explicitly distinguish source-reference validity from semantic correctness; the latter still needs independent review. The extracted graph integrates with the graph and hybrid search paths.
+
+The M9 addition is:
+
+> I connected the retrievers to a shared local answer generator with evidence budgeting and claim-level citations. It records the full prompt, response, and exact source coordinates for replay. I documented that a small model can produce an unsupported answer despite citing real text, so I do not equate citation validity with answer quality.
 
 ## Terminology to keep distinct
 
@@ -133,7 +145,8 @@ The M8 addition is:
 - **Evidence coverage:** fraction of required facts fully supported within one annotated sufficient set; take the best valid alternative.
 - **Complete evidence:** every necessary fact from at least one sufficient set is present.
 - **Context budget:** a limit on selected evidence under a specified tokenizer and rendering policy.
-- **Generation:** produce a cited answer from selected evidence; planned later.
+- **Generation:** propose an answer from selected evidence; implemented in M9 with exact citation-reference checks.
+- **Citation entailment:** whether the cited text supports the meaning of the claim; not established by an exact string match.
 - **Provenance:** the references and coordinates connecting an output back to its source.
 - **Determinism:** the same specified inputs and implementation produce the same result.
 - **Reproducibility:** preserve the inputs, settings, versions, and artifacts needed to repeat and inspect the result.

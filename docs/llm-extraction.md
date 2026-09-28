@@ -8,7 +8,7 @@ Imagine a junior Scout reading mission reports and drafting a map of names and c
 
 The Scout must attach a receipt to every connection: an exact quote from the report. Our software checks those receipts and the shape of the proposed map. A reviewer must still check whether a quote actually supports the connection. A real quote can be misinterpreted.
 
-M8's language model is being used to extract a graph. Writing an answer to a user's question remains M9 work.
+M8's language model is being used to extract a graph. [M9](answer-generation.md) now adds the separate step of writing an answer proposal with citations.
 
 ## A concrete example
 
@@ -164,4 +164,4 @@ Run `.venv/bin/python -m pytest tests/llm -q` for focused checks. Tests use prew
 5. **Can a model response contain zero relations?** Yes. Abstention is valid and useful when a passage lacks supported relations.
 6. **Can we use test answers as prompt examples?** No. That leaks evaluation labels into graph construction.
 7. **Why is a name plus type only a starting identity policy?** Different real things can share a name and type; one real thing can have multiple names.
-8. **Is the whole GraphRAG answer system finished?** No. M8 extracts graph proposals; cited answer generation and real-paper evaluation remain later milestones.
+8. **Is the whole research project finished?** No. M8 extracts graph proposals and M9 now adds cited answer proposals; real-paper evaluation and the comparative study remain later milestones.

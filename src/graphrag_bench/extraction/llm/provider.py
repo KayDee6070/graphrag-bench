@@ -5,7 +5,7 @@ from pathlib import Path
 from time import perf_counter
 
 from graphrag_bench.extraction.llm.config import LLMError, LocalModelConfig
-from graphrag_bench.extraction.llm.contracts import Completion, ExtractionRequest, ModelSpec
+from graphrag_bench.extraction.llm.contracts import ChatRequest, Completion, ModelSpec
 from graphrag_bench.models import text_sha256
 
 PROVIDER_VERSION = "transformers-causal-cpu-v1"
@@ -26,7 +26,7 @@ class LocalTransformersProvider:
             from transformers import AutoModelForCausalLM, AutoTokenizer, GenerationConfig
         except ImportError as error:
             raise LLMError(
-                "Local extraction requires optional torch/transformers dependencies; "
+                "Local inference requires optional torch/transformers dependencies; "
                 "see requirements-embeddings-cpu.txt and docs/llm-extraction.md."
             ) from error
         self._config = config
@@ -104,7 +104,11 @@ class LocalTransformersProvider:
     def spec(self) -> ModelSpec:
         return self._spec.model_copy(deep=True)
 
-    def complete(self, request: ExtractionRequest) -> Completion:
+    def count_tokens(self, text: str) -> int:
+        """Count evidence text with the generation tokenizer, without special tokens."""
+        return len(self._tokenizer.encode(text, add_special_tokens=False, truncation=False))
+
+    def complete(self, request: ChatRequest) -> Completion:
         started = perf_counter()
         try:
             messages = [
@@ -137,4 +141,4 @@ class LocalTransformersProvider:
         except LLMError:
             raise
         except Exception as error:
-            raise LLMError(f"local extraction inference failed: {error}") from error
+            raise LLMError(f"local inference failed: {error}") from error

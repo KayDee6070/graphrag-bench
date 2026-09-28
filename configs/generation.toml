@@ -1,0 +1,16 @@
+# Reuses the model already downloaded for M8. Cached-only unless explicitly allowed.
+[generation]
+context_tokens = 1500
+
+[generation.model]
+model_id = "Qwen/Qwen2.5-0.5B-Instruct"
+revision = "7ae557604adf67be50417f59c2c2f167def9a775"
+device = "cpu"
+dtype = "float32"
+cpu_threads = 4
+max_input_tokens = 4096
+max_new_tokens = 768
+
+[generation.retrieval]
+strategy = "graph"
+top_k = 5

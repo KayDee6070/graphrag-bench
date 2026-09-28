@@ -33,6 +33,14 @@ from graphrag_bench.extraction.llm.pipeline import (
 )
 from graphrag_bench.extraction.llm.provider import LocalTransformersProvider
 from graphrag_bench.fixtures import FixtureError, load_fixture
+from graphrag_bench.generation.config import GenerationError, load_generation_config
+from graphrag_bench.generation.pipeline import (
+    AnswerManifest,
+    build_answer_to_directory,
+    replay_answer_to_directory,
+    validate_answer_output,
+)
+from graphrag_bench.generation.retrieval import retrieve_for_answer
 from graphrag_bench.graph.builder import GraphError, KnowledgeGraph
 from graphrag_bench.graph.pipeline import build_graph_to_directory, load_graph
 from graphrag_bench.ingestion.pipeline import ingest_to_directory
@@ -155,6 +163,46 @@ def _query_vector(args: argparse.Namespace) -> dict:
         "result": result.model_dump(mode="json"),
         "evidence": [index.chunk(hit.chunk_id).model_dump(mode="json") for hit in result.hits],
         "embedding": index.spec.model_dump(mode="json"),
+    }
+
+
+def _answer(args: argparse.Namespace) -> dict:
+    validate_answer_output(args.source, args.output, args.graph, args.index)
+    config = load_generation_config(
+        args.config,
+        overrides={
+            name: getattr(args, name)
+            for name in ("strategy", "top_k")
+            if getattr(args, name) is not None
+        },
+    )
+    retrieval = retrieve_for_answer(
+        args.source,
+        args.query,
+        config.retrieval,
+        graph_directory=args.graph,
+        index_directory=args.index,
+        allow_download=args.allow_download,
+        cache_folder=args.cache_folder,
+    )
+    provider = LocalTransformersProvider(
+        config.model, allow_download=args.allow_download, cache_folder=args.cache_folder
+    )
+    return _answer_summary(
+        build_answer_to_directory(args.source, args.output, retrieval, config, provider),
+        args.output,
+    )
+
+
+def _answer_summary(manifest: AnswerManifest, output: Path) -> dict:
+    return {
+        "status": manifest.answer_status,
+        "mode": manifest.execution_mode,
+        "claims": manifest.claim_count,
+        "citations": manifest.citation_count,
+        "review_status": "unreviewed",
+        "output": str(output),
+        "answer_file": str(output / "answer.md"),
     }
 
 
@@ -378,6 +426,29 @@ def main(argv: list[str] | None = None) -> int:
         "verify-benchmark", help="verify saved run checksums without a model"
     )
     verify_run.add_argument("directory", type=Path)
+    answer = commands.add_parser(
+        "answer", help="generate an answer proposal with exact source citations"
+    )
+    answer.add_argument("source", type=Path, help="verified ingestion directory")
+    answer.add_argument("--query", required=True)
+    answer.add_argument(
+        "--config", type=Path, required=True, help="TOML generation and retrieval settings"
+    )
+    answer.add_argument("--output", type=Path, required=True, help="new answer directory")
+    answer.add_argument("--strategy", choices=("bm25", "vector", "graph", "hybrid"))
+    answer.add_argument("--top-k", type=int)
+    answer.add_argument("--graph", type=Path)
+    answer.add_argument("--index", type=Path)
+    answer.add_argument(
+        "--allow-download", action="store_true", help="fetch pinned local models if needed"
+    )
+    answer.add_argument("--cache-folder", type=Path, help="local model cache")
+    replay_answer = commands.add_parser(
+        "replay-answer", help="replay selection and citation checks without models"
+    )
+    replay_answer.add_argument("directory", type=Path)
+    replay_answer.add_argument("--source", type=Path, required=True)
+    replay_answer.add_argument("--output", type=Path, required=True)
     args = parser.parse_args(argv)
     try:
         if args.command == "ingest":
@@ -410,6 +481,12 @@ def main(argv: list[str] | None = None) -> int:
                 "records": checked.record_count,
                 "evaluation_sha256": checked.evaluation_sha256,
             }
+        elif args.command == "answer":
+            summary = _answer(args)
+        elif args.command == "replay-answer":
+            summary = _answer_summary(
+                replay_answer_to_directory(args.directory, args.source, args.output), args.output
+            )
         else:
             summary = _validate(args.path)
     except (
@@ -423,6 +500,7 @@ def main(argv: list[str] | None = None) -> int:
         EmbeddingError,
         RetrievalError,
         BenchmarkError,
+        GenerationError,
     ) as error:
         print(f"error: {error}", file=sys.stderr)
         return 1

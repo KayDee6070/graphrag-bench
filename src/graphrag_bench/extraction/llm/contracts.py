@@ -84,6 +84,13 @@ class ExtractionProvider(Protocol):
     def complete(self, request: ExtractionRequest) -> Completion: ...
 
 
+class ChatRequest(Protocol):
+    """Only messages are needed by the shared local inference adapter."""
+
+    @property
+    def messages(self) -> tuple[Message, ...]: ...
+
+
 class ResponseRecord(Record):
     request_sha256: Sha256
     request: ExtractionRequest

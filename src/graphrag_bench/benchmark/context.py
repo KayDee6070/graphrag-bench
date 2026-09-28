@@ -1,6 +1,6 @@
 """Greedy whole-passage selection under an exact shared tokenizer budget."""
 
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from typing import Protocol
 
 from graphrag_bench.benchmark.dataset import BenchmarkError
@@ -71,6 +71,7 @@ def assemble_context(
     counter: TokenCounter,
     *,
     max_tokens: int,
+    renderer: Callable[[Iterable[ContextPiece]], str] = render_context,
 ) -> SelectedContext:
     if type(max_tokens) is not int or max_tokens < 1:
         raise BenchmarkError("max_tokens must be a positive integer")
@@ -99,7 +100,7 @@ def assemble_context(
             )
             for start, end in uncovered
         ]
-        candidate = render_context((*pieces, *additions))
+        candidate = renderer((*pieces, *additions))
         count = counter.count_tokens(candidate)
         if type(count) is not int or count < 0 or (candidate.strip() and count == 0):
             raise BenchmarkError(

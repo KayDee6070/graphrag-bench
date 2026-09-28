@@ -26,7 +26,9 @@ The primary experiment will omit reranking. A later ablation can apply the same 
 
 This project studies local evidence traversal. The original Microsoft GraphRAG paper instead emphasizes global question-focused summarization with community summaries, so its results do not directly validate this hypothesis: <https://arxiv.org/abs/2404.16130>.
 
-M8 adds a separate [local LLM-assisted extraction path](llm-extraction.md). It records pinned model settings, a configurable ontology and independently written prompt examples, exact requests/responses, source checks, and replayable graph artifacts. The resulting assertions remain unreviewed. A tiny controlled source pilot checks integration and exposes model failures; real-paper extraction quality has not been established. The M7 benchmark continues to use deterministic extraction by default, and M9 answer generation has not started.
+M8 adds a separate [local LLM-assisted extraction path](llm-extraction.md). It records pinned model settings, a configurable ontology and independently written prompt examples, exact requests/responses, source checks, and replayable graph artifacts. The resulting assertions remain unreviewed. A tiny controlled source pilot checks integration and exposes model failures; real-paper extraction quality has not been established. The M7 benchmark continues to use deterministic extraction by default.
+
+M9 adds [local answer generation](answer-generation.md) after any of the four retrievers. It uses the answer model's tokenizer to budget the actual evidence block, records selection decisions, requests cited claims, resolves exact quotes to source coordinates, and supports offline replay. A model can still attach real quotes to an unsupported answer; the pilot documents this failure. Citation-reference validity is therefore separated from semantic support and completeness. The M7 benchmark is unchanged, and answer-quality comparisons on independently annotated real papers remain later work.
 
 ## Experiment protocol
 

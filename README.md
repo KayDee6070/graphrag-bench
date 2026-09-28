@@ -4,7 +4,7 @@ When does graph-based retrieval outperform vector retrieval for questions requir
 
 GraphRAG Bench is a small research-engineering project for comparing vector, graph, and hybrid retrieval under the same evidence budget. Retrieval quality will be measured independently of answer generation.
 
-**Current milestone: M8 — local LLM-assisted extraction.** A pinned local language model now proposes entities and relationships, with strict output validation, exact source references, saved inference receipts, and offline graph replay. Its graphs work with the existing graph and hybrid retrievers. Assertions remain explicitly unreviewed: matching a quote does not establish that a model interpreted it correctly. The M7 retrieval benchmark remains available with its deterministic extraction baseline. Answer generation and the real-paper comparative study remain future work.
+**Current milestone: M9 — local answer generation with citations.** All four retrieval strategies now feed the same answer pipeline, with evidence budgeting, claim-level source quotes, explicit abstention/rejection states, saved inference receipts, and offline replay. Citation checks establish source references, not answer correctness: the small local model still produces unsupported answers and incomplete citation chains. Both graph assertions and answer claims remain unreviewed. Real-paper answer-quality evaluation and the comparative study remain future work.
 
 ## Quick start
 
@@ -152,6 +152,23 @@ After the optional CPU dependency setup, use the pinned M8 model from the local 
 
 The first model download requires an explicit `--allow-download` on `build-llm-graph`; the model is about 1 GB. No hosted inference API is used. Replay and the lesson run without neural dependencies. Inspect `issues.jsonl` and the raw responses before trusting the extracted relationships. Read the [M8 walkthrough](docs/llm-extraction.md) and [local observation report](reports/m8-local.md).
 
+## Generate and inspect an answer proposal
+
+Using the M8 example artifacts above and the same cached local model:
+
+```bash
+.venv/bin/graphrag-bench answer datasets/processed/m8-example \
+  --graph experiments/runs/m8-example --config configs/generation.toml \
+  --query "Which dataset evaluates the model used by Orion?" \
+  --output experiments/runs/m9-example
+cat experiments/runs/m9-example/answer.md
+.venv/bin/graphrag-bench replay-answer experiments/runs/m9-example \
+  --source datasets/processed/m8-example --output experiments/runs/m9-example-replay
+.venv/bin/python scripts/study_m9.py
+```
+
+The [M9 walkthrough](docs/answer-generation.md) explains all four strategies, exact citation checks, token budgets, and replay limits. The [local observation report](reports/m9-local.md) includes an invented score that passed reference checks; `answered` is not an independent correctness judgment. The Scout lesson works without model weights or neural dependencies.
+
 ## Development checks
 
 ```bash
@@ -175,6 +192,7 @@ GitHub Actions defines these checks for Python 3.11, 3.12, and 3.13. Fixture fil
 - `src/graphrag_bench/embeddings/`: replaceable provider contract and optional CPU Sentence Transformers adapter.
 - `src/graphrag_bench/retrieval/`: vector ranking and artifacts, BM25, query-name linking, bounded graph traversal, and reciprocal rank fusion with candidate traces.
 - `src/graphrag_bench/benchmark/`: annotation validation, context selection, source-evidence metrics, repeated comparisons, reports, and run verification.
+- `src/graphrag_bench/generation/`: shared answer routing, evidence budgeting, source-only prompts, exact citation references, saved responses, and offline replay.
 - `src/graphrag_bench/config.py` and `configs/`: validated chunking settings and TOML examples.
 - `scripts/study_m2.py`: an executable explanation of chunk overlap and source coordinates.
 - `scripts/study_m3.py`: an executable explanation of nodes, directed edges, aliases, and source evidence.
@@ -183,6 +201,7 @@ GitHub Actions defines these checks for Python 3.11, 3.12, and 3.13. Fixture fil
 - `scripts/study_m6.py`: fusion arithmetic, candidate windows, parameter sensitivity, failure examples, and optional real hybrid retrieval.
 - `scripts/study_m7.py`: evidence coverage, alternative sources, budget losses, and honest interpretation of repeated fixture runs.
 - `scripts/study_m8.py`: model-proposal validation, invented quotes, replay, and the limits of mechanical source checks.
+- `scripts/study_m9.py`: the Eren/Lantern Squad lesson on answer claims, missing reports, invented citations, and incomplete support.
 - `datasets/fixtures/tiny/corpus/`: eight fictional technical documents.
 - `datasets/fixtures/tiny/gold/`: manually specified reference chunks, entities, assertions, and 20 questions.
 - `tests/`: contract validation, provenance failures, fixture integration, and CLI tests.
@@ -192,7 +211,7 @@ The fixture has 25 chunks, 15 entities, and 23 relation assertions. It includes 
 
 ## Architecture
 
-The diagram shows both implemented and planned boundaries. Source processing, deterministic and local LLM-assisted extraction, all four retrieval methods, token-budget context assembly, source-evidence metrics, and reproducible records exist through M8. Answer generation/evaluation and the real-paper comparative study remain planned.
+The diagram shows both implemented and planned boundaries. Source processing, deterministic and local LLM-assisted extraction, all four retrieval methods, token-budget context assembly, source-evidence metrics, cited answer proposals, and replayable records exist through M9. Independent answer-quality evaluation and the real-paper comparative study remain planned.
 
 ```mermaid
 flowchart TD
@@ -218,7 +237,7 @@ flowchart TD
     B --> AE
 ```
 
-Gold labels are evaluation inputs. They must never become query seeds, extraction instructions, or retrieval inputs. Fixture gold annotations may be used explicitly in isolated tests and labeled oracle diagnostics.
+Gold labels are evaluation inputs. They must never become query seeds, extraction instructions, retrieval inputs, or answer-prompt hints. Fixture gold annotations may be used explicitly in isolated tests and labeled oracle diagnostics.
 
 Read the [M0 design and experiment plan](docs/design.md), [data contracts](docs/data-contracts.md), and [fixture notes](datasets/fixtures/tiny/README.md).
 
@@ -233,7 +252,7 @@ Read the [M0 design and experiment plan](docs/design.md), [data contracts](docs/
 7. **M6:** Reciprocal rank fusion, explicit candidate windows, contribution traces, source validation, and study documentation — complete.
 8. **M7:** Source-evidence benchmark, shared context budget, repeated retrieval evaluation, saved reports, and study documentation — complete.
 9. **M8:** Local LLM-assisted extraction, source checks, inference receipts, graph replay, and study documentation — complete; the small controlled pilot is not a real-paper quality benchmark.
-10. **M9:** Answer generation with provenance and citations.
+10. **M9:** Local answer proposals, exact citation references, token-budget receipts, offline replay, and study documentation — complete; semantic correctness and abstention reliability are not established.
 11. **M10:** Real-paper pilot, independently checked annotations, and corpus expansion.
 12. **M11–M12:** Comparative experiments, ablations, and error analysis.
 13. **M13–M14:** CLI polish, documentation, charts, and release preparation; optional demonstration UI.

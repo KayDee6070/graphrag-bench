@@ -31,6 +31,10 @@ def inference_stub(monkeypatch):
             state["calls"].append(("decode", tokens, kwargs))
             return '{"entities": [], "relations": []}'
 
+        def encode(self, text, **kwargs):
+            state["calls"].append(("encode", text, kwargs))
+            return list(range(len(text)))
+
     class Model:
         def __init__(self):
             self.config = SimpleNamespace(max_position_embeddings=state["capacity"])
@@ -170,3 +174,20 @@ def test_dependencies_are_optional(monkeypatch):
     monkeypatch.setitem(sys.modules, "transformers", None)
     with pytest.raises(LLMError, match="optional torch/transformers"):
         LocalTransformersProvider(config())
+
+
+def test_evidence_count_uses_same_tokenizer_without_special_tokens(inference_stub):
+    provider = LocalTransformersProvider(config())
+    assert provider.count_tokens("source") == 6
+    assert (
+        "encode",
+        "source",
+        {"add_special_tokens": False, "truncation": False},
+    ) in inference_stub["calls"]
+
+
+def test_shared_provider_accepts_answer_messages_without_an_extraction_chunk(inference_stub):
+    from graphrag_bench.extraction.llm.contracts import Message
+
+    request = SimpleNamespace(messages=(Message(role="user", content="Answer this question."),))
+    assert LocalTransformersProvider(config()).complete(request).finish_reason == "eos"

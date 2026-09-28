@@ -2,7 +2,7 @@
 
 ## Identity and serialization
 
-Persisted project records carry `schema_version: "1.0"`. M8's raw model-proposal schema deliberately omits that field; validated proposals are converted to versioned project records. Unknown fields and unsupported schema versions are rejected. IDs are stable, explicit strings, not Python hashes or runtime object addresses. IDs allow letters, digits, underscore, period, colon, and hyphen, with an alphanumeric first character.
+Persisted project records carry `schema_version: "1.0"`. M8 and M9 raw model-proposal schemas deliberately omit that field; validated proposals are converted to versioned project records. Unknown fields and unsupported schema versions are rejected. IDs are stable, explicit strings, not Python hashes or runtime object addresses. IDs allow letters, digits, underscore, period, colon, and hyphen, with an alphanumeric first character.
 
 Records use Pydantic's frozen assignment policy. Tuple collections prevent accidental list mutation, but dictionary fields are not deeply immutable. Revalidate records after transforming their serialized data. Do not use unchecked `model_construct` or `model_copy(update=...)` to ingest external data.
 
@@ -69,6 +69,12 @@ M7 now populates `RunManifest` with raw source/question input hashes, selected-s
 M8 adds `LLMExtractionConfig`, `ProposedExtraction`, `ModelSpec`, `ExtractionRequest`, `Completion`, `ResponseRecord`, `LLMIssue`, and `LLMGraphManifest`. Responses use local entity IDs that are replaced by stable normalized-name/type IDs after validation. Quotes must match a unique contiguous interval of their chunk and contain both endpoint names. Invalid chunk-level output and rejected individual proposals are recorded separately. All retained assertions carry `review_status: unreviewed`; source checks establish coordinates, not semantic entailment.
 
 The M8 manifest hashes the graph, issues, and complete inference receipts, and binds them to ingestion hashes, the extraction recipe, model revision, environment versions, and package source hash. The graph loader reconstructs the expected prompts and replays validation without loading a model. A cached response retains the original token usage and inference duration. Source/reference checks and replay consistency are not extraction accuracy metrics. See the [M8 walkthrough](llm-extraction.md).
+
+M9 adds `GenerationConfig`, `AnswerRetrievalConfig`, `AnswerProposal`, `CitedClaim`, `Citation`, `Answer`, `TokenMeasurement`, `RetrievalReceipt`, `AnswerRequest`, `AnswerReceipt`, and `AnswerManifest`. It reuses the M8 local provider through the message-only `ChatRequest` protocol. Answer status distinguishes a structurally accepted proposal, insufficient evidence, and rejected output; every accepted claim remains `unreviewed`.
+
+Citation labels such as `S1` address selected context pieces within one answer. They are not global IDs. Quotes resolve to unique intervals inside those pieces and then to `EvidenceSpan` document/chunk coordinates. A valid span elsewhere in the document is insufficient if it was not shown to the model. A single invalid citation rejects the whole answer; partial claims are not silently salvaged.
+
+The answer manifest binds five artifacts to the original ingestion hashes and recorded provider/configuration. Replay uses the saved ranking and candidate token-count receipts to reconstruct selection and prompts, then rechecks citations and rendering. It does not rerun retrieval, tokenize independently, generate new text, or prove entailment. The nullable completion distinguishes deterministic empty-context abstention from a real model response. See the [M9 walkthrough](answer-generation.md).
 
 ## Fixture audit boundary
 
