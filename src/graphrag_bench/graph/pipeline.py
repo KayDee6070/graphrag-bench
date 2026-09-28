@@ -77,7 +77,13 @@ def build_graph_to_directory(source: Path, output: Path, rules_path: Path) -> Gr
 def load_graph(directory: Path, ingestion_directory: Path) -> KnowledgeGraph:
     """Verify artifact integrity and the original corpus before reconstructing the backend."""
     try:
-        manifest = GraphManifest.model_validate_json((directory / "manifest.json").read_bytes())
+        raw_manifest = (directory / "manifest.json").read_bytes()
+        data = json.loads(raw_manifest)
+        if isinstance(data, dict) and data.get("extractor_version") == "llm-source-proposals-v1":
+            from graphrag_bench.extraction.llm.pipeline import load_llm_graph
+
+            return load_llm_graph(directory, ingestion_directory)
+        manifest = GraphManifest.model_validate_json(raw_manifest)
         if manifest.graph_version != GRAPH_VERSION:
             raise GraphError(f"unsupported graph version: {manifest.graph_version}")
         if manifest.rules_sha256 != manifest.rules.fingerprint:

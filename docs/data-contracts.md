@@ -2,7 +2,7 @@
 
 ## Identity and serialization
 
-All records carry `schema_version: "1.0"`. Unknown fields and unsupported schema versions are rejected. IDs are stable, explicit strings, not Python hashes or runtime object addresses. IDs allow letters, digits, underscore, period, colon, and hyphen, with an alphanumeric first character.
+Persisted project records carry `schema_version: "1.0"`. M8's raw model-proposal schema deliberately omits that field; validated proposals are converted to versioned project records. Unknown fields and unsupported schema versions are rejected. IDs are stable, explicit strings, not Python hashes or runtime object addresses. IDs allow letters, digits, underscore, period, colon, and hyphen, with an alphanumeric first character.
 
 Records use Pydantic's frozen assignment policy. Tuple collections prevent accidental list mutation, but dictionary fields are not deeply immutable. Revalidate records after transforming their serialized data. Do not use unchecked `model_construct` or `model_copy(update=...)` to ingest external data.
 
@@ -65,6 +65,10 @@ M7 evaluates `BenchmarkQuestion` source coordinates independently of runtime chu
 `SelectedContext` records exact source pieces, rendered text, selected chunk IDs, overlap/budget skips, and the tokenizer count. `QuestionRun` records query/repeat identity, original retrieval and diagnostics, measured retrieval time, and cutoff evaluations. `BenchmarkSummary` includes descriptive aggregates, paired hybrid/vector differences, and a fingerprint excluding timing/diagnostics. Repeatability is null when only one repeat is available. Annotation group split checks precede filtering, and fixture labels are not promoted to held-out labels.
 
 M7 now populates `RunManifest` with raw source/question input hashes, selected-source snapshots and output checksums, full comparison settings, extraction rules, model/tokenizer specification, implementation/library versions, code provenance, and timings. The manifest is written last. The verifier checks integrity and result fingerprints, not truth, independent annotation quality, or tokenizer equivalence to an answer model. See the [M7 walkthrough](benchmark.md).
+
+M8 adds `LLMExtractionConfig`, `ProposedExtraction`, `ModelSpec`, `ExtractionRequest`, `Completion`, `ResponseRecord`, `LLMIssue`, and `LLMGraphManifest`. Responses use local entity IDs that are replaced by stable normalized-name/type IDs after validation. Quotes must match a unique contiguous interval of their chunk and contain both endpoint names. Invalid chunk-level output and rejected individual proposals are recorded separately. All retained assertions carry `review_status: unreviewed`; source checks establish coordinates, not semantic entailment.
+
+The M8 manifest hashes the graph, issues, and complete inference receipts, and binds them to ingestion hashes, the extraction recipe, model revision, environment versions, and package source hash. The graph loader reconstructs the expected prompts and replays validation without loading a model. A cached response retains the original token usage and inference duration. Source/reference checks and replay consistency are not extraction accuracy metrics. See the [M8 walkthrough](llm-extraction.md).
 
 ## Fixture audit boundary
 

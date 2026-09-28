@@ -26,6 +26,8 @@ The primary experiment will omit reranking. A later ablation can apply the same 
 
 This project studies local evidence traversal. The original Microsoft GraphRAG paper instead emphasizes global question-focused summarization with community summaries, so its results do not directly validate this hypothesis: <https://arxiv.org/abs/2404.16130>.
 
+M8 adds a separate [local LLM-assisted extraction path](llm-extraction.md). It records pinned model settings, a configurable ontology and independently written prompt examples, exact requests/responses, source checks, and replayable graph artifacts. The resulting assertions remain unreviewed. A tiny controlled source pilot checks integration and exposes model failures; real-paper extraction quality has not been established. The M7 benchmark continues to use deterministic extraction by default, and M9 answer generation has not started.
+
 ## Experiment protocol
 
 Start with approximately 30 papers and 120 manually verified questions: 40 development and 80 held out. Aim for 40 held-out two-hop questions and 40 single-hop controls. Keep related templates and evidence chains in the same split. A shared retrieval corpus is permitted; held-out labels must remain unavailable during tuning and extraction.

@@ -2,6 +2,8 @@
 
 M3 adds deterministic entity and relation extraction, conservative name resolution, and a graph builder. It consumes M2 documents and chunks. Every extracted relationship retains an exact source quote and the chunk that contains it. The current extractor uses a small, explicit grammar; it does not understand arbitrary prose or call a language model.
 
+This document describes the deterministic baseline. M8 adds a separate [local language-model extractor](llm-extraction.md), with saved proposals, source checks, and offline replay.
+
 ## 1. Start here: the nontechnical explanation
 
 Imagine several books on a desk. M1 gave us standard record cards for describing their contents. M2 copied the text into manageable pieces and wrote down where each piece came from. M3 now draws a map of the named things and the connections explicitly described in those pieces.

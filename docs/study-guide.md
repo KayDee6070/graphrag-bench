@@ -1,6 +1,6 @@
 # Study guide: understanding the project incrementally
 
-The project currently implements M1–M7. In everyday terms: M1 defines our record cards, M2 divides documents into traceable pieces, M3 draws connections, M4 finds pieces by comparing numerical text representations, M5 follows the connections to collect evidence, M6 combines the two search lists, and M7 checks whether the selected passages contain the facts needed to answer. Every method keeps the source receipts. Start with the working data flow rather than reading every model at once.
+The project currently implements M1–M8. In everyday terms: M1 defines our record cards, M2 divides documents into traceable pieces, M3 draws connections, M4 finds pieces by comparing numerical text representations, M5 follows the connections to collect evidence, M6 combines the two search lists, M7 checks whether the selected passages contain the facts needed to answer, and M8 asks a local language model to propose connections with source receipts. Start with the working data flow rather than reading every model at once.
 
 ## First session: what the project is testing
 
@@ -95,13 +95,25 @@ Run the full benchmark after the optional model setup. Read `report.md`, then in
 
 Inspect the [first fixture observation report](../reports/m7-fixture.md). Vector and hybrid have equal totals, but hybrid improves q10 and regresses on q13 at K=5. Explain why neither that tie nor three repeated runs establishes a general result for real papers. These twenty questions were used during development and remain fixtures.
 
+## Tenth session: separate a model's proposal from a verified fact
+
+Read the [M8 walkthrough](llm-extraction.md), then run `.venv/bin/python scripts/study_m8.py`. Explain why an invented quote is rejected, but a reversed relation with a genuine quote can pass mechanical checks. Locate the `unreviewed` marker on a saved assertion and explain why it does not automatically exclude the assertion from graph retrieval.
+
+Inspect the [actual local-model observations](../reports/m8-local.md). Separate malformed output, bad source references, and wrong interpretations. Compare a fresh inference run with an offline replay. Explain why identical replayed graphs do not demonstrate model reliability or independent extraction quality.
+
+The configured prompt examples are independently written development examples. They teach the output format; they must never be populated from held-out question labels. M8's controlled pilot does not replace the real-paper study.
+
 ## Explain the current system in an interview
 
-A precise description at M7 is:
+A precise description through M7 is:
 
 > I implemented vector, lexical, graph, and hybrid retrieval, then built a source-evidence benchmark with a shared token budget and reproducible run records. It measures complete evidence and partial fact coverage, accepts alternative sufficient sources, and reports paired gains and losses. On twenty synthetic fixture questions, hybrid tied vector overall while helping one question and hurting another at K=5. The real-paper study remains future work, so I do not yet claim a general retrieval improvement.
 
 Avoid claiming a complete GraphRAG system or measured retrieval improvements at this stage. Later milestones will add those capabilities and their evidence.
+
+The M8 addition is:
+
+> I added a local language-model extractor behind a provider interface. It validates structured proposals, aligns exact source quotes, records failures, and saves requests and responses for offline replay. I explicitly distinguish source-reference validity from semantic correctness; the latter still needs independent review. The extracted graph integrates with the graph and hybrid search paths.
 
 ## Terminology to keep distinct
 
