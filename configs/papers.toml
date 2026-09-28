@@ -1,0 +1,7 @@
+# Measured on the three pinned M10 PDFs with the pinned M4 tokenizer:
+# 693 chunks, maximum 335 tokens including special tokens (encoder limit 384).
+# A character limit is not a universal token guarantee. Preflight every new corpus.
+[chunking]
+max_chars = 600
+max_units = 5
+overlap_units = 1

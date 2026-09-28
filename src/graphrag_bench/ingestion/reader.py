@@ -7,9 +7,11 @@ from pathlib import Path
 from pydantic import ValidationError
 
 from graphrag_bench.corpus import CorpusError, CorpusIndex
+from graphrag_bench.ingestion.chunker import CHUNKER_VERSION
 from graphrag_bench.ingestion.pipeline import IngestionBatch, IngestionManifest
 from graphrag_bench.ingestion.types import IngestionError
 from graphrag_bench.models import Chunk, Document
+from graphrag_bench.papers.pdf import PDF_PARSER_VERSION, validate_page_chunks
 
 
 def load_ingestion(directory: Path) -> tuple[IngestionBatch, dict[str, str]]:
@@ -55,6 +57,12 @@ def load_ingestion(directory: Path) -> tuple[IngestionBatch, dict[str, str]]:
                 raise IngestionError("source sections must cover the document")
             if not corpus.by_document[source.document_id]:
                 raise IngestionError("every ingested document must have chunks")
+            if source.format == "pdf":
+                if manifest.parser_version != PDF_PARSER_VERSION:
+                    raise IngestionError("unsupported PDF parser version")
+                if manifest.chunker_version != CHUNKER_VERSION:
+                    raise IngestionError("unsupported PDF chunker version")
+                validate_page_chunks(source, corpus.by_document[source.document_id])
         hashes["manifest.json"] = sha256(raw_manifest).hexdigest()
         return IngestionBatch(
             documents, chunks, manifest.sources, manifest.ignored_files, manifest.chunking

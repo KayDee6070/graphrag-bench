@@ -79,7 +79,9 @@ def ingest_directory(root: Path, config: ChunkingConfig | None = None) -> Ingest
     return IngestionBatch(tuple(documents), tuple(chunks), tuple(sources), ignored, config)
 
 
-def write_artifacts(batch: IngestionBatch, output: Path) -> IngestionManifest:
+def write_artifacts(
+    batch: IngestionBatch, output: Path, *, parser_version: str = PARSER_VERSION
+) -> IngestionManifest:
     """Create a new directory; write the manifest last as the completion marker.
 
     Existing directories are never reused. An I/O failure may leave a partial
@@ -91,7 +93,7 @@ def write_artifacts(batch: IngestionBatch, output: Path) -> IngestionManifest:
     }
     manifest = IngestionManifest(
         package_version=__version__,
-        parser_version=PARSER_VERSION,
+        parser_version=parser_version,
         chunker_version=CHUNKER_VERSION,
         chunking=batch.config,
         document_count=len(batch.documents),

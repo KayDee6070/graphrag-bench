@@ -37,7 +37,7 @@ class Section(Record):
 class SourceRecord(Record):
     document_id: Identifier
     relative_path: Text
-    format: Literal["text", "markdown"]
+    format: Literal["text", "markdown", "pdf"]
     raw_sha256: Sha256
     raw_bytes: PositiveInt
     had_utf8_bom: bool

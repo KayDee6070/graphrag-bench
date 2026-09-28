@@ -47,6 +47,9 @@ from graphrag_bench.ingestion.pipeline import ingest_to_directory
 from graphrag_bench.ingestion.reader import load_ingestion
 from graphrag_bench.ingestion.types import IngestionError
 from graphrag_bench.models import RetrievalResult
+from graphrag_bench.papers.acquire import fetch_papers
+from graphrag_bench.papers.catalog import PaperError, load_catalog
+from graphrag_bench.papers.pipeline import PaperManifest, prepare_papers, verify_papers
 from graphrag_bench.retrieval.artifacts import (
     build_vector_to_directory,
     load_vector_index,
@@ -59,6 +62,17 @@ from graphrag_bench.retrieval.hybrid import HybridRetriever
 from graphrag_bench.retrieval.hybrid_config import load_hybrid_retrieval_config
 from graphrag_bench.retrieval.linking import QueryLink
 from graphrag_bench.retrieval.vector import RetrievalError, validate_request
+
+
+def _paper_summary(manifest: PaperManifest) -> dict[str, str | int]:
+    return {
+        "documents": manifest.document_count,
+        "pages": manifest.page_count,
+        "chunks": manifest.chunk_count,
+        "questions": manifest.question_count,
+        "split": manifest.split,
+        "review_status": manifest.review_status,
+    }
 
 
 def _ingest(args: argparse.Namespace) -> dict[str, str | int]:
@@ -449,9 +463,46 @@ def main(argv: list[str] | None = None) -> int:
     replay_answer.add_argument("directory", type=Path)
     replay_answer.add_argument("--source", type=Path, required=True)
     replay_answer.add_argument("--output", type=Path, required=True)
+    fetch = commands.add_parser("fetch-papers", help="download only catalog-pinned PDF snapshots")
+    fetch.add_argument("--catalog", type=Path, required=True)
+    fetch.add_argument("--output", type=Path, required=True, help="raw PDF cache directory")
+    papers = commands.add_parser(
+        "prepare-papers", help="parse cached papers and compile dev labels"
+    )
+    papers.add_argument("--catalog", type=Path, required=True)
+    papers.add_argument("--annotations", type=Path, required=True)
+    papers.add_argument("--raw", type=Path, required=True, help="verified local PDF cache")
+    papers.add_argument("--output", type=Path, required=True, help="new paper bundle directory")
+    papers.add_argument("--config", type=Path, help="TOML chunking settings")
+    verify_paper = commands.add_parser("verify-papers", help="verify a saved paper bundle offline")
+    verify_paper.add_argument("directory", type=Path)
+    verify_paper.add_argument(
+        "--raw", type=Path, help="also re-extract original PDFs (requires pypdf)"
+    )
     args = parser.parse_args(argv)
     try:
-        if args.command == "ingest":
+        if args.command == "fetch-papers":
+            summary = {"status": "fetched", **fetch_papers(load_catalog(args.catalog), args.output)}
+        elif args.command == "prepare-papers":
+            summary = {
+                "status": "prepared",
+                **_paper_summary(
+                    prepare_papers(
+                        args.catalog,
+                        args.annotations,
+                        args.raw,
+                        args.output,
+                        load_chunking_config(args.config),
+                    )
+                ),
+            }
+        elif args.command == "verify-papers":
+            summary = {
+                "status": "valid",
+                "raw_verified": args.raw is not None,
+                **_paper_summary(verify_papers(args.directory, raw_directory=args.raw)),
+            }
+        elif args.command == "ingest":
             summary = _ingest(args)
         elif args.command == "build-graph":
             summary = _build_graph(args)
@@ -501,6 +552,7 @@ def main(argv: list[str] | None = None) -> int:
         RetrievalError,
         BenchmarkError,
         GenerationError,
+        PaperError,
     ) as error:
         print(f"error: {error}", file=sys.stderr)
         return 1

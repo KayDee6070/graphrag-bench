@@ -76,6 +76,14 @@ Citation labels such as `S1` address selected context pieces within one answer. 
 
 The answer manifest binds five artifacts to the original ingestion hashes and recorded provider/configuration. Replay uses the saved ranking and candidate token-count receipts to reconstruct selection and prompts, then rechecks citations and rendering. It does not rerun retrieval, tokenize independently, generate new text, or prove entailment. The nullable completion distinguishes deterministic empty-context abstention from a real model response. See the [M9 walkthrough](answer-generation.md).
 
+## Real-paper pilot boundary
+
+M10 adds `Paper`, `PaperCatalog`, `QuoteLocator`, `FactAnnotation`, `QuestionAnnotation`, `AnnotationBook`, and `PaperManifest`. Catalog entries require versioned arXiv identifiers, byte hashes/counts, authors, and explicit supported source licenses. The small-pilot acquisition limits are 10 papers, 16 MB per PDF, and 32 MB total. Downloads and parsing are separate commands.
+
+`SourceRecord.format` now also accepts `pdf`. The paper parser is `pypdf-6.19.0-plain-pages-v1`; text/Markdown behavior is unchanged. Its sections partition canonical extracted text by physical PDF page, with a three-character `\n\f\n` separator after each page. Page-numbered chunks cannot cross section boundaries. The ingestion reader validates these page references without importing pypdf. Raw hashes refer to original PDF bytes; document hashes and character offsets refer to the derived text. Empty pages retain their positions even if they yield no chunks.
+
+Paper annotations resolve exact unique page-local quotes into normal `EvidenceSpan` records without chunk IDs. Required document counts are computed across annotated sufficient sets; they do not prove the absence of unannotated shortcuts. The compiler accepts only the pilot's `dev` split and `pending-independent-review` status. Graph extraction and retrieval never read these annotations. The bundle binds the source catalog, annotations, compiled questions, review worksheet, attribution, and ingestion artifacts with checksums. Offline verification reconstructs chunks and labels; optional raw verification repeats extraction. Neither mode proves semantic correctness or independent review. See the [M10 walkthrough](real-paper-corpus.md).
+
 ## Fixture audit boundary
 
 `load_fixture` checks manifest hashes, individual schemas, unique IDs, ontology membership, document/chunk references, exact source slices, entity mention surfaces, relation endpoints, benchmark evidence, and split-group consistency. Errors from JSONL parsing include filename and line number.

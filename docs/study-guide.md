@@ -1,6 +1,6 @@
 # Study guide: understanding the project incrementally
 
-The project currently implements M1–M9. In everyday terms: M1 defines our record cards, M2 divides documents into traceable pieces, M3 draws connections, M4 finds pieces by comparing numerical text representations, M5 follows the connections to collect evidence, M6 combines the two search lists, M7 checks whether the selected passages contain the facts needed to answer, M8 asks a local language model to propose connections with source receipts, and M9 asks a local writer to propose an answer with citations. Start with the working data flow rather than reading every model at once.
+The project currently implements M1–M9 and the M10 real-paper pilot. In everyday terms: M1 defines our record cards, M2 divides documents into traceable pieces, M3 draws connections, M4 finds pieces by comparing numerical text representations, M5 follows the connections to collect evidence, M6 combines the two search lists, M7 checks whether the selected passages contain the facts needed to answer, M8 asks a local language model to propose connections with source receipts, M9 asks a local writer to propose an answer with citations, and M10 introduces real research reports with separate draft answer sheets. Start with the working data flow rather than reading every model at once.
 
 ## First session: what the project is testing
 
@@ -111,13 +111,21 @@ Inspect the [actual M9 observations](../reports/m9-local.md). Find the invented 
 
 Open one `request.json`, `receipt.json`, and `answer.json`. Follow a citation label to its selected source piece and absolute character coordinates. Explain what replay verifies and what still requires independent human annotation.
 
+## Twelfth session: real reports and the separate answer sheet
+
+Read the [M10 walkthrough](real-paper-corpus.md), then run `.venv/bin/python scripts/study_m10.py`. Start with the reading box (corpus) and exam box (benchmark). Explain why changing a reference answer must not change the searchable documents.
+
+Open `datasets/papers/pilot/catalog.json` and find a paper's version, fingerprint, authors, and license. In the prepared bundle, follow `paper-c01` from `review.md` to the two physical PDF pages. Explain why this comparison requires two annotated documents but is not a hidden two-hop chain.
+
+Read the [M10 observations](../reports/m10-pilot.md). Explain why the 800-character chunks failed the encoder limit and why 600 characters is only a measured setting for these papers. Distinguish a reproducible corpus from an independently reviewed benchmark and from a demonstrated retrieval improvement.
+
 ## Explain the current system in an interview
 
 A precise description through M7 is:
 
 > I implemented vector, lexical, graph, and hybrid retrieval, then built a source-evidence benchmark with a shared token budget and reproducible run records. It measures complete evidence and partial fact coverage, accepts alternative sufficient sources, and reports paired gains and losses. On twenty synthetic fixture questions, hybrid tied vector overall while helping one question and hurting another at K=5. The real-paper study remains future work, so I do not yet claim a general retrieval improvement.
 
-Avoid claiming demonstrated improvements on real papers or independently verified answer correctness. Later milestones will supply the corpus and comparative evidence needed to assess those claims.
+Avoid claiming demonstrated improvements on real papers or independently verified answer correctness. A small real corpus now exists; expansion, independent annotation review, and comparative evidence remain necessary.
 
 The M8 addition is:
 
@@ -126,6 +134,10 @@ The M8 addition is:
 The M9 addition is:
 
 > I connected the retrievers to a shared local answer generator with evidence budgeting and claim-level citations. It records the full prompt, response, and exact source coordinates for replay. I documented that a small model can produce an unsupported answer despite citing real text, so I do not equate citation validity with answer quality.
+
+The M10 pilot addition is:
+
+> I added version-pinned PDF acquisition, page-preserving text extraction, source attribution, and a separate compiler for development questions. I validated a three-paper corpus and documented a real tokenizer-limit failure. I preserve exact source coordinates while keeping draft labels out of the searchable corpus. Independent annotation review and corpus expansion remain necessary before the full comparative study.
 
 ## Terminology to keep distinct
 
@@ -142,6 +154,9 @@ The M9 addition is:
 - **Candidate window:** how many results from one method enter fusion, before the final selection.
 - **Rank fusion:** combine ordered lists using positions rather than incompatible raw scores.
 - **Gold evidence:** manually annotated source facts used by the evaluator, not supplied as hints to retrieval.
+- **Draft evidence labels:** source-authored annotations awaiting independent review; the M10 pilot uses this status.
+- **Corpus:** the documents available to retrieval and extraction.
+- **Benchmark:** the questions and reference evidence used to evaluate the system.
 - **Evidence coverage:** fraction of required facts fully supported within one annotated sufficient set; take the best valid alternative.
 - **Complete evidence:** every necessary fact from at least one sufficient set is present.
 - **Context budget:** a limit on selected evidence under a specified tokenizer and rendering policy.

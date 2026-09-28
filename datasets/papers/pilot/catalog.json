@@ -1,0 +1,36 @@
+{
+  "catalog_id": "rag-papers-pilot-v1",
+  "purpose": "development-pilot",
+  "papers": [
+    {
+      "paper_id": "graphrag",
+      "arxiv_version": "2404.16130v2",
+      "title": "From Local to Global: A Graph RAG Approach to Query-Focused Summarization",
+      "authors": ["Darren Edge", "Ha Trinh", "Newman Cheng", "Joshua Bradley", "Alex Chao", "Apurva Mody", "Steven Truitt", "Dasha Metropolitansky", "Robert Osazuwa Ness", "Jonathan Larson"],
+      "license_id": "CC-BY-4.0",
+      "metadata_checked_on": "2026-09-28",
+      "pdf_sha256": "730f1a9f38d16689900969a3eeeb1b31e45eda1dcc1f37a043afa90aff76c867",
+      "pdf_bytes": 6893854
+    },
+    {
+      "paper_id": "raptor",
+      "arxiv_version": "2401.18059v1",
+      "title": "RAPTOR: Recursive Abstractive Processing for Tree-Organized Retrieval",
+      "authors": ["Parth Sarthi", "Salman Abdullah", "Aditi Tuli", "Shubh Khanna", "Anna Goldie", "Christopher D. Manning"],
+      "license_id": "CC-BY-4.0",
+      "metadata_checked_on": "2026-09-28",
+      "pdf_sha256": "01319e2e6e6ecfd504ee1bbda41d023f9e060bd3505ab3c161baa1d6d696cf75",
+      "pdf_bytes": 2547113
+    },
+    {
+      "paper_id": "lightrag",
+      "arxiv_version": "2410.05779v3",
+      "title": "LightRAG: Simple and Fast Retrieval-Augmented Generation",
+      "authors": ["Zirui Guo", "Lianghao Xia", "Yanhua Yu", "Tu Ao", "Chao Huang"],
+      "license_id": "CC-BY-NC-SA-4.0",
+      "metadata_checked_on": "2026-09-28",
+      "pdf_sha256": "bd72eebf611df1366b251c16ce4eac7aac699e519783c586feb2c5c43899347a",
+      "pdf_bytes": 1123301
+    }
+  ]
+}

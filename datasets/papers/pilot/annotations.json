@@ -1,0 +1,363 @@
+{
+  "catalog_id": "rag-papers-pilot-v1",
+  "split": "dev",
+  "authorship": "agent-source-authored",
+  "review_status": "pending-independent-review",
+  "questions": [
+    {
+      "question_id": "paper-g01",
+      "question": "Which community detection algorithm does the GraphRAG pipeline apply hierarchically?",
+      "question_type": "factual",
+      "expected_answer": "Leiden community detection.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "graphrag-clustering",
+            "statement": "GraphRAG recursively applies Leiden community detection.",
+            "spans": [
+              {
+                "paper_id": "graphrag",
+                "page": 5,
+                "quote": "In our pipeline, we use Leiden community\ndetection (Traag et al., 2019) in a hierarchical manner, recursively detecting sub-communities within\neach detected community until reaching leaf communities that can no longer be partitioned."
+              }
+            ]
+          }
+        ]
+      ],
+      "reasoning_hops": 1,
+      "difficulty": "easy",
+      "group_id": "rag-pilot-connected-methods",
+      "rationale": "Direct statement in the method's own paper. One direct relation, not a hidden bridge. Selected supporting evidence is not an exhaustive relevance judgment."
+    },
+    {
+      "question_id": "paper-g02",
+      "question": "How does the GraphRAG manuscript reconcile different extracted names for the same entity?",
+      "question_type": "relationship",
+      "expected_answer": "It uses exact string matching for entity matching in the reported analysis.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "graphrag-matching",
+            "statement": "The manuscript uses exact string matching for entity matching.",
+            "spans": [
+              {
+                "paper_id": "graphrag",
+                "page": 5,
+                "quote": "In this manuscript, our analysis uses exact string matching forentity matching – the task of reconcil-\ning different extracted names for the same entity"
+              }
+            ]
+          }
+        ]
+      ],
+      "reasoning_hops": 1,
+      "difficulty": "easy",
+      "group_id": "rag-pilot-connected-methods",
+      "rationale": "Direct statement in the method's own paper. One direct relation, not a hidden bridge. Selected supporting evidence is not an exhaustive relevance judgment."
+    },
+    {
+      "question_id": "paper-g03",
+      "question": "What determines the edge weights when GraphRAG aggregates duplicate relationships?",
+      "question_type": "relationship",
+      "expected_answer": "The number of duplicates for a given relationship becomes its edge weight.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "graphrag-weights",
+            "statement": "The number of duplicate relationships becomes graph edge weights.",
+            "spans": [
+              {
+                "paper_id": "graphrag",
+                "page": 5,
+                "quote": "Relationships are aggregated into graph edges, where the num-\nber of duplicates for a given relationship becomes edge weights."
+              }
+            ]
+          }
+        ]
+      ],
+      "reasoning_hops": 1,
+      "difficulty": "easy",
+      "group_id": "rag-pilot-connected-methods",
+      "rationale": "Direct statement in the method's own paper. One direct relation, not a hidden bridge. Selected supporting evidence is not an exhaustive relevance judgment."
+    },
+    {
+      "question_id": "paper-r01",
+      "question": "Which SBERT encoder does RAPTOR use for its initial text chunks?",
+      "question_type": "factual",
+      "expected_answer": "multi-qa-mpnet-base-cos-v1.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "raptor-encoder",
+            "statement": "RAPTOR embeds initial text chunks using SBERT multi-qa-mpnet-base-cos-v1.",
+            "spans": [
+              {
+                "paper_id": "raptor",
+                "page": 3,
+                "quote": "These texts\nare then embedded using SBERT, a BERT-based encoder ( multi-qa-mpnet-base-cos-v1)\n(Reimers & Gurevych, 2019)."
+              }
+            ]
+          }
+        ]
+      ],
+      "reasoning_hops": 1,
+      "difficulty": "easy",
+      "group_id": "rag-pilot-connected-methods",
+      "rationale": "Direct statement in the method's own paper. One direct relation, not a hidden bridge. Selected supporting evidence is not an exhaustive relevance judgment."
+    },
+    {
+      "question_id": "paper-r02",
+      "question": "Which probabilistic model underlies RAPTOR's clustering algorithm?",
+      "question_type": "factual",
+      "expected_answer": "Gaussian Mixture Models (GMMs).",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "raptor-clustering",
+            "statement": "RAPTOR uses Gaussian Mixture Models for clustering.",
+            "spans": [
+              {
+                "paper_id": "raptor",
+                "page": 3,
+                "quote": "Our clustering algorithm is based on Gaussian Mixture Models (GMMs), an approach that offers\nboth flexibility and a probabilistic framework."
+              }
+            ]
+          }
+        ]
+      ],
+      "reasoning_hops": 1,
+      "difficulty": "easy",
+      "group_id": "rag-pilot-connected-methods",
+      "rationale": "Direct statement in the method's own paper. One direct relation, not a hidden bridge. Selected supporting evidence is not an exhaustive relevance judgment."
+    },
+    {
+      "question_id": "paper-r03",
+      "question": "What are RAPTOR's two querying strategies, and how do they differ?",
+      "question_type": "factual",
+      "expected_answer": "Tree traversal selects nodes layer by layer; collapsed tree considers nodes across all layers together.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "raptor-querying",
+            "statement": "RAPTOR describes tree traversal and collapsed tree querying.",
+            "spans": [
+              {
+                "paper_id": "raptor",
+                "page": 3,
+                "quote": "For querying within this tree, we introduce two distinct strategies: tree traversal and collapsed tree.\nThe tree traversal method traverses the tree layer-by-layer, pruning and selecting the most relevant\nnodes at each level. The collapsed tree method evaluates nodes collectively across all layers to find\nthe most relevant ones."
+              }
+            ]
+          }
+        ]
+      ],
+      "reasoning_hops": 1,
+      "difficulty": "easy",
+      "group_id": "rag-pilot-connected-methods",
+      "rationale": "Direct statement in the method's own paper. One direct relation, not a hidden bridge. Selected supporting evidence is not an exhaustive relevance judgment."
+    },
+    {
+      "question_id": "paper-l01",
+      "question": "What do the low-level and high-level retrieval stages in LightRAG target?",
+      "question_type": "factual",
+      "expected_answer": "Low-level retrieval targets specific entities and their attributes or relationships; high-level retrieval targets broader themes across related entities and relationships.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "lightrag-low",
+            "statement": "LightRAG low-level retrieval targets specific entities and their attributes or relationships.",
+            "spans": [
+              {
+                "paper_id": "lightrag",
+                "page": 4,
+                "quote": "Low-Level Retrieval. This level is primarily focused on retrieving specific entities along with their\nassociated attributes or relationships."
+              }
+            ]
+          },
+          {
+            "fact_id": "lightrag-high",
+            "statement": "LightRAG high-level retrieval addresses broader topics and themes across related entities and relationships.",
+            "spans": [
+              {
+                "paper_id": "lightrag",
+                "page": 4,
+                "quote": "High-Level Retrieval. This level addresses broader topics and overarching themes. Queries at this\nlevel aggregate information across multiple related entities and relationships, providing insights\ninto higher-level concepts and summaries rather than specific details."
+              }
+            ]
+          }
+        ]
+      ],
+      "reasoning_hops": 1,
+      "difficulty": "medium",
+      "group_id": "rag-pilot-connected-methods",
+      "rationale": "Two directly stated complementary facts on one PDF page. Both levels are required for a complete answer; this is not a multi-hop graph chain."
+    },
+    {
+      "question_id": "paper-l02",
+      "question": "Does LightRAG require complete external-database reprocessing to incorporate new knowledge?",
+      "question_type": "factual",
+      "expected_answer": "No. The paper describes incremental knowledge-base updates without complete reprocessing.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "lightrag-updates",
+            "statement": "LightRAG incrementally updates the knowledge base without complete database reprocessing.",
+            "spans": [
+              {
+                "paper_id": "lightrag",
+                "page": 4,
+                "quote": "our LightRAG incrementally updates the knowledge\nbase without the need for complete reprocessing of the entire external database."
+              }
+            ]
+          }
+        ]
+      ],
+      "reasoning_hops": 1,
+      "difficulty": "easy",
+      "group_id": "rag-pilot-connected-methods",
+      "rationale": "Direct statement in the method's own paper. One direct relation, not a hidden bridge. Selected supporting evidence is not an exhaustive relevance judgment."
+    },
+    {
+      "question_id": "paper-l03",
+      "question": "What does LightRAG match local and global query keywords against?",
+      "question_type": "relationship",
+      "expected_answer": "Local keywords match candidate entities; global keywords match relations linked to global keys.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "lightrag-keywords",
+            "statement": "LightRAG vector matching maps local keywords to entities and global keywords to relations linked to global keys.",
+            "spans": [
+              {
+                "paper_id": "lightrag",
+                "page": 4,
+                "quote": "The algorithm uses an efficient vector database to match local query\nkeywords with candidate entities and global query keywords with relations linked to global keys."
+              }
+            ]
+          }
+        ]
+      ],
+      "reasoning_hops": 1,
+      "difficulty": "easy",
+      "group_id": "rag-pilot-connected-methods",
+      "rationale": "Direct statement in the method's own paper. One direct relation, not a hidden bridge. Selected supporting evidence is not an exhaustive relevance judgment."
+    },
+    {
+      "question_id": "paper-c01",
+      "question": "According to their respective methods sections, which grouping algorithms do GraphRAG and RAPTOR use?",
+      "question_type": "comparison",
+      "expected_answer": "GraphRAG uses hierarchical Leiden community detection; RAPTOR uses Gaussian Mixture Models for clustering.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "graphrag-clustering",
+            "statement": "GraphRAG recursively applies Leiden community detection.",
+            "spans": [
+              {
+                "paper_id": "graphrag",
+                "page": 5,
+                "quote": "In our pipeline, we use Leiden community\ndetection (Traag et al., 2019) in a hierarchical manner, recursively detecting sub-communities within\neach detected community until reaching leaf communities that can no longer be partitioned."
+              }
+            ]
+          },
+          {
+            "fact_id": "raptor-clustering",
+            "statement": "RAPTOR uses Gaussian Mixture Models for clustering.",
+            "spans": [
+              {
+                "paper_id": "raptor",
+                "page": 3,
+                "quote": "Our clustering algorithm is based on Gaussian Mixture Models (GMMs), an approach that offers\nboth flexibility and a probabilistic framework."
+              }
+            ]
+          }
+        ]
+      ],
+      "reasoning_hops": 1,
+      "difficulty": "medium",
+      "group_id": "rag-pilot-connected-methods",
+      "rationale": "Two direct facts from the respective primary papers are compared. This is a two-document comparison with reasoning_hops=1, not a two-edge bridge chain. The minimum document count is relative to the annotated evidence sets; independent review must check corpus shortcuts and alternative evidence."
+    },
+    {
+      "question_id": "paper-c02",
+      "question": "According to their respective methods sections, how do GraphRAG's entity matching and LightRAG's query keyword matching differ?",
+      "question_type": "comparison",
+      "expected_answer": "GraphRAG's reported entity matching uses exact strings; LightRAG uses vector matching of local query keywords to entities and global query keywords to relations.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "graphrag-matching",
+            "statement": "The manuscript uses exact string matching for entity matching.",
+            "spans": [
+              {
+                "paper_id": "graphrag",
+                "page": 5,
+                "quote": "In this manuscript, our analysis uses exact string matching forentity matching – the task of reconcil-\ning different extracted names for the same entity"
+              }
+            ]
+          },
+          {
+            "fact_id": "lightrag-keywords",
+            "statement": "LightRAG vector matching maps local keywords to entities and global keywords to relations linked to global keys.",
+            "spans": [
+              {
+                "paper_id": "lightrag",
+                "page": 4,
+                "quote": "The algorithm uses an efficient vector database to match local query\nkeywords with candidate entities and global query keywords with relations linked to global keys."
+              }
+            ]
+          }
+        ]
+      ],
+      "reasoning_hops": 1,
+      "difficulty": "medium",
+      "group_id": "rag-pilot-connected-methods",
+      "rationale": "Two direct facts from the respective primary papers are compared. This is a two-document comparison with reasoning_hops=1, not a two-edge bridge chain. The minimum document count is relative to the annotated evidence sets; independent review must check corpus shortcuts and alternative evidence. These operations happen at different pipeline stages; the question does not claim equivalent tasks or compare accuracy."
+    },
+    {
+      "question_id": "paper-c03",
+      "question": "What querying choices does RAPTOR describe, and what retrieval levels does LightRAG describe in their own methods sections?",
+      "question_type": "comparison",
+      "expected_answer": "RAPTOR describes tree traversal and collapsed tree querying. LightRAG distinguishes low-level entity details from high-level themes.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "raptor-querying",
+            "statement": "RAPTOR describes tree traversal and collapsed tree querying.",
+            "spans": [
+              {
+                "paper_id": "raptor",
+                "page": 3,
+                "quote": "For querying within this tree, we introduce two distinct strategies: tree traversal and collapsed tree.\nThe tree traversal method traverses the tree layer-by-layer, pruning and selecting the most relevant\nnodes at each level. The collapsed tree method evaluates nodes collectively across all layers to find\nthe most relevant ones."
+              }
+            ]
+          },
+          {
+            "fact_id": "lightrag-low",
+            "statement": "LightRAG low-level retrieval targets specific entities and their attributes or relationships.",
+            "spans": [
+              {
+                "paper_id": "lightrag",
+                "page": 4,
+                "quote": "Low-Level Retrieval. This level is primarily focused on retrieving specific entities along with their\nassociated attributes or relationships."
+              }
+            ]
+          },
+          {
+            "fact_id": "lightrag-high",
+            "statement": "LightRAG high-level retrieval addresses broader topics and themes across related entities and relationships.",
+            "spans": [
+              {
+                "paper_id": "lightrag",
+                "page": 4,
+                "quote": "High-Level Retrieval. This level addresses broader topics and overarching themes. Queries at this\nlevel aggregate information across multiple related entities and relationships, providing insights\ninto higher-level concepts and summaries rather than specific details."
+              }
+            ]
+          }
+        ]
+      ],
+      "reasoning_hops": 1,
+      "difficulty": "medium",
+      "group_id": "rag-pilot-connected-methods",
+      "rationale": "Two direct facts from the respective primary papers are compared. This is a two-document comparison with reasoning_hops=1, not a two-edge bridge chain. The minimum document count is relative to the annotated evidence sets; independent review must check corpus shortcuts and alternative evidence."
+    }
+  ]
+}

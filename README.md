@@ -4,7 +4,7 @@ When does graph-based retrieval outperform vector retrieval for questions requir
 
 GraphRAG Bench is a small research-engineering project for comparing vector, graph, and hybrid retrieval under the same evidence budget. Retrieval quality will be measured independently of answer generation.
 
-**Current milestone: M9 — local answer generation with citations.** All four retrieval strategies now feed the same answer pipeline, with evidence budgeting, claim-level source quotes, explicit abstention/rejection states, saved inference receipts, and offline replay. Citation checks establish source references, not answer correctness: the small local model still produces unsupported answers and incomplete citation chains. Both graph assertions and answer claims remain unreviewed. Real-paper answer-quality evaluation and the comparative study remain future work.
+**Current milestone: M10 — real-paper development pilot implemented.** Three pinned research papers now produce 65 traceable PDF pages, 693 chunks, and 12 source-authored development questions. Acquisition, page provenance, annotation compilation, offline verification, and retrieval integration are implemented. Independent annotation review and corpus expansion remain open before the full M11 study. Graph assertions and generated answers remain unreviewed; citation checks establish source references, not answer correctness. No real-paper retrieval advantage has been established.
 
 ## Quick start
 
@@ -169,6 +169,24 @@ cat experiments/runs/m9-example/answer.md
 
 The [M9 walkthrough](docs/answer-generation.md) explains all four strategies, exact citation checks, token budgets, and replay limits. The [local observation report](reports/m9-local.md) includes an invented score that passed reference checks; `answered` is not an independent correctness judgment. The Scout lesson works without model weights or neural dependencies.
 
+## Prepare the real-paper pilot
+
+```bash
+.venv/bin/python -m pip install --no-build-isolation -e '.[papers]'
+.venv/bin/graphrag-bench fetch-papers \
+  --catalog datasets/papers/pilot/catalog.json --output datasets/raw/m10-pilot
+.venv/bin/graphrag-bench prepare-papers \
+  --catalog datasets/papers/pilot/catalog.json \
+  --annotations datasets/papers/pilot/annotations.json \
+  --raw datasets/raw/m10-pilot --config configs/papers.toml \
+  --output datasets/processed/my-paper-pilot
+.venv/bin/graphrag-bench verify-papers datasets/processed/my-paper-pilot \
+  --raw datasets/raw/m10-pilot
+.venv/bin/python scripts/study_m10.py
+```
+
+`fetch-papers` explicitly downloads about 10.6 MB from arXiv; preparation and verification are local. Use a fresh prepared-output directory. The [M10 walkthrough](docs/real-paper-corpus.md), [data card and licensing notice](datasets/papers/pilot/README.md), and [observation report](reports/m10-pilot.md) explain the exact boundaries. All pilot labels are `dev` and pending independent review. Downloaded PDFs and generated artifacts stay ignored. Paper content retains its source license; LightRAG uses CC BY-NC-SA 4.0.
+
 ## Development checks
 
 ```bash
@@ -185,6 +203,7 @@ GitHub Actions defines these checks for Python 3.11, 3.12, and 3.13. Fixture fil
 - `src/graphrag_bench/models.py`: documents, chunks, entities, relation assertions, evidence, benchmark questions, retrieval results, and run manifests.
 - `src/graphrag_bench/fixtures.py`: JSONL loading, integrity validation, and fixture-specific ontology configuration.
 - `src/graphrag_bench/ingestion/`: text/Markdown parsing, sentence-window chunking, and deterministic exports.
+- `src/graphrag_bench/papers/`: pinned PDF acquisition, physical-page provenance, separate development annotations, attribution, and offline bundle verification.
 - `src/graphrag_bench/corpus.py` and `ingestion/reader.py`: cross-record source validation and verified ingestion artifact loading.
 - `src/graphrag_bench/extraction/`: configurable statement rules, conservative name resolution, mentions, and diagnostics.
 - `src/graphrag_bench/extraction/llm/`: optional local inference, structured proposals, source validation, response caching, and replayable graph artifacts.
@@ -202,6 +221,8 @@ GitHub Actions defines these checks for Python 3.11, 3.12, and 3.13. Fixture fil
 - `scripts/study_m7.py`: evidence coverage, alternative sources, budget losses, and honest interpretation of repeated fixture runs.
 - `scripts/study_m8.py`: model-proposal validation, invented quotes, replay, and the limits of mechanical source checks.
 - `scripts/study_m9.py`: the Eren/Lantern Squad lesson on answer claims, missing reports, invented citations, and incomplete support.
+- `scripts/study_m10.py`: real paper receipts, corpus/benchmark separation, and the difference between document count and reasoning hops.
+- `datasets/papers/pilot/`: three-paper acquisition catalog, source-authored draft annotations, and source licensing notice.
 - `datasets/fixtures/tiny/corpus/`: eight fictional technical documents.
 - `datasets/fixtures/tiny/gold/`: manually specified reference chunks, entities, assertions, and 20 questions.
 - `tests/`: contract validation, provenance failures, fixture integration, and CLI tests.
@@ -211,7 +232,7 @@ The fixture has 25 chunks, 15 entities, and 23 relation assertions. It includes 
 
 ## Architecture
 
-The diagram shows both implemented and planned boundaries. Source processing, deterministic and local LLM-assisted extraction, all four retrieval methods, token-budget context assembly, source-evidence metrics, cited answer proposals, and replayable records exist through M9. Independent answer-quality evaluation and the real-paper comparative study remain planned.
+The diagram shows both implemented and planned boundaries. Source processing, deterministic and local LLM-assisted extraction, all four retrieval methods, token-budget context assembly, source-evidence metrics, cited answer proposals, and replayable records exist through M9. M10 adds a real-paper corpus pilot with page provenance and separate draft labels. Independent annotation review, corpus expansion, answer-quality evaluation, and the real-paper comparative study remain planned.
 
 ```mermaid
 flowchart TD
@@ -253,8 +274,8 @@ Read the [M0 design and experiment plan](docs/design.md), [data contracts](docs/
 8. **M7:** Source-evidence benchmark, shared context budget, repeated retrieval evaluation, saved reports, and study documentation — complete.
 9. **M8:** Local LLM-assisted extraction, source checks, inference receipts, graph replay, and study documentation — complete; the small controlled pilot is not a real-paper quality benchmark.
 10. **M9:** Local answer proposals, exact citation references, token-budget receipts, offline replay, and study documentation — complete; semantic correctness and abstention reliability are not established.
-11. **M10:** Real-paper pilot, independently checked annotations, and corpus expansion.
+11. **M10:** Real-paper acquisition, PDF provenance, 12 draft development questions, and reproducible three-paper pilot — implemented; independent annotation review and corpus expansion remain open.
 12. **M11–M12:** Comparative experiments, ablations, and error analysis.
 13. **M13–M14:** CLI polish, documentation, charts, and release preparation; optional demonstration UI.
 
-Work proceeds one milestone at a time. MIT licensed, including the original fictional fixture corpus.
+Work proceeds one milestone at a time. Code and original fictional fixtures are MIT licensed. Third-party paper content and pilot annotations have [separate licenses and attribution](datasets/papers/pilot/README.md#licensing-and-changes).
