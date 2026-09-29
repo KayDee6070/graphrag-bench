@@ -2,6 +2,12 @@
 
 M8 adds an optional local language model to propose entities and relationships. It saves the complete requests and responses, validates the proposals against the source, and builds a graph that the existing graph and hybrid retrievers can use. The deterministic M3 extractor remains a separate baseline.
 
+M11 adds [optional prompt profiles, name-whitespace normalization, and source-only
+sampling](paper-comparison.md#the-bounded-local-extractor-experiment). The original
+recipe remains the default and existing final M8 artifacts still replay. Read the
+[measured follow-up](../reports/m11-development.md) before using the small model
+on a large paper corpus; successful fictional controls do not establish paper quality.
+
 ## Start with the Scout story
 
 Imagine a junior Scout reading mission reports and drafting a map of names and connections. M3 gave that Scout a strict set of sentence templates. A sentence written differently could be missed. M8 asks a language model to draft the map from less rigid language.

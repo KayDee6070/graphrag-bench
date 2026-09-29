@@ -64,7 +64,9 @@ class Message(Record):
 
 
 class ExtractionRequest(Record):
-    prompt_version: Literal["chunk-entities-relations-v1"] = PROMPT_VERSION
+    prompt_version: Literal[
+        "chunk-entities-relations-v1", "compact-chunk-relations-v1", "focused-chunk-relations-v1"
+    ] = PROMPT_VERSION
     chunk: Chunk
     messages: tuple[Message, ...] = Field(min_length=1)
 
@@ -99,7 +101,12 @@ class ResponseRecord(Record):
 
 class LLMIssue(Record):
     code: Literal[
-        "output_limit", "invalid_json", "invalid_entity", "invalid_relation", "invalid_quote"
+        "output_limit",
+        "invalid_json",
+        "invalid_entity",
+        "invalid_relation",
+        "invalid_quote",
+        "normalized_entity",
     ]
     message: Text
     span: EvidenceSpan

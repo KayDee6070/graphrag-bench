@@ -39,12 +39,16 @@ class PromptExample(Record):
 
 class LLMExtractionConfig(Record):
     model: LocalModelConfig
+    prompt_style: Literal["standard", "compact-v1", "focused-v1"] = "standard"
+    strip_entity_whitespace: bool = Field(default=False, strict=True)
     entity_types: dict[Identifier, Text] = Field(min_length=1)
     relations: tuple[RelationType, ...] = Field(min_length=1)
     examples: tuple[PromptExample, ...] = Field(default=(), max_length=5)
 
     @model_validator(mode="after")
     def check_ontology(self) -> Self:
+        if self.prompt_style == "compact-v1" and self.examples:
+            raise ValueError("compact-v1 is example-free; remove examples explicitly")
         require_unique(tuple(r.predicate for r in self.relations), "ontology predicates")
         for relation in self.relations:
             for types in (relation.subject_types, relation.object_types):

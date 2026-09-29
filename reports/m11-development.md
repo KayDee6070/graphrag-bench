@@ -1,0 +1,248 @@
+# M11 development comparison and extraction feasibility
+
+Work began 2026-09-28 and continued 2026-09-29 (Europe/Berlin). Package 0.11.0.
+The full four-method study is **incomplete**. This report separates the completed
+baseline from source-only extraction diagnostics. All 40 questions are draft dev
+labels pending independent review; there are zero held-out questions.
+
+## Completed full-corpus baseline
+
+The runner reused `datasets/processed/m10-expanded-03`: 30 pinned papers, 558 PDF
+pages, 6,996 page-aware chunks, and 40 questions in 23 related groups. The vector
+index contains 6,996 × 384 values. Indexing took about 203.46 seconds on the local
+CPU, including the work timed by the index CLI. No model or PDF download occurred.
+
+The embedding model was `sentence-transformers/msmarco-MiniLM-L6-cos-v5` at revision
+`14ca9be4bbcf1402eac0f43a2e2ccb6e0f994ba3`. Configuration: CPU, four PyTorch threads,
+batch size 16, 384-token encoder limit, empty query and document prefixes. The
+adapter rejects oversized embedding inputs rather than silently truncating them.
+
+`configs/benchmark-papers-baseline.toml` selected vector and BM25, K=5/10, a
+2,000-token context budget, three repeats, and seed 0. Graph and hybrid did not run.
+There are 240 question/strategy/repeat records, each containing both cutoffs.
+Rankings and evidence results were stable across repeats. All draft evidence was
+reachable when the entire chunk collection was supplied to the coverage scorer.
+
+| Method | K | Complete evidence after budget | Mean fraction of fully covered facts |
+| --- | ---: | ---: | ---: |
+| Vector | 5 | 12/40 = 30.0% | 33.33% |
+| BM25 | 5 | 22/40 = 55.0% | 61.25% |
+| Vector | 10 | 19/40 = 47.5% | 50.83% |
+| BM25 | 10 | 25/40 = 62.5% | 68.75% |
+
+No chunks were skipped for the token budget in this run, so raw and budgeted
+evidence scores match. Mean context size was about 720–725 tokens at K=5 and
+1,440–1,465 at K=10. These use the embedding tokenizer to measure the whole rendered
+context; the context is not passed through the embedding encoder.
+
+Both methods retrieved complete annotated evidence for **0/5 candidate two-hop
+questions**, at both cutoffs. Mean fact coverage on those questions was 10% for
+vector and 40% for BM25. This identifies an engineering challenge. It does not
+show that a graph would solve it or establish that the draft hop labels are right.
+
+| Method | Warm retrieval median | Warm retrieval p95 |
+| --- | ---: | ---: |
+| Vector | 35.66 ms | 91.62 ms |
+| BM25 | 38.57 ms | 60.70 ms |
+
+Each timing is the largest-K retrieval call, reused for both cutoff evaluations.
+One warmup query per strategy is excluded. Context assembly is separately recorded.
+Model loading, artifact verification, index construction, and extraction are
+excluded. These are descriptive observations on a shared desktop, not service
+latency guarantees. Repeated questions are not independent statistical samples.
+
+BM25 scored higher on these known draft questions. This is not a general ranking
+of retrieval methods: exact annotated coordinates, question wording, corpus
+composition, and encoder choice all affect the outcome. Alternative unannotated
+support receives no coordinate credit. There are no significance claims.
+
+## Saved baseline and verification
+
+The index is `experiments/runs/m11-research-vectors`. The self-contained comparison
+is `experiments/runs/m11-research-baseline`; its outer manifest records exact source
+hashes, model settings and library versions, comparison policy, and code provenance.
+It includes copies of the paper bundle and vector index. Generated artifacts and
+third-party source text remain Git-ignored; the code, configuration, and this
+report are tracked.
+
+The evaluation fingerprint is:
+
+```text
+ae3e03a22f921a966a1b497a731e82d6f6e57a21d4caa392eaeaa62f4606b93e
+```
+
+Offline verification reproduced the source metrics, summary, and report. It does
+not rerun neural search, recount tokenizer tokens, or independently verify timings.
+The run records the working-tree code state at execution, before the final local
+commit; later extraction work does not rewrite this saved result.
+
+## Original extraction recipe: bounded source sample
+
+Eight chunks were selected by evenly spaced positions after sorting the full
+corpus by document ID and ordinal. This is a deterministic source-only diagnostic;
+benchmark questions, answers, and evidence labels were not selection inputs.
+It is not a representative extraction-quality evaluation.
+
+The cached `Qwen/Qwen2.5-0.5B-Instruct` revision
+`7ae557604adf67be50417f59c2c2f167def9a775` ran with CPU float32, four threads,
+4,096 input tokens, and at most 768 generated tokens. The original configuration
+contains three fictional format examples.
+
+| Sample | PDF page | Input tokens | Output tokens | Completion seconds | Source validation |
+| ---: | ---: | ---: | ---: | ---: | --- |
+| 1 | 1 | 1,023 | 179 | 26.42 | All proposed entities rejected |
+| 2 | 8 | 1,059 | 516 | 72.26 | Invalid JSON/schema |
+| 3 | 14 | 1,005 | 768 | 85.61 | Output limit; whole chunk rejected |
+| 4 | 19 | 1,180 | 751 | 76.84 | Invalid JSON/schema |
+| 5 | 5 | 1,013 | 177 | 24.82 | All proposed entities rejected |
+| 6 | 9 | 955 | 90 | 12.01 | All proposed entities rejected |
+| 7 | 12 | 939 | 768 | 85.05 | Output limit; whole chunk rejected |
+| 8 | 6 | 1,062 | 768 | 84.49 | Output limit; whole chunk rejected |
+
+Total accepted entities: **0**. Total accepted relations: **0**. Five responses
+were rejected outright; the other three parsed but all proposed entities failed
+source/type checks. Two of those responses copied fictional names such as Comet
+and Tundra from the format examples into unrelated paper passages. Existing source
+checks prevented those names from becoming graph evidence.
+
+The mean recorded completion time was about 58.44 seconds. Multiplying by 6,996
+projects **113.57 hours, about 4.7 days**. This is a rough planning estimate from
+eight heterogeneous chunks on a shared machine, not a runtime guarantee. Early
+diagnostic retries briefly overlapped, so the sample is not an isolated speed
+benchmark. Cached replays preserve original generation durations.
+
+Full extraction was not launched. The user selected improving the existing local
+extractor before scaling. No larger model, hosted service, or paid API was used.
+
+Original receipts remain in `experiments/runs/m11-research-extraction-cache`.
+`m11-extraction-preflight-validated.jsonl` records source validation, exact chunk
+IDs, request fingerprints, model settings, and input hashes. A sample cannot be
+loaded as a complete paper graph: complete graph validation still requires every
+source chunk exactly once.
+
+## Local extractor changes and controlled checks
+
+The user selected improving the existing local extractor before any full-corpus
+run. We added opt-in prompt profiles and source-only diagnostic replay while
+preserving the original default recipe and its fingerprint.
+
+The first compact prototype removed the fictional examples and shortened the
+ontology formatting. All four completed samples hit the 320-token output limit;
+the model copied ontology labels into the entity list. The run was stopped during
+the fifth sample. Those four receipts remain in
+`m11-extraction-compact-preflight.jsonl`; this is an incomplete diagnostic, not an
+eight-chunk comparison or a valid graph.
+
+The first focused prototype moved the ontology/schema into the system message,
+leaving only the passage in each user message. It used four fictional examples,
+including an empty-result example. On the same eight paper chunks, seven outputs
+hit the limit and one parsed but yielded no accepted entities or relations.
+Its average completion time was 35.29 seconds. The lower time mostly reflects
+earlier output cutoffs; it is not a successful quality/cost improvement.
+
+Replay exposed an implementation bug in the new prompt builder: ontology type
+definitions were initially rendered in dictionary insertion order, whereas saved
+JSON sorts dictionary keys. The final builder sorts type definitions explicitly.
+Tests require identical requests and recipe hashes before and after configuration
+serialization. The initial `m11-focused-controls` artifact belongs to that prototype
+and is superseded; it cannot be replayed by the final builder. Historical prototype
+receipts retain their exact original prompts. Final candidate measurements use
+the canonical builder, with their own fresh paths.
+
+After canonicalization, the small model proposed `" Harbor"` in the positive
+Nova/Harbor control. Strict parsing correctly rejected the padded name. The new
+optional `strip_entity_whitespace` setting removes leading/trailing name whitespace,
+records `normalized_entity`, and then applies all the existing exact source,
+endpoint-type, and quote checks. It does not repair spelling, invent names, merge
+aliases, or alter source quotations. The raw completion is preserved. This setting
+defaults to false; the focused candidate enables it and records it in the recipe.
+
+The final controlled graph is `experiments/runs/m11-focused-controls-normalized`.
+It reuses the already generated canonical-prompt receipts from
+`m11-focused-controls-v2`; normalization itself requires no additional inference.
+It contains **4 entities, 2 assertions, 1 normalization diagnostic, and 0 rejected
+chunks**. Its only relations are Orion `USES` Nova and Nova `EVALUATED_ON` Harbor.
+The negated Nova/Mirage passage yields an empty relation list, while preserving
+both name mentions. These are three known fictional development passages, not
+real-paper evaluation questions.
+
+In the earlier M8 controlled run, the negated passage produced a malformed
+predicate and was rejected. The final focused configuration instead produces the
+requested empty relation list on this one control. That is a limited observed
+improvement; it does not establish general negation reliability or paper accuracy.
+
+`m11-focused-controls-normalized-replay` reconstructs the final graph, issue file,
+and response file byte for byte, without inference. The old `m8-final-02` graph
+also still verifies under the new implementation.
+
+| Final control artifact | SHA-256 |
+| --- | --- |
+| Extraction recipe | `4836c1a01b77f9b90b179ac1dafd051262187e0e219bd7d7c186f367e9c4a1b4` |
+| `graph.json` | `2025fe00ff899e569ea32338d62918abed9972b5148dfc738a81dafe3efe249e` |
+| `issues.jsonl` | `c5e3d8f8df69eee53e38a04f02d17630ff7e75c54672090712596a0c93f7f23b` |
+| `responses.jsonl` | `23354df932bf3fc6b6c87a0a34da908b75fce04d7cfd6693d2e21a92bfc28794` |
+
+## Final focused profile on the same eight paper chunks
+
+After fixing canonical prompt order and enabling recorded name trimming, we ran
+the same eight real-paper source chunks again. The final results are saved in
+`experiments/runs/m11-extraction-focused-final.jsonl`.
+
+| Observation | Original recipe | Final focused candidate |
+| --- | ---: | ---: |
+| Sampled paper chunks | 8 | 8 |
+| Generated-token limit | 768 | 320 |
+| Schema-valid responses | 3 | 1 |
+| Responses stopped at output limit | 3 | 7 |
+| Entire responses rejected | 5 | 7 |
+| Accepted entities | 0 | 0 |
+| Accepted relations | 0 | 0 |
+| Mean recorded completion time | 58.44 s | 42.74 s |
+| Rough full-corpus extrapolation | 113.57 h | 83.06 h |
+
+The only final focused response that parsed proposed names/types that failed source
+validation. No normalization could repair those failures. The candidate therefore
+**fails the real-paper readiness check** and is not promoted to the default.
+Reduced output allowance cuts generation short more often; these timings do not
+demonstrate a useful extraction speedup. Runs used a shared desktop on different
+dates and are not an isolated performance experiment.
+
+The outcome is deliberately narrow: the comparison infrastructure, real baseline,
+sample diagnostics, deterministic prompt replay, and opt-in name normalization are
+implemented and verified. The current small model's real-paper extraction remains
+unsuitable for scaling on this evidence. Further extraction design/model work and
+a broader source-reviewed development check should precede full graph construction.
+No multi-day extraction job is running, and no larger model was downloaded.
+
+## Engineering findings
+
+The first baseline attempt exposed a previously unsupported case in shared context
+assembly. After overlapping passages have been selected, a later passage may add
+only a space between them. That is a valid uncovered source interval. The earlier
+context-piece contract rejected whitespace-only text and aborted the run.
+
+Context pieces now preserve that exact nonempty whitespace interval, while keeping
+the inherited offset/length checks. Documents, chunks, and annotated fact spans
+still require nonblank text. A regression test covers the gap between `a` and `b`
+in `a b`. The source-union algorithm and scoring policy are unchanged. The successful
+baseline above uses this fix. Token counting also suppresses the encoder-length
+warning only for context that is counted without neural encoding; input length
+checks for actual embeddings remain active.
+
+The new comparison tests exercise nonempty graph paths, all four strategies,
+source-only search behavior, frozen inputs, offline verification after original
+folders are removed, configuration/provider mismatches, and altered results.
+Fake providers in those tests validate software wiring, not model quality.
+
+Validation: **565 tests pass**, Ruff lint and formatting checks pass. An installed
+0.11.0 wheel was checked outside the repository. It verified the 40-question,
+240-record baseline and the final control graph with imports of PyTorch,
+Transformers, Sentence Transformers, and pypdf explicitly blocked. This checks
+that offline verification does not require those optional inference/PDF libraries.
+
+## Remaining study requirements
+
+A usable complete real-paper graph, the four-method comparison, independently
+reviewed annotations, and 80 genuinely held-out questions remain. The five draft
+two-hop questions still need shortcut checks. No M12 ablation study has started.
+The beginner lesson and reproduction commands are in [paper-comparison.md](../docs/paper-comparison.md).

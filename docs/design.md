@@ -60,3 +60,10 @@ Precision@K requires sufficiently complete relevance judgments. MRR does not cap
 The largest risks are extraction quality, entity resolution, benchmark bias, and annotation effort. Use a retrieval-trained encoder and a small BM25 sanity baseline. Prioritize zero-, one-, and two-hop ablations before adding infrastructure. Begin with a few real papers before expanding the corpus. A two- to three-week schedule requires keeping the UI optional and avoiding broad PDF-layout support in v1.
 
 M1 establishes contracts and fixtures only. No graph, embedding, retrieval, extraction provider, or generation implementation is included in this milestone.
+
+M11 adds a [frozen paper comparison runner](paper-comparison.md) alongside the M7
+fixture runner. It validates saved page-aware chunks, embedding rows, and complete
+LLM graph receipts from the same ingestion, then uses the existing shared-budget
+retrieval evaluator. Experiment folders copy their inputs and support offline
+source-score verification. The full real-paper four-method study is not complete;
+the development report records the completed runs and extraction feasibility.

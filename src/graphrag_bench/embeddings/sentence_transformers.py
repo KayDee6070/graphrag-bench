@@ -148,6 +148,8 @@ class SentenceTransformerProvider:
                     truncation=False,
                     padding=False,
                     add_special_tokens=False,
+                    # This text is counted, never passed through the encoder.
+                    verbose=False,
                 )["input_ids"][0]
             )
         except Exception as error:

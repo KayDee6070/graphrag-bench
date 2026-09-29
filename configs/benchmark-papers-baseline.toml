@@ -1,0 +1,16 @@
+# Development baseline only; no graph/hybrid results are implied.
+[benchmark]
+strategies = ["vector", "bm25"]
+cutoffs = [5, 10]
+max_context_tokens = 2000
+repeats = 3
+seed = 0
+
+[benchmark.chunking]
+max_chars = 512
+max_units = 5
+overlap_units = 1
+
+[benchmark.bm25]
+k1 = 1.5
+b = 0.75

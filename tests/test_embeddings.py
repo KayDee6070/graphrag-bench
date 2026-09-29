@@ -133,7 +133,8 @@ def test_context_token_count_uses_whole_text_without_encoding_or_special_tokens(
     assert provider.count_tokens("") == 0
     tokenization = [call for call in model_stub if call[0] == "tokenize"]
     assert all(
-        call[2] == {"truncation": False, "padding": False, "add_special_tokens": False}
+        call[2]
+        == {"truncation": False, "padding": False, "add_special_tokens": False, "verbose": False}
         for call in tokenization
     )
     assert tokenization[0][1] == ["word " * 20]

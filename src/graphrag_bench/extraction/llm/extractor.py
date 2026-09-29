@@ -77,6 +77,11 @@ def _entities(
 ) -> dict[str, tuple[str, EntityProposal]]:
     accepted = {}
     for entity in proposals:
+        if config.strip_entity_whitespace and entity.name != entity.name.strip():
+            entity = entity.model_copy(update={"name": entity.name.strip()})
+            issues.append(
+                _issue("normalized_entity", f"{entity.id}: trimmed name whitespace.", chunk)
+            )
         locations = _locations(chunk.text, entity.name)
         if (
             entity.entity_type not in config.entity_types
@@ -167,12 +172,40 @@ def process_responses(
     spec: ModelSpec,
 ) -> LLMExtractionResult:
     """Replay validation without inference. Exact source matches do not establish entailment."""
+    return _process_responses(corpus, records, config, spec, complete=True)
+
+
+def validate_sample_responses(
+    corpus: CorpusIndex,
+    records: tuple[ResponseRecord, ...],
+    config: LLMExtractionConfig,
+    spec: ModelSpec,
+) -> LLMExtractionResult:
+    """Diagnose source-only samples; never substitute this for complete graph validation.
+
+    The full corpus preserves original ordinals, IDs, and source coordinates.
+    Graph artifact loading still requires one response for every source chunk.
+    """
+    return _process_responses(corpus, records, config, spec, complete=False)
+
+
+def _process_responses(
+    corpus: CorpusIndex,
+    records: tuple[ResponseRecord, ...],
+    config: LLMExtractionConfig,
+    spec: ModelSpec,
+    *,
+    complete: bool,
+) -> LLMExtractionResult:
     validate_provider_spec(config, spec)
     try:
         require_unique(tuple(r.request.chunk.chunk_id for r in records), "response chunk IDs")
     except ValueError as error:
         raise LLMError(str(error)) from error
-    if {r.request.chunk.chunk_id for r in records} != corpus.chunks.keys():
+    received = {r.request.chunk.chunk_id for r in records}
+    if not received <= corpus.chunks.keys():
+        raise LLMError("response references an unknown source chunk")
+    if complete and received != corpus.chunks.keys():
         raise LLMError("responses must cover every source chunk exactly once")
     registry = EntityRegistry()
     relations: dict[str, RelationAssertion] = {}

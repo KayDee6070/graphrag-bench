@@ -1,6 +1,6 @@
 # Study guide: understanding the project incrementally
 
-The project currently implements M1–M9 and the M10 real-paper corpus preparation and review tools. In everyday terms: M1 defines our record cards, M2 divides documents into traceable pieces, M3 draws connections, M4 finds pieces by comparing numerical text representations, M5 follows the connections to collect evidence, M6 combines the two search lists, M7 checks whether the selected passages contain the facts needed to answer, M8 asks a local language model to propose connections with source receipts, M9 asks a local writer to propose an answer with citations, and M10 introduces real research reports with separate draft answer sheets. Independent review remains pending. Start with the working data flow rather than reading every model at once.
+The project currently implements M1–M10 engineering and the M11 frozen-artifact comparison runner; the full M11 study remains incomplete. In everyday terms: M1 defines our record cards, M2 divides documents into traceable pieces, M3 draws connections, M4 finds pieces by comparing numerical text representations, M5 follows the connections to collect evidence, M6 combines the two search lists, M7 checks whether the selected passages contain the facts needed to answer, M8 asks a local language model to propose connections with source receipts, M9 asks a local writer to propose an answer with citations, M10 introduces real research reports with separate draft answer sheets, and M11 tests search methods against exactly the same saved library. Independent review remains pending. Start with the working data flow rather than reading every model at once.
 
 ## First session: what the project is testing
 
@@ -121,13 +121,19 @@ Read the [M10 observations](../reports/m10-pilot.md). Explain why the 800-charac
 
 Continue with the [30-paper expansion](m10-expansion.md) and `.venv/bin/python scripts/study_m10_expansion.py`. Follow REPLUG → Contriever → training details, then explain why another passage could invalidate the two-hop label. Compare the 600-, 512-, and 400-character coverage audits. Explain why smaller chunks do not always improve exact evidence coverage, why a reviewer file is bound to a specific bundle, and why approval cannot make a known question held out.
 
+## Thirteenth session: the same library and the same exam
+
+Read the [M11 comparison lesson](paper-comparison.md) and [development report](../reports/m11-development.md). Explain why the old fixture benchmark could not simply rebuild chunks for the saved paper graph. Distinguish raw top-K evidence from the passages that fit into the writer's token budget.
+
+Open the saved baseline's `summary.json` and `manifest.json`. Identify which methods actually ran. Explain why three repeats do not turn 40 questions into 120 independent questions, why an eight-chunk extraction sample is not a complete graph, and why a fast query can hide days of graph preparation.
+
 ## Explain the current system in an interview
 
 A precise description through M7 is:
 
 > I implemented vector, lexical, graph, and hybrid retrieval, then built a source-evidence benchmark with a shared token budget and reproducible run records. It measures complete evidence and partial fact coverage, accepts alternative sufficient sources, and reports paired gains and losses. On twenty synthetic fixture questions, hybrid tied vector overall while helping one question and hurting another at K=5. The real-paper study remains future work, so I do not yet claim a general retrieval improvement.
 
-Avoid claiming demonstrated improvements on real papers or independently verified answer correctness. A small real corpus now exists; expansion, independent annotation review, and comparative evidence remain necessary.
+Avoid claiming a general improvement on real papers or independently verified answer correctness. The corpus now contains 30 papers. Independent annotation review, complete comparative evidence, and held-out evaluation remain necessary.
 
 The M8 addition is:
 
@@ -140,6 +146,10 @@ The M9 addition is:
 The M10 corpus addition is:
 
 > I added version-pinned PDF acquisition, page-preserving text extraction, source attribution, and a separate compiler for development questions. I expanded the corpus to 30 papers and 40 draft development questions, then added source-coverage audits and review records that become stale when the bundle changes. I preserve exact source coordinates while keeping labels out of the searchable corpus. Independent review and 80 genuinely held-out questions remain necessary before the full comparative study.
+
+The M11 engineering addition is:
+
+> I added a benchmark that reuses verified paper, vector, and model-graph artifacts without rebuilding them. Every method receives the same source chunks, scoring policy, and tokenizer budget. Each run includes frozen inputs and offline source-score verification. I also measure model extraction feasibility before attempting the full corpus. The full comparative study remains incomplete, so I report development observations with their limits.
 
 ## Terminology to keep distinct
 

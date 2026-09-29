@@ -1,0 +1,71 @@
+# M11 development candidate. Same approved model, shorter example-free prompt.
+# This is not an established extraction-quality improvement or the default recipe.
+[llm_extraction]
+prompt_style = "compact-v1"
+
+[llm_extraction.model]
+model_id = "Qwen/Qwen2.5-0.5B-Instruct"
+revision = "7ae557604adf67be50417f59c2c2f167def9a775"
+device = "cpu"
+dtype = "float32"
+cpu_threads = 4
+max_input_tokens = 4096
+max_new_tokens = 320
+
+[llm_extraction.entity_types]
+Paper = "A named research paper."
+Method = "A named algorithm or retrieval method."
+Model = "A named machine learning model."
+Encoder = "A named encoder that produces representations."
+Reranker = "A named model used to reorder retrieved candidates."
+Dataset = "A named dataset or benchmark collection."
+Metric = "A named evaluation measure."
+Task = "A task such as question answering or semantic retrieval."
+
+[[llm_extraction.relations]]
+predicate = "BASED_ON"
+description = "The subject explicitly builds on the object."
+subject_types = ["Method", "Model", "Encoder", "Reranker"]
+object_types = ["Method", "Model", "Encoder", "Reranker"]
+
+[[llm_extraction.relations]]
+predicate = "USES"
+description = "The subject explicitly uses the object as a component."
+subject_types = ["Method", "Model", "Encoder", "Reranker"]
+object_types = ["Method", "Model", "Encoder", "Reranker"]
+
+[[llm_extraction.relations]]
+predicate = "EVALUATED_ON"
+description = "The subject was evaluated on the object dataset."
+subject_types = ["Method", "Model", "Encoder", "Reranker"]
+object_types = ["Dataset"]
+
+[[llm_extraction.relations]]
+predicate = "SUPPORTS_TASK"
+description = "The subject dataset provides data for the object task."
+subject_types = ["Dataset"]
+object_types = ["Task"]
+
+[[llm_extraction.relations]]
+predicate = "TARGETS"
+description = "The subject is intended for the object task."
+subject_types = ["Method", "Model", "Encoder", "Reranker"]
+object_types = ["Task"]
+
+[[llm_extraction.relations]]
+predicate = "MEASURED_BY"
+description = "The subject is evaluated using the object metric."
+subject_types = ["Method", "Model", "Encoder", "Reranker"]
+object_types = ["Metric"]
+
+[[llm_extraction.relations]]
+predicate = "REPORTS"
+description = "The subject dataset explicitly reports the object metric."
+subject_types = ["Dataset"]
+object_types = ["Metric"]
+
+[[llm_extraction.relations]]
+predicate = "PROPOSES"
+description = "The subject paper introduces the object method or model."
+subject_types = ["Paper"]
+object_types = ["Method", "Model", "Encoder", "Reranker"]

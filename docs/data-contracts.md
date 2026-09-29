@@ -68,6 +68,24 @@ M7 now populates `RunManifest` with raw source/question input hashes, selected-s
 
 M8 adds `LLMExtractionConfig`, `ProposedExtraction`, `ModelSpec`, `ExtractionRequest`, `Completion`, `ResponseRecord`, `LLMIssue`, and `LLMGraphManifest`. Responses use local entity IDs that are replaced by stable normalized-name/type IDs after validation. Quotes must match a unique contiguous interval of their chunk and contain both endpoint names. Invalid chunk-level output and rejected individual proposals are recorded separately. All retained assertions carry `review_status: unreviewed`; source checks establish coordinates, not semantic entailment.
 
+M11 adds opt-in `compact-v1` and `focused-v1` prompt styles, each with an explicit
+request version. The standard recipe remains compatible with saved M8 artifacts.
+`strip_entity_whitespace` defaults to false. When enabled, it trims only the ends
+of proposed entity names, emits a `normalized_entity` diagnostic, preserves raw
+receipts, and still requires exact source and quotation matches. Enabled behavior
+changes the extraction recipe fingerprint. Sample-only response validation accepts
+a source-bound subset for diagnostics; complete graph verification still requires
+one response for every chunk.
+
+`PaperExperimentManifest` binds the comparison policy, embedding specification,
+source-manifest hashes, code provenance, and copied artifacts. Paper experiments
+are development-only and retain pending-review status. Offline verification checks
+the full question/strategy/repeat inventory and recomputes source metrics from
+recorded context selection. It does not rerun neural rankings or tokenization.
+`ContextPiece` permits nonempty whitespace-only source intervals left by overlap
+deduplication; exact offset/length checks still apply. This exception does not
+permit blank documents, chunks, or gold evidence spans.
+
 The M8 manifest hashes the graph, issues, and complete inference receipts, and binds them to ingestion hashes, the extraction recipe, model revision, environment versions, and package source hash. The graph loader reconstructs the expected prompts and replays validation without loading a model. A cached response retains the original token usage and inference duration. Source/reference checks and replay consistency are not extraction accuracy metrics. See the [M8 walkthrough](llm-extraction.md).
 
 M9 adds `GenerationConfig`, `AnswerRetrievalConfig`, `AnswerProposal`, `CitedClaim`, `Citation`, `Answer`, `TokenMeasurement`, `RetrievalReceipt`, `AnswerRequest`, `AnswerReceipt`, and `AnswerManifest`. It reuses the M8 local provider through the message-only `ChatRequest` protocol. Answer status distinguishes a structurally accepted proposal, insufficient evidence, and rejected output; every accepted claim remains `unreviewed`.

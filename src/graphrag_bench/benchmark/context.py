@@ -3,6 +3,8 @@
 from collections.abc import Callable, Iterable
 from typing import Protocol
 
+from pydantic import Field
+
 from graphrag_bench.benchmark.dataset import BenchmarkError
 from graphrag_bench.corpus import CorpusIndex
 from graphrag_bench.models import (
@@ -23,6 +25,9 @@ class TokenCounter(Protocol):
 
 class ContextPiece(TextSpan):
     chunk_id: Identifier
+    # Deduplication can leave only the whitespace between two already selected
+    # spans. Preserve it so source-union coverage and offsets remain exact.
+    text: str = Field(min_length=1)
 
 
 class SelectedContext(Record):

@@ -1,0 +1,32 @@
+# Full comparison requires a complete LLM graph bound to this exact ingestion.
+[benchmark]
+strategies = ["vector", "graph", "hybrid", "bm25"]
+cutoffs = [5, 10]
+max_context_tokens = 2000
+repeats = 3
+seed = 0
+
+[benchmark.chunking]
+max_chars = 512
+max_units = 5
+overlap_units = 1
+
+[benchmark.graph]
+max_hops = 2
+direction = "both"
+max_neighbors = 16
+max_assertions_per_neighbor = 4
+max_paths = 256
+max_seeds = 16
+include_mentions = true
+predicates = []
+
+[benchmark.hybrid]
+method = "rrf"
+rank_constant = 60
+vector_candidates = 20
+graph_candidates = 20
+
+[benchmark.bm25]
+k1 = 1.5
+b = 0.75

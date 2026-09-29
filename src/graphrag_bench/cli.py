@@ -13,6 +13,11 @@ from pydantic import ValidationError
 from graphrag_bench import __version__
 from graphrag_bench.benchmark.config import load_benchmark_config
 from graphrag_bench.benchmark.dataset import BenchmarkError, load_benchmark
+from graphrag_bench.benchmark.papers import (
+    load_paper_inputs,
+    run_paper_benchmark,
+    verify_paper_benchmark,
+)
 from graphrag_bench.benchmark.pipeline import (
     run_benchmark,
     validate_run_output,
@@ -340,6 +345,29 @@ def _benchmark(args: argparse.Namespace) -> dict:
     }
 
 
+def _benchmark_papers(args: argparse.Namespace) -> dict:
+    validate_run_output(args.output)
+    config = load_benchmark_config(args.config)
+    inputs = load_paper_inputs(args.bundle, args.index, config, args.graph)
+    provider = SentenceTransformerProvider(
+        EmbeddingConfig.model_validate(inputs.index.spec.settings),
+        allow_download=False,
+        cache_folder=args.cache_folder,
+    )
+    summary = run_paper_benchmark(
+        args.bundle, args.index, args.output, config, provider, graph_directory=args.graph
+    )
+    return {
+        "status": "benchmarked",
+        "output": str(args.output),
+        "questions": summary.question_count,
+        "records": summary.record_count,
+        "split": summary.split,
+        "repeatable": summary.repeatable,
+        "evaluation_sha256": summary.evaluation_sha256,
+    }
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="GraphRAG Bench development tools")
     parser.add_argument("--version", action="version", version=__version__)
@@ -441,6 +469,19 @@ def main(argv: list[str] | None = None) -> int:
         "verify-benchmark", help="verify saved run checksums without a model"
     )
     verify_run.add_argument("directory", type=Path)
+    paper_benchmark = commands.add_parser(
+        "benchmark-papers", help="compare frozen paper, vector, and optional LLM graph artifacts"
+    )
+    paper_benchmark.add_argument("bundle", type=Path)
+    paper_benchmark.add_argument("--index", type=Path, required=True)
+    paper_benchmark.add_argument("--graph", type=Path)
+    paper_benchmark.add_argument("--config", type=Path, required=True)
+    paper_benchmark.add_argument("--output", type=Path, required=True)
+    paper_benchmark.add_argument("--cache-folder", type=Path)
+    verify_paper_run = commands.add_parser(
+        "verify-paper-benchmark", help="verify frozen inputs and replay source scores offline"
+    )
+    verify_paper_run.add_argument("directory", type=Path)
     answer = commands.add_parser(
         "answer", help="generate an answer proposal with exact source citations"
     )
@@ -550,6 +591,16 @@ def main(argv: list[str] | None = None) -> int:
             summary = _query_hybrid(args)
         elif args.command == "benchmark":
             summary = _benchmark(args)
+        elif args.command == "benchmark-papers":
+            summary = _benchmark_papers(args)
+        elif args.command == "verify-paper-benchmark":
+            checked = verify_paper_benchmark(args.directory)
+            summary = {
+                "status": "valid",
+                "questions": checked.question_count,
+                "records": checked.record_count,
+                "evaluation_sha256": checked.evaluation_sha256,
+            }
         elif args.command == "verify-benchmark":
             checked = verify_benchmark_run(args.directory)
             summary = {

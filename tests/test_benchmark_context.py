@@ -61,6 +61,20 @@ def test_exact_boundary_includes_source_headers_and_separators():
     assert rejected.skipped_budget == ("c0",)
 
 
+def test_whitespace_only_uncovered_gap_preserves_exact_source_union():
+    corpus = sources(((0, 1), (2, 3), (0, 3)), text="a b")
+    selected = assemble_context(
+        result("c0", "c1", "c2"), corpus, CharacterCounter(), max_tokens=100
+    )
+    assert [(p.start, p.end, p.text) for p in selected.pieces] == [
+        (0, 1, "a"),
+        (2, 3, "b"),
+        (1, 2, " "),
+    ]
+    assert selected.selected_chunk_ids == ("c0", "c1", "c2")
+    assert selected.token_count == len(selected.text)
+
+
 def test_oversized_chunk_skipped_without_clipping_and_later_chunk_can_fit():
     corpus = sources(((0, 9), (0, 1)))
     selected = assemble_context(result("c0", "c1"), corpus, CharacterCounter(), max_tokens=9)

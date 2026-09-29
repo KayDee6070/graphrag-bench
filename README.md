@@ -4,7 +4,7 @@ When does graph-based retrieval outperform vector retrieval for questions requir
 
 GraphRAG Bench is a small research-engineering project for comparing vector, graph, and hybrid retrieval under the same evidence budget. Retrieval quality will be measured independently of answer generation.
 
-**Current milestone: M10 — expanded real-paper development corpus implemented.** Thirty pinned research papers produce 558 traceable PDF pages, 6,996 chunks, and 40 draft development questions, including five candidate two-hop chains. Source-coverage audits and bundle-bound reviewer records are implemented. Independent annotation review and 80 genuinely held-out questions remain before the planned study. Graph assertions and generated answers remain unreviewed; citation checks establish source references, not answer correctness. No real-paper retrieval advantage has been established. Start with the [expansion lesson](docs/m10-expansion.md).
+**Current milestone: M11 — comparison runner implemented; full study incomplete.** The runner compares verified, frozen paper chunks, vector indexes, and optional complete LLM graphs under one evidence budget. The corpus contains 30 papers, 558 pages, 6,996 chunks, and 40 draft dev questions. Full graph extraction, the four-method real-paper comparison, independent annotation review, and 80 genuinely held-out questions remain. No general retrieval advantage has been established. Start with the [M11 lesson](docs/paper-comparison.md) and [development observations](reports/m11-development.md).
 
 ## Quick start
 
@@ -246,7 +246,7 @@ The fixture has 25 chunks, 15 entities, and 23 relation assertions. It includes 
 
 ## Architecture
 
-The diagram shows both implemented and planned boundaries. Source processing, deterministic and local LLM-assisted extraction, all four retrieval methods, token-budget context assembly, source-evidence metrics, cited answer proposals, and replayable records exist through M9. M10 adds a 30-paper corpus with page provenance, separate draft dev labels, and review tooling. Independent annotation review, held-out labels, answer-quality evaluation, and the real-paper comparative study remain planned.
+The diagram shows both implemented and planned boundaries. Source processing, deterministic and local LLM-assisted extraction, all four retrieval methods, token-budget context assembly, source-evidence metrics, cited answer proposals, and replayable records exist through M9. M10 adds a 30-paper corpus with page provenance, separate draft dev labels, and review tooling. M11 adds frozen-artifact comparison, a vector/BM25 development baseline, and bounded extractor trials. Independent annotation review, held-out labels, answer-quality evaluation, and the full four-method real-paper study remain planned.
 
 ```mermaid
 flowchart TD
@@ -289,7 +289,8 @@ Read the [M0 design and experiment plan](docs/design.md), [data contracts](docs/
 9. **M8:** Local LLM-assisted extraction, source checks, inference receipts, graph replay, and study documentation — complete; the small controlled pilot is not a real-paper quality benchmark.
 10. **M9:** Local answer proposals, exact citation references, token-budget receipts, offline replay, and study documentation — complete; semantic correctness and abstention reliability are not established.
 11. **M10:** Real-paper acquisition, PDF provenance, 30-paper expansion, 40 draft development questions, coverage audits, and review tooling — implemented; independent annotation review and 80 held-out questions remain open.
-12. **M11–M12:** Comparative experiments, ablations, and error analysis.
-13. **M13–M14:** CLI polish, documentation, charts, and release preparation; optional demonstration UI.
+12. **M11:** Frozen real-paper comparison runner and offline source-metric verification implemented; development baseline and extraction preflight documented. Full graph, four-method study, independent review, and held-out evaluation remain.
+13. **M12:** Ablations and error analysis — not started.
+14. **M13–M14:** CLI polish, documentation, charts, and release preparation; optional demonstration UI.
 
 Work proceeds one milestone at a time. Code and original fictional fixtures are MIT licensed. Third-party paper content and annotations have [separate licenses and attribution](datasets/papers/research/README.md#licensing-and-changes).
