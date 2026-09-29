@@ -12,6 +12,10 @@ needs ontology review; seven responses failed whole-response validation. The
 [study lesson](docs/indexed-extraction.md) and [trial report](reports/m11-development.md)
 explain the paired comparison, replay checks, and unresolved extraction quality.
 
+Next experiment prepared: [a pinned 3B local-model comparison](docs/local-model-trial.md)
+on those same eight chunks, with a read-only source/RAM preflight. Download and
+inference remain pending; no larger-model result is claimed.
+
 ## Quick start
 
 Python 3.11 or newer is required. From this repository:

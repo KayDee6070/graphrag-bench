@@ -7,6 +7,7 @@ full-corpus runtime projection is produced.
 
 import argparse
 import json
+import math
 from collections import Counter
 from hashlib import sha256
 from pathlib import Path
@@ -24,13 +25,8 @@ from graphrag_bench.extraction.llm.provider import LocalTransformersProvider
 from graphrag_bench.ingestion.reader import load_ingestion
 
 
-def run_checks(
-    source: Path,
-    checks_path: Path,
-    config: LLMExtractionConfig,
-    provider: ExtractionProvider,
-    cache: Path | None,
-) -> dict:
+def load_checks(source: Path, checks_path: Path) -> tuple[dict, str, CorpusIndex, dict]:
+    """Validate the source binding before a caller allocates a model."""
     raw = checks_path.read_bytes()
     checks = json.loads(raw)
     batch, hashes = load_ingestion(source)
@@ -41,9 +37,61 @@ def run_checks(
     ids = [case["chunk_id"] for case in cases]
     if len(set(ids)) != len(ids) or not set(ids) <= corpus.chunks.keys():
         raise ValueError("draft checks need unique, known source chunk IDs")
+    return checks, sha256(raw).hexdigest(), corpus, hashes
+
+
+def available_memory_bytes(path: Path = Path("/proc/meminfo")) -> int | None:
+    """Read Linux's available RAM estimate; unknown is never treated as sufficient."""
+    try:
+        for line in path.read_text(encoding="ascii").splitlines():
+            fields = line.split()
+            if fields and fields[0] == "MemAvailable:":
+                if len(fields) == 3 and fields[2] == "kB" and fields[1].isdigit():
+                    return int(fields[1]) * 1024
+                return None
+    except (OSError, UnicodeError):
+        pass
+    return None
+
+
+def positive_gib(value: str) -> float:
+    try:
+        gib = float(value)
+    except ValueError as error:
+        raise argparse.ArgumentTypeError(
+            "RAM threshold must be a finite positive GiB value"
+        ) from error
+    if not math.isfinite(gib) or gib <= 0:
+        raise argparse.ArgumentTypeError("RAM threshold must be a finite positive GiB value")
+    return gib
+
+
+def preflight(source: Path, checks_path: Path, config: LLMExtractionConfig) -> dict:
+    """Read source checks and host RAM without loading a model or writing artifacts."""
+    checks, digest, _, hashes = load_checks(source, checks_path)
+    return {
+        "kind": "extraction-preflight-v1",
+        "inference_run": False,
+        "model": config.model.model_dump(mode="json"),
+        "checks_sha256": digest,
+        "source_hashes": hashes,
+        "cases": len(checks["cases"]),
+        "expected_facts": sum(len(case["expected"]) for case in checks["cases"]),
+        "available_memory_bytes": available_memory_bytes(),
+    }
+
+
+def run_checks(
+    source: Path,
+    checks_path: Path,
+    config: LLMExtractionConfig,
+    provider: ExtractionProvider,
+    cache: Path | None,
+) -> dict:
+    checks, digest, corpus, hashes = load_checks(source, checks_path)
     spec = provider.spec
     rows = []
-    for case in cases:
+    for case in checks["cases"]:
         # Only the original source chunk/config reach the inference interface.
         receipt = complete_chunk(corpus.chunks[case["chunk_id"]], config, provider, cache)
         result = validate_sample_responses(corpus, (receipt,), config, spec)
@@ -108,7 +156,7 @@ def run_checks(
         "kind": "draft-extraction-source-check-v1",
         "review_status": checks["review_status"],
         "selection": checks["selection"],
-        "checks_sha256": sha256(raw).hexdigest(),
+        "checks_sha256": digest,
         "source_hashes": hashes,
         "config": config.model_dump(mode="json"),
         "provider": spec.model_dump(mode="json"),
@@ -172,19 +220,54 @@ def main():
     parser.add_argument("--response-cache", type=Path)
     parser.add_argument("--output", type=Path)
     parser.add_argument("--replay", type=Path, help="verify a saved diagnostic without inference")
+    parser.add_argument(
+        "--preflight", action="store_true", help="check source/config and RAM without inference"
+    )
+    parser.add_argument(
+        "--min-available-gib",
+        type=positive_gib,
+        help="require this much available RAM before loading a model (Linux MemAvailable)",
+    )
     args = parser.parse_args()
     if args.replay:
-        if args.config or args.response_cache or args.output:
-            parser.error("replay uses its saved recipe; omit config, cache, and output")
+        if (
+            args.config
+            or args.response_cache
+            or args.output
+            or args.preflight
+            or args.min_available_gib
+        ):
+            parser.error(
+                "replay uses its saved recipe; omit config, cache, output, and preflight flags"
+            )
         print(json.dumps(verify_checks(args.source, args.checks, args.replay)))
         return
-    if not args.config or not args.response_cache or not args.output:
-        parser.error("inference requires config, response-cache, and output")
-    if args.output.exists():
-        parser.error("output already exists; choose a new file")
-    if args.output.resolve().is_relative_to(args.source.resolve()):
-        parser.error("diagnostic output must be outside source ingestion")
+    if args.preflight:
+        if not args.config or args.response_cache or args.output:
+            parser.error("preflight requires config; omit response-cache and output")
+    else:
+        if not args.config or not args.response_cache or not args.output:
+            parser.error("inference requires config, response-cache, and output")
+        if args.output.exists():
+            parser.error("output already exists; choose a new file")
+        if args.output.resolve().is_relative_to(args.source.resolve()):
+            parser.error("diagnostic output must be outside source ingestion")
     config = load_llm_config(args.config)
+    check = preflight(args.source, args.checks, config)
+    available = check["available_memory_bytes"]
+    threshold = args.min_available_gib
+    sufficient = available is not None and (threshold is None or available / 1024**3 >= threshold)
+    check["min_available_gib"] = threshold
+    check["memory_gate_passed"] = sufficient if threshold is not None else None
+    if args.preflight:
+        print(json.dumps(check))
+    if threshold is not None and not sufficient:
+        observed = "unknown" if available is None else f"{available / 1024**3:.2f} GiB"
+        parser.error(
+            f"available RAM is {observed}; {threshold:g} GiB required before model loading"
+        )
+    if args.preflight:
+        return
     report = run_checks(
         args.source,
         args.checks,

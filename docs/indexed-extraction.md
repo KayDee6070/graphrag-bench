@@ -38,6 +38,10 @@ This format requests relationships only. It does not separately extract isolated
 entities, so a name with no proposed relationship may disappear from the graph.
 That is another coverage tradeoff to assess before adopting it.
 
+The [next bounded trial](local-model-trial.md) keeps this final indexed recipe and
+changes the local reader from 0.5B to 3B. Its config and memory preflight are ready;
+the larger model has not been downloaded or evaluated.
+
 The parser also accepts a six-value array in the order subject, subject type,
 predicate, object, object type, sentence ID. This was the first prototype format.
 The final prompt and examples ask for named fields because the paper trials showed

@@ -490,6 +490,46 @@ local model or a materially different extraction design is the next decision;
 schema constraints alone would not fix the observed wrong relationships. No new
 model download, paid API, full-corpus extraction, push, or M12 study occurred.
 
+## Larger local-model trial: preparation only (2026-09-30)
+
+Repeated 0.5B failures motivate testing model capacity on the unchanged indexed
+recipe before another prompt redesign. The candidate config,
+`configs/llm-extraction-indexed-3b.toml`, pins Qwen2.5-3B-Instruct at
+`aa8e72537993ba99e69dfaafa59ed015b17504d1`. Only model ID/revision differ from the
+final 0.5B indexed config; source messages, fictional examples, ontology, CPU float32,
+four threads, and input/output limits stay fixed. Tokenizer and chat template come
+with the model, so this is not a parameter-count-only causal experiment.
+
+`check_extraction_sample.py --preflight` now checks config/source hashes and chunk
+IDs without loading a model or writing artifacts. The optional
+`--min-available-gib` gate stops both preflight and inference before provider
+construction when available RAM is insufficient or unknown. Source bindings are
+also checked before provider construction on normal inference commands. The new
+preflight does not change extraction recipes or saved diagnostic formats.
+Offline replay remains independent of the model and memory check.
+
+The real-source preflight validated all eight cases and the unchanged case-file
+hash `4f475cf0ad71b328cfa33721131db2ee6ffa7bcdff2f1c7670d6f9a3ea4f8e2a`.
+It reported 1,721,425,920 available bytes (1.60 GiB) and correctly exited with code 2
+against an 18 GiB threshold, without initializing a model. This threshold is an
+engineering headroom estimate, not a measured requirement or a memory reservation.
+Model metadata indicates approximately 11.50 GiB for float32 parameters alone;
+other runtime allocations will add to that.
+
+The explicit pinned download would transfer approximately 6.18 GB of runtime files
+and the model's Qwen Research License. Metadata was inspected; weights were not
+downloaded. Approval for that download and enough free RAM are still required.
+**No 3B quality result, runtime measurement, graph artifact, or corpus projection
+exists yet.** The [study lesson and exact commands](../docs/local-model-trial.md)
+explain the controlled comparison, memory limitations, download, and subsequent
+source-level review. No paid API, full-corpus extraction, or M12 work was started.
+
+Validation: **639 tests pass**, including low/unknown RAM stopping before model
+construction, a read-only preflight, invalid source rejection before loading,
+unchanged messages across model configs, separate model cache fingerprints, and
+model-free replay. Ruff passes. Both saved 0.5B paper diagnostics replay unchanged
+against the current source and draft case file.
+
 ## Remaining study requirements
 
 A usable complete real-paper graph, the four-method comparison, independently
