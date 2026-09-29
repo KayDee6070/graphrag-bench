@@ -1,6 +1,6 @@
 """Separate model suggestions from validated graph records and inference receipts."""
 
-from typing import Literal, Protocol, Self
+from typing import Annotated, Literal, Protocol, Self
 
 from pydantic import BaseModel, ConfigDict, Field, model_serializer, model_validator
 
@@ -50,6 +50,27 @@ class ProposedExtraction(Proposal):
         return self
 
 
+class IndexedRelation(Proposal):
+    subject: Text
+    subject_type: Identifier
+    predicate: Identifier
+    object: Text
+    object_type: Identifier
+    sentence_id: Annotated[int, Field(ge=1, strict=True)]
+
+
+class IndexedExtraction(Proposal):
+    """Compact model rows; the last field selects an exact numbered source sentence."""
+
+    relations: tuple[
+        IndexedRelation
+        | tuple[
+            Text, Identifier, Identifier, Text, Identifier, Annotated[int, Field(ge=1, strict=True)]
+        ],
+        ...,
+    ] = Field(max_length=4)
+
+
 class ModelSpec(Record):
     provider: Text
     model_id: Text
@@ -65,7 +86,10 @@ class Message(Record):
 
 class ExtractionRequest(Record):
     prompt_version: Literal[
-        "chunk-entities-relations-v1", "compact-chunk-relations-v1", "focused-chunk-relations-v1"
+        "chunk-entities-relations-v1",
+        "compact-chunk-relations-v1",
+        "focused-chunk-relations-v1",
+        "indexed-chunk-relations-v1",
     ] = PROMPT_VERSION
     chunk: Chunk
     messages: tuple[Message, ...] = Field(min_length=1)

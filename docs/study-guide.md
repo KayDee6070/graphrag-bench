@@ -130,6 +130,12 @@ Explain why “the filter skipped Report B” differs from “Report B contains 
 fact.” Why can a name pass an exact-text check but still have the wrong entity type?
 Why is an eight-skip sample insufficient to estimate the cost of real model calls?
 
+Continue with [numbered source sentences](indexed-extraction.md). Explain which
+work moves from the model to deterministic code and which judgments still need
+the model. A real quote can support an incorrectly labeled relationship: give an
+example. Distinguish draft development checks from independently reviewed
+held-out evaluation.
+
 Open the saved baseline's `summary.json` and `manifest.json`. Identify which methods actually ran. Explain why three repeats do not turn 40 questions into 120 independent questions, why an eight-chunk extraction sample is not a complete graph, and why a fast query can hide days of graph preparation.
 
 ## Explain the current system in an interview

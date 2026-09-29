@@ -71,7 +71,7 @@ def test_focused_prompt_keeps_ontology_out_of_final_source_message(source_pair, 
     )
 
 
-@pytest.mark.parametrize("style", ["compact", "focused", "cued"])
+@pytest.mark.parametrize("style", ["compact", "focused", "cued", "indexed"])
 def test_prompt_survives_canonical_config_serialization(style, source_pair, make_provider):
     config = load_llm_config(ROOT / f"configs/llm-extraction-{style}.toml")
     restored = LLMExtractionConfig.model_validate_json(json_bytes(config))

@@ -109,6 +109,15 @@ recipe. This candidate failed the real-paper readiness check. Read the
 [cue-filter lesson](paper-comparison.md#8-a-scout-who-only-reads-sentences-with-clue-words)
 before using it; a skipped chunk can still contain useful facts.
 
+`configs/llm-extraction-indexed.toml` is a separate experimental profile. The model
+returns endpoint names/types, a predicate, and a numbered source sentence. The
+program derives the quote from that exact sentence and runs the existing source
+checks. `IndexedExtraction` accepts at most four named or six-value positional
+relation rows; sentence IDs are strict positive integers. Invalid references are
+diagnosed without inventing evidence. The profile does not separately emit isolated
+entities. See the [numbered-sentence lesson](indexed-extraction.md) for the draft
+paper checks, replay commands, and unresolved quality limitations.
+
 ## Replay and query the resulting graph
 
 ```bash

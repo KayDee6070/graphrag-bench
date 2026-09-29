@@ -1,0 +1,63 @@
+{
+  "kind": "source-reviewed-extraction-development-checks-v1",
+  "review_status": "draft; independent human review pending",
+  "selection": "Five purposively selected positive chunks and three negative chunks; frozen before candidate outputs were inspected. Not representative or held out.",
+  "source_hashes": {
+    "chunks.jsonl": "b7736aaebcafeb92347846305e20c1ab6836ed2f8d5bbdaa4142d6d7a8a0cf04",
+    "documents.jsonl": "a7a2a000f9991d6667a3c2a520237e7cdd7d77d81bb50de031927247fff6d2bc",
+    "manifest.json": "27e11462a07f87ebc37f9d31f1720ebe36e24991b5610dbdc028c69a0b702c0c"
+  },
+  "cases": [
+    {
+      "id": "ragas-judge",
+      "chunk_id": "chunk-6e856ae0eed4a3cadd19417d5dca9ad3a75f86cfc8449d5c0a708ecf01c24d02",
+      "reason": "ARES page 7 explicitly says RAGAS uses GPT-3.5 as its judge.",
+      "expected": [{"subjects": ["RAGAS"], "predicate": "USES", "objects": ["GPT-3.5"]}]
+    },
+    {
+      "id": "rag-components",
+      "chunk_id": "chunk-09d4ac79eb48bfe3cd066de50f7a0b8c1fc886d849440adfdda562d298622f7f",
+      "reason": "ARES page 8 explicitly names the Facebook RAG model, its DPR retriever, and BART. RAG is an accepted bare-name spelling within the same quote.",
+      "expected": [
+        {"subjects": ["Facebook RAG", "RAG"], "predicate": "USES", "objects": ["DPR"]},
+        {"subjects": ["Facebook RAG", "RAG"], "predicate": "USES", "objects": ["BART"]}
+      ]
+    },
+    {
+      "id": "jina-backbone",
+      "chunk_id": "chunk-13e09f04d93bc29c0d540a3ddd7ca71a8cce04ef8ef799dc3fe68f05ea8d955f",
+      "reason": "Jina v3 page 4 figure caption explicitly says the architecture is based on XLM-RoBERTa; surrounding figure text is noisy.",
+      "expected": [{"subjects": ["jina-embeddings-v3"], "predicate": "BASED_ON", "objects": ["XLM-RoBERTa"]}]
+    },
+    {
+      "id": "bert-initialization",
+      "chunk_id": "chunk-a44871dfb80a320ae5fc340fbf21d9f3c99a05935abaee772e77c699fd5c62b0",
+      "reason": "E5 page 7 says BERT-FTbase initializes from BERTbase. This draft interprets initialization as BASED_ON; the same fine-tuning data does not mean it uses E5 as a component.",
+      "expected": [{"subjects": ["BERT-FTbase"], "predicate": "BASED_ON", "objects": ["BERTbase"]}]
+    },
+    {
+      "id": "sbert-backbone",
+      "chunk_id": "chunk-60f70827f8c7e6a679cafd93b78bf4ef6b1b47a3fa4fe41d318f6b98db00d2f1",
+      "reason": "Sentence-BERT page 1 defines Sentence-BERT (SBERT) as a modification of pretrained BERT. The later runtime comparison does not imply a component relation with RoBERTa.",
+      "expected": [{"subjects": ["Sentence-BERT", "SBERT"], "predicate": "BASED_ON", "objects": ["BERT"]}]
+    },
+    {
+      "id": "generic-hyperparameters",
+      "chunk_id": "chunk-10192b149e82f929720be82157fb83a4bab8b2b1c23eef55e4debd5f2138635e",
+      "reason": "Generic batch size, learning rate, and model size words are not named entities. Previously inspected in the cue-filter trial, so this is a known development failure.",
+      "expected": []
+    },
+    {
+      "id": "comparison-only",
+      "chunk_id": "chunk-7f75c937f4cdf335a316437a723b778e0e5661ef307c712ffe71656d87cad6c3",
+      "reason": "BEIR page 2 compares classes of methods against BM25 without naming a supported pair of entities in the ontology.",
+      "expected": []
+    },
+    {
+      "id": "unsuitable-tasks",
+      "chunk_id": "chunk-e989467e30f8b1663415ce911734837519cb279286bc53fdaf1f841b604ea2d9",
+      "reason": "Sentence-BERT page 1 describes BERT computation cost and unsuitability for tasks. Unsuitability is not a positive TARGETS assertion.",
+      "expected": []
+    }
+  ]
+}

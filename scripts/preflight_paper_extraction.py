@@ -80,7 +80,7 @@ def main():
         receipt = complete_chunk(chunk, config, provider, args.response_cache)
         validated = validate_sample_responses(corpus, (receipt,), config, provider.spec)
         try:
-            _parse(receipt.completion.text)
+            _parse(receipt.completion.text, style=config.prompt_style)
             schema_valid = True
         except ValueError:
             schema_valid = False

@@ -1,6 +1,6 @@
 # M11 development comparison and extraction feasibility
 
-Work began 2026-09-28 and continued 2026-09-29 (Europe/Berlin). Packages 0.11.0–0.11.1.
+Work began 2026-09-28 and continued 2026-09-29 (Europe/Berlin). Packages 0.11.0–0.11.2.
 The full four-method study is **incomplete**. This report separates the completed
 baseline from source-only extraction diagnostics. All 40 questions are draft dev
 labels pending independent review; there are zero held-out questions.
@@ -361,6 +361,134 @@ Next extraction work should address output correctness and semantic quality on a
 bounded source-reviewed sample before a full graph build. Reducing call counts
 alone has not solved this. Independent review and held-out evaluation remain
 separate work; no new model, paid API, push, or M12 run was used for this trial.
+
+## Numbered-sentence extraction and draft checks (0.11.2)
+
+The next experiment simplifies what the existing local model must generate.
+`indexed-v1` numbers exact source sentences and asks for endpoint names/types,
+a predicate, and a sentence ID. Deterministic code creates local IDs and obtains
+the quote from the referenced source slice. Existing type, exact-name, unique-quote,
+and endpoint checks still apply. The parser accepts at most four named or positional
+six-field rows, with strict positive integer sentence IDs. Raw responses remain
+unchanged. The profile requests relationships only, so standalone entity coverage
+can decline. It remains experimental and is not the default.
+
+The final config retains the cached Qwen2.5-0.5B-Instruct revision and CPU settings
+listed above, all eight ontology predicates, all source sentences, four fictional
+examples, and a 320-token output limit. It disables whitespace normalization.
+The prompt uses a shorter type list, numbered text, and a revised response schema.
+This is a bundled extraction-design comparison, not an isolated measurement of
+one prompt feature and not the planned M12 retrieval ablation study.
+
+### Positional-array prototype
+
+The first prototype asked for six-value arrays. Its three fictional controls
+produced two assertions, three entities, no issues, and no rejected responses
+(`m11-indexed-controls-01`). On the original eight systematically sampled paper
+chunks, it produced zero schema-valid responses and zero assertions; four hit the
+output limit. Mean recorded completion time was 26.68 seconds
+(`m11-indexed-systematic-01.jsonl`). This again demonstrates that fictional control
+success does not establish paper readiness.
+
+Inspection showed named objects where arrays were requested, undeclared types such
+as Person/Number/Conference, ontology/example copying, and too many rows. On the
+eight targeted development cases described below, the prototype also produced zero
+schema-valid responses and zero assertions; three hit the output limit, with a
+26.51-second mean (`m11-indexed-checks-01.json`). These raw results explain the move
+to named fields in the final prompt. The final contract also accepts six-value
+arrays; its schema, conversion policy, and prompt are fingerprinted.
+
+The `-01` artifacts predate the final prompt/contract. They are archived prototypes,
+not artifacts that claim compatibility with the final indexed recipe. Their full
+requests/responses remain in the local cache. Use the final artifacts for replay.
+
+### Same-source development diagnostic
+
+`datasets/examples/extraction-study/m11-source-checks.json` pins eight original
+chunks and their ingestion hashes. Five positive cases contain six draft reference
+facts; three cases are negative. The positives cover RAGAS/GPT-3.5, RAG/DPR/BART,
+jina-embeddings-v3/XLM-RoBERTa, BERT-FTbase/BERTbase, and Sentence-BERT/BERT. The
+negatives cover generic hyperparameters, a comparison, and task unsuitability.
+The reference file explains each interpretation and accepted name spelling.
+
+These checks were drafted after reading the source. They are **not independently
+reviewed or held out**. Selection was fixed before
+inspecting candidate outputs on these target cases, but the hyperparameter negative
+was already a known failure and the broader corpus was already used for development.
+The sample is deliberately small, positive-enriched, and does not cover all predicates.
+Interpreting initialization as BASED_ON needs a second review.
+
+`scripts/check_extraction_sample.py` supplies the same full original chunks to each
+profile. Labels never enter the inference interface. A matched fact checks endpoint
+names, direction, and predicate against a draft reference. It does not establish
+exact entity-type accuracy or full semantic correctness. Unmatched assertions are
+saved for review rather than automatically called false positives. The script makes
+no full-corpus projection and creates no paper graph.
+
+Reports bind the case-file hash, source hashes, recipe, provider, raw completions,
+accepted assertions/evidence, issues, and scores. `--replay` rebuilds requests and
+recomputes validation and scores without loading a model. It detects inconsistent
+saved results; it does not independently authenticate model provenance or prove
+the reference labels true.
+
+### Final paired observations
+
+| Observation on the same eight chunks | Focused baseline | Final indexed candidate |
+| --- | ---: | ---: |
+| Draft reference facts matched | 0/6 | 0/6 |
+| Mechanically accepted assertions | 0 | 1 |
+| Accepted assertions unmatched by draft references | 0 | 1 |
+| Schema-valid responses | 1/8 | 1/8 |
+| Entire responses rejected | 7/8 | 7/8 |
+| Responses stopped at output limit | 7/8 | 4/8 |
+| Negative cases with no assertion and no whole-response rejection | 0/3 | 0/3 |
+| Mean recorded completion time | 33.10 s | 23.47 s |
+
+The candidate's one accepted assertion is **Sentence-BERT USES BERT**, citing the
+sentence describing Sentence-BERT as a modification of pretrained BERT. The draft
+reference asks for BASED_ON. This is an ontology interpretation requiring review;
+the unmatched count does not automatically prove the assertion false. We did not
+change the reference to reward the observed output. A second proposed assertion,
+SBERT EVALUATED_ON BERT, failed because EVALUATED_ON requires a dataset object.
+
+The other candidate responses show continued failures to follow instructions:
+repeated self-relations, fictional example names copied into paper responses,
+undeclared type labels, more than four rows, and invalid sentence references.
+For example, the RAG component response copied Comet from a fictional example and
+proposed component self-relations. The Jina figure response produced a chain through
+layout words instead of the stated backbone relation. Truncated responses remain
+rejected as a whole; we do not salvage an apparently useful prefix.
+
+The measured reduction in truncations is real for these outputs, but **readiness
+still fails**. Seven of eight responses fail whole-response validation, none of six
+draft target facts match, and all three negatives fail to yield a usable empty
+response. This does not establish useful full-paper extraction or general model
+accuracy. The final named-field recipe has not been run across the full corpus or
+the earlier systematic sample. Its targeted selection cannot estimate corpus recall.
+
+Times are descriptive receipt values from sequential profile runs on a shared
+desktop, with lightweight development checks during execution. There are no repeated
+timing trials, confidence intervals, or claims of isolated performance gains.
+
+| Local artifact | SHA-256 |
+| --- | --- |
+| Draft case file | `4f475cf0ad71b328cfa33721131db2ee6ffa7bcdff2f1c7670d6f9a3ea4f8e2a` |
+| `m11-focused-checks-public.json` | `02e1a4299fcac79d2936d9e1f4420a1b62186313aa1dcc8a1fc49cd1fac796f7` |
+| `m11-indexed-checks-public.json` | `d77588c7c351c61d050c7ccc9d32c40b5ef464ea0e5dbae8b3167bc3e66ad460` |
+| Final indexed recipe | `ced901bd37ec50a9752f2e20faf02433899975a9f6efc358fd89e8487fb9ff4e` |
+
+Both final diagnostics replay successfully without inference. The existing M8,
+focused, and cue-filter control artifacts also still verify. Validation includes
+**615 passing tests**, source-only request checks, strict named/positional row
+contracts, exact quote offsets, invalid references, incompatible endpoint types,
+legacy recipe compatibility, graph replay, and tampered diagnostic scores.
+
+The [numbered-sentence lesson](../docs/indexed-extraction.md) explains the change
+with a scout analogy and gives reproduction commands. New work should prioritize
+semantic extraction quality and source-reviewed labels before scaling. A stronger
+local model or a materially different extraction design is the next decision;
+schema constraints alone would not fix the observed wrong relationships. No new
+model download, paid API, full-corpus extraction, push, or M12 study occurred.
 
 ## Remaining study requirements
 

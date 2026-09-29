@@ -39,7 +39,7 @@ class PromptExample(Record):
 
 class LLMExtractionConfig(Record):
     model: LocalModelConfig
-    prompt_style: Literal["standard", "compact-v1", "focused-v1"] = "standard"
+    prompt_style: Literal["standard", "compact-v1", "focused-v1", "indexed-v1"] = "standard"
     passage_selection: Literal["full", "relation-cues-v1"] = "full"
     strip_entity_whitespace: bool = Field(default=False, strict=True)
     entity_types: dict[Identifier, Text] = Field(min_length=1)

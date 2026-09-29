@@ -316,6 +316,11 @@ search algorithm cannot recover a relationship the extractor never recorded.
 
 ## 9. What is still missing?
 
+The next extractor experiment uses [numbered source sentences](indexed-extraction.md)
+and a fixed eight-chunk draft diagnostic. Read that lesson for the revised output
+format, same-source comparison, and the difference between valid structure and
+correct relationships.
+
 The complete real-paper model graph, full four-method comparison, independent
 annotation review, and genuinely held-out evaluation remain required. Development
 scores can guide engineering, but looking at them makes them unsuitable as unseen

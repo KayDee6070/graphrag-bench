@@ -13,6 +13,8 @@ from graphrag_bench.extraction.llm.contracts import (
     Completion,
     EntityProposal,
     ExtractionProvider,
+    IndexedExtraction,
+    IndexedRelation,
     LLMExtractionResult,
     LLMIssue,
     ModelSpec,
@@ -23,6 +25,7 @@ from graphrag_bench.extraction.llm.contracts import (
 from graphrag_bench.extraction.llm.prompt import (
     extraction_fingerprint,
     make_request,
+    numbered_spans,
     request_fingerprint,
     selected_passage,
     selected_ranges,
@@ -48,13 +51,58 @@ def _unique_object(pairs: list[tuple[str, object]]) -> dict:
     return result
 
 
-def _parse(text: str) -> ProposedExtraction:
+def _parse(text: str, *, style: str = "standard") -> ProposedExtraction | IndexedExtraction:
     def invalid_constant(value: str) -> None:
         raise ValueError(f"invalid JSON constant: {value}")
 
-    return ProposedExtraction.model_validate(
+    schema = IndexedExtraction if style == "indexed-v1" else ProposedExtraction
+    return schema.model_validate(
         json.loads(text, object_pairs_hook=_unique_object, parse_constant=invalid_constant)
     )
+
+
+def _expand_indexed(
+    proposed: IndexedExtraction, chunk: Chunk, config: LLMExtractionConfig, issues: list[LLMIssue]
+) -> ProposedExtraction:
+    spans = numbered_spans(chunk.text, config)
+    entities: dict[tuple[str, str], EntityProposal] = {}
+    relations = []
+    for row in proposed.relations:
+        if isinstance(row, IndexedRelation):
+            subject, subject_type, predicate, obj, object_type, sentence_id = (
+                row.subject,
+                row.subject_type,
+                row.predicate,
+                row.object,
+                row.object_type,
+                row.sentence_id,
+            )
+        else:
+            subject, subject_type, predicate, obj, object_type, sentence_id = row
+        if sentence_id > len(spans):
+            issues.append(_issue("invalid_quote", "Unknown numbered source sentence.", chunk))
+            continue
+        start, end = spans[sentence_id - 1]
+        quote = chunk.text[start:end]
+        subject_surface = subject.strip() if config.strip_entity_whitespace else subject
+        object_surface = obj.strip() if config.strip_entity_whitespace else obj
+        if not _locations(quote, subject_surface) or not _locations(quote, object_surface):
+            issues.append(
+                _issue("invalid_quote", "Selected sentence lacks exact endpoint names.", chunk)
+            )
+            continue
+        ids = []
+        for name, entity_type in ((subject, subject_type), (obj, object_type)):
+            key = (name, entity_type)
+            if key not in entities:
+                entities[key] = EntityProposal(
+                    id=f"e{len(entities) + 1}", name=name, entity_type=entity_type
+                )
+            ids.append(entities[key].id)
+        relations.append(
+            RelationProposal(subject=ids[0], predicate=predicate, object=ids[1], quote=quote)
+        )
+    return ProposedExtraction(entities=tuple(entities.values()), relations=tuple(relations))
 
 
 def _locations(text: str, surface: str) -> tuple[tuple[int, int], ...]:
@@ -264,6 +312,8 @@ def _process_responses(
             raise LLMError("response origin differs from passage selection policy")
         if abstains and record.completion != ABSTENTION_COMPLETION:
             raise LLMError("deterministic abstention must have the exact empty, zero-cost receipt")
+        if abstains:
+            continue
         if record.completion.finish_reason == "length":
             issues.append(
                 _issue("output_limit", "Output hit its token limit; chunk rejected.", chunk)
@@ -271,11 +321,13 @@ def _process_responses(
             rejected.append(chunk.chunk_id)
             continue
         try:
-            proposed = _parse(record.completion.text)
+            proposed = _parse(record.completion.text, style=config.prompt_style)
         except (ValueError, RecursionError) as error:
             issues.append(_issue("invalid_json", f"Response rejected: {str(error)[:240]}", chunk))
             rejected.append(chunk.chunk_id)
             continue
+        if isinstance(proposed, IndexedExtraction):
+            proposed = _expand_indexed(proposed, chunk, config, issues)
         entities = _entities(proposed.entities, chunk, config, registry, corpus, issues)
         for relation in proposed.relations:
             try:
