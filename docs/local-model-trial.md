@@ -1,7 +1,8 @@
 # M11: testing a stronger local reader
 
-**Status: prepared, not run.** The 3B model has not been downloaded or evaluated.
-This is a bounded extraction experiment within M11, not a full graph build or M12.
+**Status: completed and replay-verified on 2026-09-30.** The 3B model recovered
+2/6 draft facts across eight cases, compared with 0/6 for the 0.5B candidate.
+This remains a bounded M11 development experiment, not a full graph build or M12.
 
 ## Why change the reader?
 
@@ -38,6 +39,48 @@ cached responses as larger-model outputs.
 The reference facts stay outside the model requests. They remain draft labels
 awaiting independent review. These cases have already informed development, so
 they cannot establish held-out accuracy or performance across the entire corpus.
+
+## What happened
+
+| Same eight paper chunks | 0.5B indexed | 3B indexed |
+| --- | ---: | ---: |
+| Draft facts matched | 0/6 | 2/6 |
+| Accepted assertions | 1 | 2 |
+| Unmatched accepted assertions | 1 | 0 |
+| Schema-valid responses | 1/8 | 7/8 |
+| Rejected responses | 7/8 | 1/8 |
+| Output-limit responses | 4/8 | 0/8 |
+| Usable empty negative cases | 0/3 | 3/3 |
+| Mean recorded completion time | 23.47 s | 40.71 s |
+
+The two 3B assertions were:
+
+1. `jina-embeddings-v3 BASED_ON XLM-RoBERTa`, supported by the sentence stating
+   that its architecture is based on XLM-RoBERTa.
+2. `Sentence-BERT BASED_ON BERT`, supported by the sentence describing SBERT as a
+   modification of the pretrained BERT network.
+
+Both match the draft endpoint names, direction, and predicate. Inspection confirms
+that their quoted source text supports those relationships. This is development
+review, not the pending independent annotation review.
+
+The rejected RAG-components response omitted every required `sentence_id`. It also
+used `BASED_ON` where the draft labels use `USES`, and proposed an invalid
+`Model SUPPORTS_TASK Task` row. The program rejected the complete response; it did
+not salvage plausible fragments. RAGAS and BERT initialization were valid empty
+responses, so four positive draft facts were still missed.
+
+The larger reader therefore improved instruction following and bounded precision,
+but recall remains insufficient: it recovered only one third of the six positive
+facts. Eight development cases cannot establish corpus-wide accuracy. A full graph,
+retrieval comparison, held-out score, and general model advantage remain unproven.
+
+The saved report SHA-256 is
+`1cd04b767961755ef0fab6edf76e74692f7f52afd34586b4ea5aa148c86edbba`.
+Its extraction recipe SHA-256 is
+`70e26d7258535535cacc3d6b495cbaa8fe96fcc380bd0c66df8a54ab1547c1e9`.
+Inference plus model loading took 334.07 seconds wall time. Peak child RSS was
+18,562,104 KiB. These are single-machine observations, not performance benchmarks.
 
 ## Download and memory budget
 
@@ -97,9 +140,10 @@ The same threshold works on an inference command and is checked before loading.
 
 ### 2. Download the pinned files only after approval
 
-This is the approximately 6.18 GB download requiring approval under the established
-large-download preference. Reading model metadata during preparation did not fetch
-weights. The following command has **not** been executed:
+The approximately 6.18 GB download was explicitly approved before it began.
+Reading model metadata during initial preparation did not fetch weights. The
+background runner later completed and verified the pinned download through the Hub
+cache. This is the equivalent standalone download command:
 
 ```bash
 .venv/bin/python - <<'PY'
@@ -137,7 +181,8 @@ HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 \
 The existing provider is cache-only by default; the environment flags also disable
 Hub access. Missing files cause failure. The command does not silently download
 them, truncate inputs, or switch to a different model. The report stores actual
-outputs and their validation, not the preflight result. Run time remains unmeasured.
+outputs and their validation, not the preflight result. Use a fresh output path
+when repeating the completed trial.
 
 ### 4. Replay and inspect
 
@@ -164,6 +209,72 @@ three correct empty negative responses, and source-supported positive assertions
 Draft fact matches remain a diagnostic, not a substitute for semantic review.
 Even a clean eight-case result earns only a broader bounded feasibility check.
 It does not authorize a 6,996-chunk job or establish a retrieval advantage.
+
+## Running after VS Code closes
+
+VS Code edits files; Python runs the experiment. The editor is not a dependency.
+However, the current interactive coding session is a child of VS Code's extension
+host. Closing that host disconnects the session. A normal child shell command is
+therefore insufficient for a reliable handoff.
+
+`scripts/run_local_model_trial.py` runs under the systemd user manager, independently
+of the editor. It saves exact copies of the config and draft checks, validates the
+source, downloads only when `--allow-download` is explicit, and checks both weight
+files against their pinned SHA-256 hashes. It then waits up to 30 minutes for
+18 GiB available RAM, runs only the eight cases with a one-hour inference timeout,
+and replays the result offline. It never closes applications or publishes changes.
+
+For this approved run, the service and artifact directory are:
+
+```text
+graphrag-m11-3b-trial.service
+experiments/runs/m11-indexed-3b-trial-01/
+```
+
+To launch a fresh run after approval, choose a new unit name and output directory
+if those already exist. Substitute your absolute project path for `PROJECT`:
+
+```bash
+systemd-run --user --unit=graphrag-m11-3b-trial \
+  --working-directory=PROJECT \
+  --property=RuntimeMaxSec=3h \
+  --property=MemoryMax=20G --property=MemorySwapMax=0 \
+  --setenv=HF_HUB_DISABLE_PROGRESS_BARS=1 \
+  PROJECT/.venv/bin/python -u PROJECT/scripts/run_local_model_trial.py \
+  --allow-download \
+  --output PROJECT/experiments/runs/m11-indexed-3b-trial-01
+```
+
+The service has a three-hour total limit and a 20 GiB cgroup memory limit, with
+swap disabled for the job. These limits bound the background job; they do not
+guarantee that the model fits. Failure leaves logs and a resumable Hub/response
+cache. Do not overwrite a partial run directory; use a new one to retry.
+
+Save your open work, then close VS Code normally. Keep the computer awake and stay
+logged in. The job survives closing the editor; it is not configured to survive
+logout, shutdown, or reboot. Avoid reopening memory-heavy applications until the
+trial finishes.
+
+Check it from a separate terminal:
+
+```bash
+systemctl --user status graphrag-m11-3b-trial --no-pager
+journalctl --user -u graphrag-m11-3b-trial -n 30 --no-pager
+cat experiments/runs/m11-indexed-3b-trial-01/status.json
+```
+
+`status.json` records the last stage. `completed` means inference and replay both
+succeeded; independent semantic review remains pending. `diagnostic.json` contains
+the raw responses, evidence, scores, and provider settings. `inference.log` and `replay.log`
+record each command's output. Inference wall time includes loading and validation;
+peak child RSS is recorded in KiB on Linux. Neither is an isolated model benchmark.
+If the service is killed externally, the last status may be stale; check systemd
+as well. Stop the job with `systemctl --user stop graphrag-m11-3b-trial`.
+
+Running on another computer or a hosted notebook is possible because the project
+uses Python and files. A GPU, different numerical precision, or different library
+versions would need their own recorded recipe and comparison. They are not silently
+substituted into this CPU trial.
 
 **Check your understanding:** If the larger scout produces perfect forms but links
 the wrong people, has the experiment succeeded? No. Correct formatting and correct

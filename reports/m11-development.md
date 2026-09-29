@@ -1,6 +1,6 @@
 # M11 development comparison and extraction feasibility
 
-Work began 2026-09-28 and continued 2026-09-29 (Europe/Berlin). Packages 0.11.0–0.11.2.
+Work began 2026-09-28 and continued through 2026-09-30 (Europe/Berlin). Packages 0.11.0–0.11.3.
 The full four-method study is **incomplete**. This report separates the completed
 baseline from source-only extraction diagnostics. All 40 questions are draft dev
 labels pending independent review; there are zero held-out questions.
@@ -490,7 +490,7 @@ local model or a materially different extraction design is the next decision;
 schema constraints alone would not fix the observed wrong relationships. No new
 model download, paid API, full-corpus extraction, push, or M12 study occurred.
 
-## Larger local-model trial: preparation only (2026-09-30)
+## Larger local-model trial (0.11.3, 2026-09-30)
 
 Repeated 0.5B failures motivate testing model capacity on the unchanged indexed
 recipe before another prompt redesign. The candidate config,
@@ -516,19 +516,57 @@ engineering headroom estimate, not a measured requirement or a memory reservatio
 Model metadata indicates approximately 11.50 GiB for float32 parameters alone;
 other runtime allocations will add to that.
 
-The explicit pinned download would transfer approximately 6.18 GB of runtime files
-and the model's Qwen Research License. Metadata was inspected; weights were not
-downloaded. Approval for that download and enough free RAM are still required.
-**No 3B quality result, runtime measurement, graph artifact, or corpus projection
-exists yet.** The [study lesson and exact commands](../docs/local-model-trial.md)
-explain the controlled comparison, memory limitations, download, and subsequent
-source-level review. No paid API, full-corpus extraction, or M12 work was started.
+The approximately 6.18 GB pinned download was explicitly approved before it began.
+The runner verified both weight-file SHA-256 hashes, waited for 18 GiB available
+RAM, ran only the eight frozen cases, then replayed the saved diagnostic offline.
+It used CPU float32 with four threads. Inference plus model loading took 334.07
+seconds wall time; recorded peak child RSS was 18,562,104 KiB. These one-run host
+measurements are descriptive.
 
-Validation: **639 tests pass**, including low/unknown RAM stopping before model
+| Same eight paper chunks | 0.5B indexed | 3B indexed |
+| --- | ---: | ---: |
+| Draft facts matched | 0/6 | 2/6 |
+| Mechanically accepted assertions | 1 | 2 |
+| Accepted assertions unmatched by draft references | 1 | 0 |
+| Schema-valid responses | 1/8 | 7/8 |
+| Entire responses rejected | 7/8 | 1/8 |
+| Responses stopped at output limit | 4/8 | 0/8 |
+| Negative cases with usable empty responses | 0/3 | 3/3 |
+| Mean recorded completion time | 23.47 s | 40.71 s |
+
+The accepted assertions are `jina-embeddings-v3 BASED_ON XLM-RoBERTa` and
+`Sentence-BERT BASED_ON BERT`. Their exact evidence states that the Jina architecture
+is based on XLM-RoBERTa and that SBERT modifies the pretrained BERT network. They
+match the draft endpoint names, direction, and predicate. This source inspection is
+development review; independent annotation review remains pending.
+
+The RAG-components response was rejected because all four proposed rows omitted the
+required sentence ID. It also used `BASED_ON` instead of the draft `USES` predicate
+for DPR/BART and included an ontology-incompatible SUPPORTS_TASK proposal. The raw
+response remains in the diagnostic. No prefix or plausible row was salvaged.
+RAGAS and BERT initialization yielded valid empty responses, leaving four positive
+draft facts undetected.
+
+The 3B reader markedly improved schema compliance and handled all three negative
+cases, but 2/6 draft-fact recall is not sufficient for a complete graph. The sample
+is small, purposive, previously used for development, and lacks independent labels.
+No corpus-wide accuracy, retrieval gain, or causal parameter-count claim follows.
+
+The replay-verified diagnostic SHA-256 is
+`1cd04b767961755ef0fab6edf76e74692f7f52afd34586b4ea5aa148c86edbba`;
+the extraction recipe SHA-256 is
+`70e26d7258535535cacc3d6b495cbaa8fe96fcc380bd0c66df8a54ab1547c1e9`.
+The [study lesson and commands](../docs/local-model-trial.md) document the bounded
+runner, memory controls, exact outputs, and interpretation. No paid API, full-corpus
+extraction, push, or M12 work occurred.
+
+Validation: **643 tests pass**, including low/unknown RAM stopping before model
 construction, a read-only preflight, invalid source rejection before loading,
 unchanged messages across model configs, separate model cache fingerprints, and
-model-free replay. Ruff passes. Both saved 0.5B paper diagnostics replay unchanged
-against the current source and draft case file.
+model-free replay. Runner tests cover frozen config/check copies, cache-only inference,
+weight checks, memory waiting, timeout/failure status, and offline replay. Ruff passes.
+Both saved 0.5B diagnostics and the new 3B diagnostic replay against their source
+and draft case file.
 
 ## Remaining study requirements
 

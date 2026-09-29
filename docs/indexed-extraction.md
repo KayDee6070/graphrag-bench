@@ -40,7 +40,8 @@ That is another coverage tradeoff to assess before adopting it.
 
 The [next bounded trial](local-model-trial.md) keeps this final indexed recipe and
 changes the local reader from 0.5B to 3B. Its config and memory preflight are ready;
-the larger model has not been downloaded or evaluated.
+the completed eight-case trial recovered 2/6 draft facts and passed offline replay.
+Independent review and broader testing remain open.
 
 The parser also accepts a six-value array in the order subject, subject type,
 predicate, object, object type, sentence ID. This was the first prototype format.
