@@ -243,7 +243,78 @@ To inspect this candidate locally, choose fresh output paths:
 The second command uses the three **fictional** M8 source passages as controls.
 Its small graph is not a graph of the 30-paper research corpus.
 
-## 8. What is still missing?
+## 8. A scout who only reads sentences with clue words
+
+The next local experiment asks: **Can we make the reader's job smaller before
+asking it to draw connections?** It uses the same cached small model. No new model
+download or paid service is involved.
+
+Imagine handing the scout a highlighter. It highlights sentences containing words
+such as “uses,” “based on,” or “evaluated on,” then gives the model only the first
+two highlighted sentences in each chunk. This is the opt-in
+`passage_selection = "relation-cues-v1"` setting in
+`configs/llm-extraction-cued.toml`. The original configuration still reads full chunks.
+
+For example:
+
+> Background discussion. Orion uses Nova. More discussion.
+> Nova was evaluated on Harbor.
+
+The model sees `Orion uses Nova.` and `Nova was evaluated on Harbor.` It does not
+see the background discussion. Their original locations remain attached to the
+request, so accepted names and quotes still point into the actual document.
+A quote must fit inside one highlighted source span; joining highlighted sentences
+with a blank line does not create a new quotable source passage.
+
+If nothing matches, the system records a **deterministic abstention**: a marked
+empty result with zero generated tokens and no model call. This means “our filter
+skipped this chunk.” It does **not** mean “the model checked this and found no fact.”
+Replay verifies the marker, empty response, and zero-cost receipt. A failure from
+the model is still an error, never converted into a skip.
+
+There is a catch. “Lantern Squad guards the east gate” has a useful relationship
+but none of these research-oriented clue words. The scout would miss it. Even on
+research papers, “tested against” could express a fact that the filter misses.
+The first-two limit can also hide a later useful sentence. Sentence splitting is
+deliberately simple and may split at abbreviations such as “et al.” This candidate
+does not cover every ontology predicate or measure recall: the fraction of useful
+facts successfully retained.
+
+On our real corpus, 1,416 of 6,996 chunks match. We sampled eight matching chunks.
+Five model responses hit the output limit; none produced an accepted relationship.
+Four entity names passed mechanical source checks, but their labels were dubious:
+for example, the model called the ordinary word “batch” a dataset. Matching words
+in a source is not enough to prove that a model understood them correctly.
+
+**The experiment fails the readiness check.** It reduces the number of planned
+model calls, but has not demonstrated a useful graph or preserved evidence coverage.
+An initial sample across the whole corpus happened to contain eight skipped chunks.
+That is why the script can now sample only model-invoked chunks and reports skips
+separately. A sample with no actual model responses cannot estimate model runtime
+when other chunks still require inference; the estimate is `null`, not zero.
+
+To reproduce this bounded diagnostic, with existing local source/model caches:
+
+```bash
+.venv/bin/python scripts/preflight_paper_extraction.py \
+  datasets/processed/m10-expanded-03/ingestion \
+  --config configs/llm-extraction-cued.toml \
+  --response-cache experiments/runs/m11-research-extraction-cache \
+  --sample-pool model-invocations
+```
+
+Use `--sample-pool all` to inspect whole-corpus sampling instead. The two pools
+answer different questions; their timings are not a matched speed comparison.
+Saved completions are reused, including their historical generation times. The
+final summary records the extraction fingerprint and source hashes. It produces
+no full paper graph. See the [trial report](../reports/m11-development.md#cue-filter-trial-0111)
+for measured counts, limitations, and artifact paths.
+
+**Check your understanding:** If the highlighter skips Report B, has Graph Search
+proved that Lantern Squad has no gate? No. Its input is incomplete. Improving the
+search algorithm cannot recover a relationship the extractor never recorded.
+
+## 9. What is still missing?
 
 The complete real-paper model graph, full four-method comparison, independent
 annotation review, and genuinely held-out evaluation remain required. Development

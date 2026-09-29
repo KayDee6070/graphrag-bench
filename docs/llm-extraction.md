@@ -98,6 +98,17 @@ The model is loaded from the local cache by default. If you choose to download t
 
 Always choose a fresh output directory. A failed provider call aborts the run; it is not silently replaced with deterministic extraction or an empty successful response. Completed requests in an optional response cache can be reused on a subsequent attempt. Malformed model responses instead produce recorded per-chunk issues, allowing the other chunks to be processed. `built_with_issues` is a warning to inspect the saved results, not a quality score.
 
+The experimental `configs/llm-extraction-cued.toml` selects at most two sentences
+using source-only relation cues before inference. A cue-less chunk gets an explicit
+`origin="deterministic-abstention"` receipt, not a provider response. Replay requires
+its exact empty JSON and zero tokens/time; selected names and quotes must come from
+the text actually shown to the model. Normal provider receipts omit `origin` to
+preserve legacy bytes (the default on loading is `provider`). The selector is bound
+into the extraction fingerprint; `passage_selection="full"` preserves the original
+recipe. This candidate failed the real-paper readiness check. Read the
+[cue-filter lesson](paper-comparison.md#8-a-scout-who-only-reads-sentences-with-clue-words)
+before using it; a skipped chunk can still contain useful facts.
+
 ## Replay and query the resulting graph
 
 ```bash

@@ -6,6 +6,11 @@ GraphRAG Bench is a small research-engineering project for comparing vector, gra
 
 **Current milestone: M11 — comparison runner implemented; full study incomplete.** The runner compares verified, frozen paper chunks, vector indexes, and optional complete LLM graphs under one evidence budget. The corpus contains 30 papers, 558 pages, 6,996 chunks, and 40 draft dev questions. Full graph extraction, the four-method real-paper comparison, independent annotation review, and 80 genuinely held-out questions remain. No general retrieval advantage has been established. Start with the [M11 lesson](docs/paper-comparison.md) and [development observations](reports/m11-development.md).
 
+Latest local trial (0.11.1): source sentence filtering reduces planned model calls
+to 1,416/6,996 chunks, but eight sampled calls produced **zero accepted relations**.
+It remains experimental; the [trial report](reports/m11-development.md#cue-filter-trial-0111)
+documents the failed quality check and replay safeguards.
+
 ## Quick start
 
 Python 3.11 or newer is required. From this repository:

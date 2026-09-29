@@ -10,6 +10,7 @@ from graphrag_bench.extraction.llm.cache import get_completion
 from graphrag_bench.extraction.llm.config import LLMError, LLMExtractionConfig
 from graphrag_bench.extraction.llm.contracts import (
     EXTRACTOR_VERSION,
+    Completion,
     EntityProposal,
     ExtractionProvider,
     LLMExtractionResult,
@@ -23,9 +24,19 @@ from graphrag_bench.extraction.llm.prompt import (
     extraction_fingerprint,
     make_request,
     request_fingerprint,
+    selected_passage,
+    selected_ranges,
 )
 from graphrag_bench.extraction.registry import EntityRegistry, stable_id
 from graphrag_bench.models import Chunk, Document, EvidenceSpan, RelationAssertion, require_unique
+
+ABSTENTION_COMPLETION = Completion(
+    text='{"entities":[],"relations":[]}',
+    input_tokens=0,
+    output_tokens=0,
+    finish_reason="eos",
+    elapsed_ms=0,
+)
 
 
 def _unique_object(pairs: list[tuple[str, object]]) -> dict:
@@ -82,7 +93,11 @@ def _entities(
             issues.append(
                 _issue("normalized_entity", f"{entity.id}: trimmed name whitespace.", chunk)
             )
-        locations = _locations(chunk.text, entity.name)
+        locations = tuple(
+            (start, end)
+            for start, end in _locations(chunk.text, entity.name)
+            if any(a <= start and end <= b for a, b in selected_ranges(chunk.text, config))
+        )
         if (
             entity.entity_type not in config.entity_types
             or entity.name != entity.name.strip()
@@ -128,6 +143,11 @@ def _relation(
     start = chunk.text.find(proposal.quote)
     if start < 0 or chunk.text.find(proposal.quote, start + 1) >= 0:
         raise LLMError("quote must occur exactly once in the source chunk")
+    if not any(
+        a <= start and start + len(proposal.quote) <= b
+        for a, b in selected_ranges(chunk.text, config)
+    ):
+        raise LLMError("quote must be contained in one selected source span")
     if not _locations(proposal.quote, subject.name) or not _locations(
         proposal.quote, object_entity.name
     ):
@@ -163,6 +183,26 @@ def validate_provider_spec(config: LLMExtractionConfig, spec: ModelSpec) -> None
         raise LLMError("provider model differs from extraction configuration")
     if any(spec.settings.get(k) != v for k, v in config.model.model_dump(mode="json").items()):
         raise LLMError("provider settings differ from extraction configuration")
+
+
+def complete_chunk(
+    chunk: Chunk,
+    config: LLMExtractionConfig,
+    provider: ExtractionProvider,
+    response_cache: Path | None = None,
+) -> ResponseRecord:
+    """Complete one source chunk, or record a deterministic cue-filter abstention."""
+    spec = provider.spec
+    validate_provider_spec(config, spec)
+    request = make_request(chunk, config)
+    if config.passage_selection != "full" and not selected_passage(chunk.text, config):
+        return ResponseRecord(
+            request_sha256=request_fingerprint(spec, request),
+            request=request,
+            completion=ABSTENTION_COMPLETION,
+            origin="deterministic-abstention",
+        )
+    return get_completion(provider, request, response_cache)
 
 
 def process_responses(
@@ -219,6 +259,11 @@ def _process_responses(
             raise LLMError("saved request differs from source or extraction prompt")
         if record.request_sha256 != request_fingerprint(spec, record.request):
             raise LLMError("saved request fingerprint mismatch")
+        abstains = config.passage_selection != "full" and not selected_ranges(chunk.text, config)
+        if (record.origin == "deterministic-abstention") != abstains:
+            raise LLMError("response origin differs from passage selection policy")
+        if abstains and record.completion != ABSTENTION_COMPLETION:
+            raise LLMError("deterministic abstention must have the exact empty, zero-cost receipt")
         if record.completion.finish_reason == "length":
             issues.append(
                 _issue("output_limit", "Output hit its token limit; chunk rejected.", chunk)
@@ -262,10 +307,10 @@ def extract_with_llm(
     spec = provider.spec
     # Check provider/config agreement before the first potentially expensive inference.
     validate_provider_spec(config, spec)
-    records = tuple(
-        get_completion(provider, make_request(chunk, config), response_cache)
-        for chunk in corpus.chunks.values()
-    )
+    records = []
+    for chunk in corpus.chunks.values():
+        records.append(complete_chunk(chunk, config, provider, response_cache))
+    records = tuple(records)
     if provider.spec != spec:
         raise LLMError("provider specification changed during extraction")
     return process_responses(corpus, records, config, spec)

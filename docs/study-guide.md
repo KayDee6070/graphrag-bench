@@ -125,6 +125,11 @@ Continue with the [30-paper expansion](m10-expansion.md) and `.venv/bin/python s
 
 Read the [M11 comparison lesson](paper-comparison.md) and [development report](../reports/m11-development.md). Explain why the old fixture benchmark could not simply rebuild chunks for the saved paper graph. Distinguish raw top-K evidence from the passages that fit into the writer's token budget.
 
+Then read the [cue-filter experiment](paper-comparison.md#8-a-scout-who-only-reads-sentences-with-clue-words).
+Explain why “the filter skipped Report B” differs from “Report B contains no useful
+fact.” Why can a name pass an exact-text check but still have the wrong entity type?
+Why is an eight-skip sample insufficient to estimate the cost of real model calls?
+
 Open the saved baseline's `summary.json` and `manifest.json`. Identify which methods actually ran. Explain why three repeats do not turn 40 questions into 120 independent questions, why an eight-chunk extraction sample is not a complete graph, and why a fast query can hide days of graph preparation.
 
 ## Explain the current system in an interview

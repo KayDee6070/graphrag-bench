@@ -2,7 +2,7 @@
 
 from typing import Literal, Protocol, Self
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_serializer, model_validator
 
 from graphrag_bench.models import (
     Chunk,
@@ -97,6 +97,14 @@ class ResponseRecord(Record):
     request_sha256: Sha256
     request: ExtractionRequest
     completion: Completion
+    origin: Literal["provider", "deterministic-abstention"] = "provider"
+
+    @model_serializer(mode="wrap")
+    def preserve_provider_receipt_shape(self, handler):
+        value = handler(self)
+        if self.origin == "provider":
+            value.pop("origin", None)
+        return value
 
 
 class LLMIssue(Record):

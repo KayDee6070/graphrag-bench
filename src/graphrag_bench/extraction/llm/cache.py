@@ -33,6 +33,7 @@ def get_completion(
             entry = CacheEntry.model_validate_json(path.read_bytes())
             if (
                 entry.provider != spec
+                or entry.record.origin != "provider"
                 or entry.record.request != request
                 or entry.record.request_sha256 != key
                 or entry.completion_sha256

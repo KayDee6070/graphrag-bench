@@ -1,6 +1,7 @@
 """Build the same source-only prompt for live inference and offline replay."""
 
 import json
+import re
 from hashlib import sha256
 
 from graphrag_bench.extraction.llm.config import LLMExtractionConfig
@@ -34,6 +35,43 @@ Return at most 4 entities and 1 relation. Do not list authors, affiliations or b
 Each relation needs an exact contiguous quote containing both names and supporting its direction.
 Use the shortest such quote. Omit negated, speculative or unsupported relations.
 Do not resolve pronouns or infer missing links. Empty arrays are valid."""
+
+_RELATION_CUE = re.compile(
+    r"\b(?:based\s+on|built\s+on|builds\s+on|uses?|used\s+by|"
+    r"evaluated\s+(?:on|using)|measured\s+by|proposes?|proposed|introduces?|introduced)\b",
+    re.IGNORECASE,
+)
+_SENTENCE_END = re.compile(r"[.!?]+[\"'”’)\]]*(?=\s|$)")
+_MAX_SELECTED_SENTENCES = 2
+
+
+def selected_ranges(text: str, config: LLMExtractionConfig) -> tuple[tuple[int, int], ...]:
+    """Return original source offsets; selection never creates new evidence coordinates."""
+    if config.passage_selection == "full":
+        return ((0, len(text)),)
+    spans = []
+    cursor = 0
+    for match in _SENTENCE_END.finditer(text):
+        spans.append((cursor, match.end()))
+        cursor = match.end()
+    if cursor < len(text):
+        spans.append((cursor, len(text)))
+    selected = []
+    for start, end in spans:
+        raw = text[start:end]
+        start += len(raw) - len(raw.lstrip())
+        end -= len(raw) - len(raw.rstrip())
+        candidate = text[start:end]
+        if candidate and _RELATION_CUE.search(candidate):
+            selected.append((start, end))
+        if len(selected) == _MAX_SELECTED_SENTENCES:
+            break
+    return tuple(selected)
+
+
+def selected_passage(text: str, config: LLMExtractionConfig) -> str:
+    """Select exact source substrings using query-independent ontology cues."""
+    return "\n\n".join(text[start:end] for start, end in selected_ranges(text, config))
 
 
 def _user_content(text: str, config: LLMExtractionConfig) -> str:
@@ -105,7 +143,9 @@ def make_request(chunk: Chunk, config: LLMExtractionConfig) -> ExtractionRequest
                 Message(role="assistant", content=example.response),
             )
         )
-    messages.append(Message(role="user", content=_user_content(chunk.text, config)))
+    messages.append(
+        Message(role="user", content=_user_content(selected_passage(chunk.text, config), config))
+    )
     return ExtractionRequest(
         prompt_version={
             "standard": "chunk-entities-relations-v1",
@@ -127,6 +167,19 @@ def extraction_fingerprint(config: LLMExtractionConfig, spec: ModelSpec) -> str:
         excluded.add("prompt_style")
     if not config.strip_entity_whitespace:
         excluded.add("strip_entity_whitespace")
+    if config.passage_selection == "full":
+        excluded.add("passage_selection")
+    recipe_config = config.model_dump(mode="json", exclude=excluded)
+    if config.passage_selection != "full":
+        recipe_config["selection_policy"] = {
+            "cue_pattern": _RELATION_CUE.pattern,
+            "cue_flags": int(_RELATION_CUE.flags),
+            "sentence_end_pattern": _SENTENCE_END.pattern,
+            "sentence_end_flags": int(_SENTENCE_END.flags),
+            "max_sentences": _MAX_SELECTED_SENTENCES,
+            "algorithm": "first-matching-trimmed-spans-double-newline-v1",
+            "validation": "selected-span-evidence-and-exact-abstention-v1",
+        }
 
     class Recipe(Record):
         extractor_version: str
@@ -142,7 +195,7 @@ def extraction_fingerprint(config: LLMExtractionConfig, spec: ModelSpec) -> str:
                 extractor_version=EXTRACTOR_VERSION,
                 # Preserve legacy recipe hashes and graph replay when the opt-in
                 # prompt style is absent from old manifests.
-                config=config.model_dump(mode="json", exclude=excluded),
+                config=recipe_config,
                 provider=spec,
                 system_prompt=_system_content(config),
                 output_schema=ProposedExtraction.model_json_schema(),

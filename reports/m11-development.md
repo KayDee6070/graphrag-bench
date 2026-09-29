@@ -1,6 +1,6 @@
 # M11 development comparison and extraction feasibility
 
-Work began 2026-09-28 and continued 2026-09-29 (Europe/Berlin). Package 0.11.0.
+Work began 2026-09-28 and continued 2026-09-29 (Europe/Berlin). Packages 0.11.0–0.11.1.
 The full four-method study is **incomplete**. This report separates the completed
 baseline from source-only extraction diagnostics. All 40 questions are draft dev
 labels pending independent review; there are zero held-out questions.
@@ -239,6 +239,128 @@ Validation: **565 tests pass**, Ruff lint and formatting checks pass. An install
 240-record baseline and the final control graph with imports of PyTorch,
 Transformers, Sentence Transformers, and pypdf explicitly blocked. This checks
 that offline verification does not require those optional inference/PDF libraries.
+
+## Cue-filter trial (0.11.1)
+
+The next bounded local trial keeps the focused prompt, normalization, model,
+revision, CPU settings, and 320-token output limit. It adds the opt-in
+`relation-cues-v1` passage selector. The original extraction config remains the
+default. This is M11 feasibility work, not the planned M12 retrieval ablation study.
+
+The selector splits on punctuation followed by whitespace/end, strips outer
+whitespace, and retains the first two sentences matching its case-insensitive
+cue pattern. Cues include “based on,” “built on,” “builds on,” “use/uses,” “used by,”
+“evaluated on/using,” “measured by,” “propose/proposes/proposed,” and
+“introduce/introduces/introduced.” The patterns, flags, sentence cap, algorithm
+identifier, and validation policy are included in the opt-in recipe fingerprint.
+Selection reads source text only; no questions, answers, or gold relationships.
+
+This is an intentionally incomplete heuristic. It omits some ontology predicates,
+can select generic verbs without named relationships, can split abbreviations,
+and discards later matching sentences. Overlapping chunks are counted separately.
+No claim is made about the fraction of useful facts retained. Full-corpus source
+accounting does not make a filtered graph equivalent in evidence coverage.
+
+| Corpus accounting | Count |
+| --- | ---: |
+| Original source chunks | 6,996 |
+| Chunks with selected text, eligible for a model call | 1,416 (20.24%) |
+| Chunks receiving a recorded deterministic skip | 5,580 (79.76%) |
+| Actual model responses sampled | 8 |
+
+The eligible chunks were sorted by original document ID and chunk ordinal, then
+sampled at positions 0, 202, 404, 606, 809, 1011, 1213, and 1415. Position numbers
+refer to the filtered pool, not the full corpus. The final source-validated
+diagnostic is `experiments/runs/m11-extraction-cued-final.jsonl`.
+
+| Observation | Final cue-filter sample |
+| --- | ---: |
+| Provider schema-valid responses | 2/8 |
+| Responses stopped at output limit | 5/8 |
+| Entire responses rejected | 6/8 |
+| Mechanically accepted entity names | 4 |
+| Accepted relations | **0** |
+| Mean historical provider completion time | 30.39 s |
+| Rough projected inference time for 1,416 calls | 11.95 h |
+
+One response had empty entities/relations. The other parseable response named
+`batch`, `learning_rate`, `small`, `base`, and `large`. The invented underscore in
+`learning_rate` failed exact-source validation. The other four names occurred in
+the selected sentence and passed mechanical checks. Calling `batch` a Dataset,
+or treating size labels as named models, does not establish correct extraction.
+The proposed relation referenced the rejected name and produced no assertion.
+Another response failed schema validation; the other five were truncated.
+
+The final validation reused the eight cached completions from
+`m11-extraction-cued-model-sample-v2.jsonl`; it did not generate a second independent
+set of responses. The final file binds the hardened validation/selection recipe:
+`b00a1e28eb83a0d5f0e8326d63f1010c97010228abd089ec0c30c22e0145e136`.
+
+The 11.95-hour projection is mean sampled **provider** time multiplied by eligible
+chunks. It excludes model loading, cache/validation overhead, and machine variation.
+Eight systematically selected chunks are not a representative runtime study.
+These chunks differ from the prior focused sample; 30.39 versus 42.74 seconds is
+not a matched prompt speedup. No full extraction was launched. The trial fails
+the real-paper readiness check and is not promoted to the default.
+
+### Accounting and prototype corrections
+
+An initial eight-chunk sample over the whole corpus selected only cue-less chunks.
+The prototype incorrectly counted their well-formed empty records as model schema
+successes and reported a zero-hour projection. Those are not model results. The
+corrected diagnostic (`m11-extraction-cued-all-final.jsonl`) reports eight
+deterministic abstentions, zero provider samples, and a `null` runtime projection
+because 1,416 other chunks still need model calls. Mixed samples now average only
+provider times, avoiding a second reduction for the skip fraction.
+
+The earlier broader selector included words such as “supports,” which selected
+the noun phrase “customer support.” That trial was stopped after its first
+completed response. Its files (`m11-extraction-cued-model-sample.jsonl` and
+`m11-extraction-cued-preflight.jsonl`) are prototypes, not the final policy or
+an additional independent comparison. The early `m11-cued-controls` manifest also
+predates selection-policy fingerprinting; use the final control artifact below.
+
+### Audit checks and fictional controls
+
+Provider receipts keep their legacy serialized shape. Deterministic skip records
+carry an explicit origin and an exact empty completion with zero tokens/time.
+Replay checks both directions: only cue-less chunks may skip, and cue-less chunks
+must carry a skip receipt. Altered completions or origins are rejected. Provider
+cache entries cannot masquerade as deterministic skips. Failures never silently
+become successful empty model results.
+
+Names/mentions must lie in selected source spans. Each relation quote must occur
+uniquely in the original chunk and fit wholly inside one selected span, with both
+endpoint names present. This prevents accidentally accepting material omitted
+from the prompt or treating the join between selected sentences as source evidence.
+It still does not prove semantic truth, negation handling, or correct entity types.
+
+The three fictional controls in `m11-cued-controls-final` retain four entities,
+two assertions, one whitespace-normalization issue, and zero rejected responses.
+The positive controls produce Orion USES Nova and Nova EVALUATED_ON Harbor; the
+negated control produces no edge. Their prompts equal the final focused controls,
+so cached model completions were reused. This is a replay/control check, not fresh
+independent model-quality evidence.
+
+| Final cue control artifact | SHA-256 |
+| --- | --- |
+| `graph.json` | `e75afed342efd1efd807adaf616e29683dd2527be4099311bb999c5cc5d42524` |
+| `issues.jsonl` | `c5e3d8f8df69eee53e38a04f02d17630ff7e75c54672090712596a0c93f7f23b` |
+| `responses.jsonl` | `23354df932bf3fc6b6c87a0a34da908b75fce04d7cfd6693d2e21a92bfc28794` |
+
+The final cue controls, existing focused controls, and original `m8-final-02` all
+replay graph, issues, and response files byte for byte into fresh `-v0111-replay`
+directories. Generated corpora, caches, and run directories remain local and
+gitignored; the implementation, config, tests, and study report are committed.
+
+Validation: **585 tests pass**, including altered skip receipts, incorrect origins,
+out-of-prompt names/quotes, cache-origin corruption, legacy serialization, stable
+config round trips, and runtime accounting with zero/mixed provider samples.
+
+Next extraction work should address output correctness and semantic quality on a
+bounded source-reviewed sample before a full graph build. Reducing call counts
+alone has not solved this. Independent review and held-out evaluation remain
+separate work; no new model, paid API, push, or M12 run was used for this trial.
 
 ## Remaining study requirements
 

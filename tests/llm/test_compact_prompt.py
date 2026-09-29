@@ -11,7 +11,12 @@ from graphrag_bench.extraction.llm.extractor import (
     process_responses,
     validate_sample_responses,
 )
-from graphrag_bench.extraction.llm.prompt import extraction_fingerprint, make_request
+from graphrag_bench.extraction.llm.prompt import (
+    extraction_fingerprint,
+    make_request,
+    selected_passage,
+)
+from graphrag_bench.models import Chunk, text_sha256
 from graphrag_bench.serialization import json_bytes
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -66,7 +71,7 @@ def test_focused_prompt_keeps_ontology_out_of_final_source_message(source_pair, 
     )
 
 
-@pytest.mark.parametrize("style", ["compact", "focused"])
+@pytest.mark.parametrize("style", ["compact", "focused", "cued"])
 def test_prompt_survives_canonical_config_serialization(style, source_pair, make_provider):
     config = load_llm_config(ROOT / f"configs/llm-extraction-{style}.toml")
     restored = LLMExtractionConfig.model_validate_json(json_bytes(config))
@@ -114,4 +119,47 @@ def test_opt_in_name_trimming_still_requires_exact_source(
         assert not strict.relations
     assert extraction_fingerprint(config, provider.spec) != extraction_fingerprint(
         llm_config, provider.spec
+    )
+
+
+def test_relation_cue_selection_uses_exact_source_sentences(llm_config):
+    config = llm_config.model_copy(update={"passage_selection": "relation-cues-v1"})
+    text = (
+        "Background has no declared link. "
+        "Orion uses Nova. "
+        "Another neutral sentence. "
+        "Nova was evaluated on Harbor. "
+        "Helix proposes Comet."
+    )
+    assert selected_passage(text, config) == ("Orion uses Nova.\n\nNova was evaluated on Harbor.")
+    assert selected_passage("Nothing relevant is stated.", config) == ""
+
+
+def test_cueless_chunk_records_abstention_without_provider_call_or_cache(
+    source_pair, llm_config, make_provider, tmp_path
+):
+    config = llm_config.model_copy(update={"passage_selection": "relation-cues-v1"})
+    text = "Nothing relevant is stated."
+    document = source_pair[0][0].model_copy(
+        update={"text": text, "content_sha256": text_sha256(text)}
+    )
+    chunk = Chunk(
+        document_id=document.document_id,
+        chunk_id="cueless",
+        ordinal=0,
+        start=0,
+        end=len(document.text),
+        text=document.text,
+    )
+    provider = make_provider(config=config)
+    cache = tmp_path / "cache"
+    result = extract_with_llm((document,), (chunk,), config, provider, response_cache=cache)
+    assert provider.requests == []
+    assert not cache.exists()
+    assert result.records[0].origin == "deterministic-abstention"
+    assert result.records[0].completion.input_tokens == 0
+    assert not result.entities and not result.relations and not result.issues
+    assert (
+        process_responses(CorpusIndex((document,), (chunk,)), result.records, config, provider.spec)
+        == result
     )
