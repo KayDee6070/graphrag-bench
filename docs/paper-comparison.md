@@ -154,20 +154,32 @@ already cached. They perform no model downloads. Choose fresh output paths.
   experiments/runs/m11-research-baseline
 ```
 
-For a full four-method dev comparison, first produce the complete graph using
-`build-llm-graph`, then pass it with `--graph` and select
-`configs/benchmark-papers.toml`. Do not launch full extraction without reading the
-measured runtime report. Once a complete graph exists, the command is:
+The full four-method comparison needs a complete graph. On a machine with a CUDA device
+and the pinned model cached, the whole pipeline takes about 75 minutes:
 
 ```bash
+.venv/bin/graphrag-bench build-llm-graph datasets/processed/m10-expanded-03/ingestion \
+  --config configs/llm-extraction-indexed-3b-cuda-bf16.toml \
+  --output experiments/runs/m11-research-graph-bf16 \
+  --response-cache experiments/runs/m11-research-graph-bf16-cache
 .venv/bin/graphrag-bench benchmark-papers datasets/processed/m10-expanded-03 \
-  --index experiments/runs/m11-research-vectors \
-  --graph experiments/runs/m11-research-graph \
+  --index experiments/runs/m11-research-vectors-cu130 \
+  --graph experiments/runs/m11-research-graph-bf16 \
   --config configs/benchmark-papers.toml \
-  --output experiments/runs/m11-research-comparison
+  --output experiments/runs/m11-research-comparison-01
+.venv/bin/graphrag-bench verify-paper-benchmark experiments/runs/m11-research-comparison-01
 ```
 
-That last command is a future run recipe, not a claim that its graph exists.
+On CPU float32 the same extraction projects to about 79 hours, so add
+`--min-available-gib 18` and expect a multi-day run. Read
+[the recipe comparison](local-model-trial.md#why-the-reference-recipe-is-slow-and-the-two-ways-off-it)
+before choosing; the GPU recipe has a different fingerprint and was verified against the
+CPU reference on eight cases only.
+
+The completed run produced 22/40 for BM25, 14/40 hybrid, 12/40 vector, and 7/40 graph at
+K=5, and **0/40 for every method** on the two-hop and cross-document questions. Read
+§4 again before quoting any of those numbers: the labels are unreviewed drafts, nothing
+is held out, and the graph holds 111 assertions from 6,996 chunks.
 
 `--graph` also accepts a deterministic `build-graph` directory. The runner reads the
 graph's own manifest to tell the two kinds apart and records `graph_status` as either

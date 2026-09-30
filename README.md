@@ -18,13 +18,21 @@ replay checks, and limits. This result does not establish full-corpus readiness.
 Two follow-up candidates with richer examples and cue-selected sentences did not
 improve that result; their evidence is in the development report.
 
-All four methods have now run together on the real corpus (0.11.5), using a
-deterministic graph as a floor: **BM25 22/40, vector 12/40, hybrid 12/40, graph 0/40**
-complete evidence at K=5 under one 2,000-token budget, verified offline. The M3
-line grammar matches 0 statements in 6,996 PDF chunks, so that graph is empty and the
-graph and hybrid columns measure wiring, not method quality. The only substantive
-pattern is the 25-point lexical advantage over dense retrieval on unreviewed draft
-labels. A four-method comparison with a non-empty graph remains open.
+**The four-method comparison is complete (0.11.6).** A GPU bfloat16 recipe that
+reproduces the CPU reference exactly extracted the whole corpus in ~72 minutes,
+yielding a sparse real graph: 330 entities and 111 assertions from 6,996 chunks.
+Complete evidence at K=5 under one 2,000-token budget, verified offline:
+**BM25 22/40, hybrid 14/40, vector 12/40, graph 7/40**.
+
+The headline is negative. On the 5 two-hop and 8 cross-document questions — exactly what
+this project set out to test — **all four methods score 0.000** at both cutoffs. The
+evidence is reachable; no method ranks it into the top 10. Fusion also flips sign, gaining
+5 points at K=5 and losing 7.5 at K=10. BM25 leads every non-zero row.
+
+This does not settle the research question. All 40 labels are unreviewed draft dev
+annotations, there are zero held-out questions, and the extractor recovers 2 of 6 sampled
+draft facts, so the graph arm measures this extractor as much as it measures graph
+retrieval. Details in the [development report](reports/m11-development.md).
 
 ## Quick start
 
@@ -309,8 +317,8 @@ Read the [M0 design and experiment plan](docs/design.md), [data contracts](docs/
 9. **M8:** Local LLM-assisted extraction, source checks, inference receipts, graph replay, and study documentation — complete; the small controlled pilot is not a real-paper quality benchmark.
 10. **M9:** Local answer proposals, exact citation references, token-budget receipts, offline replay, and study documentation — complete; semantic correctness and abstention reliability are not established.
 11. **M10:** Real-paper acquisition, PDF provenance, 30-paper expansion, 40 draft development questions, coverage audits, and review tooling — implemented; independent annotation review and 80 held-out questions remain open.
-12. **M11:** Frozen real-paper comparison runner and offline source-metric verification implemented; development baseline, extraction preflight, reviewer packets, and a four-method run over a deterministic graph floor documented. A non-empty real-paper graph, independent review, and held-out evaluation remain.
-13. **M12:** Ablations and error analysis — not started.
+12. **M11:** Frozen real-paper comparison runner, offline source-metric verification, reviewer packets, host-memory gating, a GPU recipe measured against the CPU reference, a complete real-paper model graph, and the verified four-method comparison — complete. Independent annotation review and 80 held-out questions remain, so all results are development diagnostics.
+13. **M12:** Ablations and error analysis — not started; the completed comparison sets its agenda (universal zero on multi-document questions, missing edges versus traversal failure, and the K=5/K=10 fusion sign flip).
 14. **M13–M14:** CLI polish, documentation, charts, and release preparation; optional demonstration UI.
 
 Work proceeds one milestone at a time. Code and original fictional fixtures are MIT licensed. Third-party paper content and annotations have [separate licenses and attribution](datasets/papers/research/README.md#licensing-and-changes).

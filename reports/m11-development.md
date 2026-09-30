@@ -711,13 +711,105 @@ quoted coordinates, the question wording, and the pinned encoder all shape that
 number, and no alternative unannotated support receives credit. It is a development
 observation on unreviewed labels with no held-out split and no significance test.
 
+## Completed four-method comparison with a model graph (0.11.6, 2026-09-30)
+
+The bfloat16 GPU recipe extracted the whole corpus: 6,996 chunks in about 72 minutes,
+producing **330 entities, 111 assertions, 519 issues, and 152 rejected chunks**. Model-free
+replay reproduced all four counts. One hundred eleven accepted assertions over 6,996
+chunks is a sparse graph, consistent with the 2/6 sampled recall; it is a real graph,
+not a good one, and no assertion has been independently reviewed.
+
+Rebuilding the vector index under the new torch produced **bit-identical** `vectors.npy`
+and `rows.json`, and re-running the deterministic floor comparison on the rebuilt index
+reproduced evaluation fingerprint `70eabebe…` exactly. The torch change altered recorded
+version strings and nothing numerical. All comparisons below share one index.
+
+`experiments/runs/m11-research-comparison-01`: 40 questions, 4 strategies, 3 repeats,
+480 records, offline verification passed. Fingerprint:
+
+```text
+30bf9bf4a25e3e8bb48feefc200b31784b2e158154dd47c479919b321f100eea
+```
+
+| Method | K | Complete evidence | Fact Recall@K | Mean selected chunks | Retrieval p95 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| BM25 | 5 | 22/40 = 55.0% | 0.613 | 5.00 | 64.14 ms |
+| Vector | 5 | 12/40 = 30.0% | 0.333 | 5.00 | 93.65 ms |
+| Hybrid | 5 | 14/40 = 35.0% | 0.383 | 5.00 | 103.76 ms |
+| Graph | 5 | 7/40 = 17.5% | 0.175 | 4.05 | 14.96 ms |
+| BM25 | 10 | 25/40 = 62.5% | 0.688 | 10.00 | 64.14 ms |
+| Vector | 10 | 19/40 = 47.5% | 0.508 | 10.00 | 93.65 ms |
+| Hybrid | 10 | 16/40 = 40.0% | 0.446 | 10.00 | 103.76 ms |
+| Graph | 10 | 8/40 = 20.0% | 0.200 | 7.00 | 14.96 ms |
+
+Rankings, contexts, and scores were identical across repeats, no question was unstable,
+and every draft evidence set was reachable from the full chunk collection.
+
+### The hypothesis question, answered negatively on this corpus
+
+The project asks when graph retrieval beats vector retrieval for evidence spread across
+documents. The subgroups that ask exactly that return zero for every method:
+
+| Subgroup | n | BM25 | Vector | Hybrid | Graph |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Two reasoning hops | 5 | 0.000 | 0.000 | 0.000 | 0.000 |
+| Two required documents | 8 | 0.000 | 0.000 | 0.000 | 0.000 |
+| Comparison questions | 3 | 0.000 | 0.000 | 0.000 | 0.000 |
+| One hop | 35 | 0.629 | 0.343 | 0.400 | 0.200 |
+| One document | 32 | 0.688 | 0.375 | 0.438 | 0.219 |
+
+Identical at K=10 for the zero rows. On the questions the graph was built to help with,
+this graph helped not at all.
+
+These zeros are ranking failures, not coverage failures. The audit lists no unreachable
+question: every annotated evidence set for all 13 multi-document or two-hop questions
+exists in the chunk collection and would score if it were retrieved. No method put it in
+the top 5 or top 10. For the graph arm specifically, 111 assertions very likely do not
+contain the needed bridges, but this run cannot separate a missing-edge failure from an
+entity-linking or traversal-ranking failure. Distinguishing them is M12 work, and the
+five two-hop questions still need the shortcut check they have needed since M10.
+
+### Fusion helps at a tight budget and hurts at a loose one
+
+Paired against vector, hybrid gains **+5.0 points at K=5** (3 wins, 36 ties, 1 loss) and
+loses **7.5 points at K=10** (0 wins, 37 ties, 3 losses). Wins at K=5 are `paper-d11`,
+`paper-d15`, `paper-d19`; the loss is `paper-d13`. Losses at K=10 are `paper-d21`,
+`paper-g01`, `paper-g02`.
+
+The sign flip has a mechanical explanation worth an M12 ablation: reciprocal rank fusion
+reserves positions for graph candidates, which is cheap insurance when only five slots
+exist and a net cost when ten slots would otherwise hold better vector hits. With 40
+questions and three of each outcome, this is a direction to investigate, not a measured
+effect.
+
+Graph retrieval was the fastest method by a wide margin, 14.96 ms p95 against 93.65 ms
+for vector, and selected fewer than K chunks (4.05 at K=5, 7.00 at K=10) because
+traversal often returns fewer candidates than the cutoff. Its low token counts reflect
+that shortfall, not better compression.
+
+BM25 leads every non-zero row. The lexical advantage over dense retrieval seen in the
+two-method baseline survives the addition of both graph arms.
+
+### What this result is not
+
+All 40 labels are draft dev annotations written by this project and not independently
+reviewed. There are zero held-out questions. No assertion in the graph has been checked
+by a second reader. The extractor recovers 2 of 6 sampled draft facts, so the graph arm
+measures this extractor at least as much as it measures graph retrieval. Alternative
+unannotated support earns no credit. There are no confidence intervals and no
+significance tests, and 40 questions with 3 identical repeats provide no independent
+statistical samples. Nothing here establishes a general ranking of retrieval methods.
+
 ## Remaining study requirements
 
-A usable complete real-paper graph, a four-method comparison with a non-empty graph,
-independently reviewed annotations, and 80 genuinely held-out questions remain. The
-deterministic graph arm above does not satisfy the graph requirement.
-Producing an LLM graph over the 1,416 cue-eligible chunks is projected at about
-11.95 hours of local provider time at 2/6 sampled draft-fact recovery; that run has
-not been launched and its quality gate is undecided.
-The five draft two-hop questions still need shortcut checks. No M12 ablation study has started.
+The complete real-paper graph and the four-method comparison are **done**. What remains is
+**independently reviewed annotations** and **80 genuinely held-out questions**; without
+both, every number above stays a development diagnostic. Reviewer packets now exist for
+the extraction checks, but no second reader has used them, and no packet exists yet for
+the 40 question annotations.
+
+The five draft two-hop questions still need shortcut checks. M12 has a clear agenda from
+this run: why all methods return zero on multi-document questions, whether the graph arm
+fails from missing edges or from linking and traversal, and why fusion flips sign between
+K=5 and K=10.
 The beginner lesson and reproduction commands are in [paper-comparison.md](../docs/paper-comparison.md).
