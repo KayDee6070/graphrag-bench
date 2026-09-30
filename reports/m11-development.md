@@ -750,24 +750,55 @@ and every draft evidence set was reachable from the full chunk collection.
 The project asks when graph retrieval beats vector retrieval for evidence spread across
 documents. The subgroups that ask exactly that return zero for every method:
 
+Complete evidence, with partial fact recall alongside it, because the distinction matters:
+
 | Subgroup | n | BM25 | Vector | Hybrid | Graph |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Two reasoning hops | 5 | 0.000 | 0.000 | 0.000 | 0.000 |
-| Two required documents | 8 | 0.000 | 0.000 | 0.000 | 0.000 |
-| Comparison questions | 3 | 0.000 | 0.000 | 0.000 | 0.000 |
+| Two reasoning hops | 5 | 0.000 (0.400) | 0.000 (0.100) | 0.000 (0.200) | 0.000 (0.000) |
+| Two required documents | 8 | 0.000 (0.312) | 0.000 (0.104) | 0.000 (0.167) | 0.000 (0.000) |
+| Comparison questions | 3 | 0.000 (0.167) | 0.000 (0.111) | 0.000 (0.111) | 0.000 (0.000) |
 | One hop | 35 | 0.629 | 0.343 | 0.400 | 0.200 |
 | One document | 32 | 0.688 | 0.375 | 0.438 | 0.219 |
 
-Identical at K=10 for the zero rows. On the questions the graph was built to help with,
-this graph helped not at all.
+Parenthesised values are Fact Recall@5, identical at K=10 for these subgroups. **No method
+completed a single multi-document question, but only the graph arm found nothing at all.**
+BM25 retrieved 40% of the needed facts on two-hop questions and still scored zero, because
+completing a question requires every fact in one evidence set.
 
-These zeros are ranking failures, not coverage failures. The audit lists no unreachable
-question: every annotated evidence set for all 13 multi-document or two-hop questions
-exists in the chunk collection and would score if it were retrieved. No method put it in
-the top 5 or top 10. For the graph arm specifically, 111 assertions very likely do not
-contain the needed bridges, but this run cannot separate a missing-edge failure from an
-entity-linking or traversal-ranking failure. Distinguishing them is M12 work, and the
-five two-hop questions still need the shortcut check they have needed since M10.
+An earlier draft of this report said all four methods found nothing on these questions.
+That was wrong: three of them recover partial evidence. Only the graph arm is at zero.
+
+### Why the multi-document questions score zero
+
+`scripts/diagnose_multihop.py` resolves each annotated fact to the source chunks that
+would satisfy it and reports how deep each retriever ranks them, searching to depth 400.
+It reads gold annotations deliberately and is therefore a labelled oracle diagnostic, not
+a retrieval run; it writes no benchmark artifact. Results are in
+`experiments/runs/m11-multihop-diagnostic.json` for 8 questions and 17 facts.
+
+**The annotations are sound.** Zero of 17 facts are uncoverable. Two facts, `mistral-cache`
+and `lightrag-high`, have spans that straddle a chunk boundary, so no single chunk contains
+them and two adjacent chunks must be retrieved together. Scoring merges adjacent fragments,
+so these remain legitimately satisfiable, just harder. No question is impossible by
+construction, which matches the run's empty unreachable list.
+
+**The failure is ranking depth.** Of 26 reachable fact/method pairs within the top 400,
+**19 sit deeper than rank 10**. The recurring shape is one easy fact and one buried partner:
+`paper-b01` puts `sbert-structures` at BM25 rank 1 while `raptor-encoder` sits at 34;
+`paper-b05` puts `mistral-gqa` at vector rank 2 while `e5-mistral-backbone` sits at 209.
+A method that finds half of a two-fact set scores zero, so these questions fail on the
+second fact, every time. Eight pairs are unreachable even at depth 400, and
+`graphrag-clustering` is absent from BM25, vector, and graph results entirely.
+
+**The graph arm is not merely weak, it is close to inert.** It reached **1 of 17 facts**
+(`replug-retriever`, rank 11 — outside both cutoffs). On `paper-b05` query linking produced
+**zero seeds and zero hits**, so traversal never started. Elsewhere it produced 5 to 28
+candidate chunks that were almost never the annotated ones. With 111 assertions over 6,996
+chunks, the graph cannot connect these questions' entities; the earlier uncertainty between
+missing edges and traversal ranking resolves mostly toward missing edges, with at least one
+outright entity-linking failure.
+
+The five draft two-hop questions still need their shortcut check.
 
 ### Fusion helps at a tight budget and hurts at a loose one
 
@@ -808,8 +839,13 @@ both, every number above stays a development diagnostic. Reviewer packets now ex
 the extraction checks, but no second reader has used them, and no packet exists yet for
 the 40 question annotations.
 
-The five draft two-hop questions still need shortcut checks. M12 has a clear agenda from
-this run: why all methods return zero on multi-document questions, whether the graph arm
-fails from missing edges or from linking and traversal, and why fusion flips sign between
-K=5 and K=10.
+The five draft two-hop questions still need shortcut checks. The diagnostic above already
+answers two of the three questions M12 was going to ask: multi-document questions fail on a
+buried second fact, and the graph arm fails mostly from missing edges plus at least one
+entity-linking failure. The open M12 item is the K=5/K=10 fusion sign flip.
+
+The diagnostic also identifies the concrete engineering lever, should this work continue:
+recall depth, not method choice. Nineteen of 26 reachable fact/method pairs sit deeper than
+rank 10, so a larger candidate pool with reranking, or per-fact rather than per-question
+retrieval, would move these numbers far more than swapping retrievers.
 The beginner lesson and reproduction commands are in [paper-comparison.md](../docs/paper-comparison.md).

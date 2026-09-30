@@ -25,14 +25,22 @@ Complete evidence at K=5 under one 2,000-token budget, verified offline:
 **BM25 22/40, hybrid 14/40, vector 12/40, graph 7/40**.
 
 The headline is negative. On the 5 two-hop and 8 cross-document questions — exactly what
-this project set out to test — **all four methods score 0.000** at both cutoffs. The
-evidence is reachable; no method ranks it into the top 10. Fusion also flips sign, gaining
-5 points at K=5 and losing 7.5 at K=10. BM25 leads every non-zero row.
+this project set out to test — **no method completed a single one**, at either cutoff.
+BM25 leads every other row, and fusion flips sign: +5 points at K=5, −7.5 at K=10.
 
-This does not settle the research question. All 40 labels are unreviewed draft dev
+A labelled oracle diagnostic explains why, and the answer is not "graphs don't work":
+
+- **The annotations are sound.** 0 of 17 multi-document facts are uncoverable.
+- **The failure is recall depth.** 19 of 26 reachable fact/method pairs sit deeper than
+  rank 10. These questions need two facts; typically one lands at rank 1–5 and its partner
+  at rank 26–363, and half a set scores zero.
+- **The graph arm is near-inert**, reaching 1 of 17 facts, with one question linking no
+  entity at all. 111 assertions cannot connect these questions.
+
+So the measured lever is retrieval depth and extraction coverage, not method choice. And
+this still does not settle the research question: all 40 labels are unreviewed draft dev
 annotations, there are zero held-out questions, and the extractor recovers 2 of 6 sampled
-draft facts, so the graph arm measures this extractor as much as it measures graph
-retrieval. Details in the [development report](reports/m11-development.md).
+draft facts. Details in the [development report](reports/m11-development.md).
 
 ## Quick start
 
@@ -263,6 +271,8 @@ GitHub Actions defines these checks for Python 3.11, 3.12, and 3.13. Fixture fil
 - `scripts/study_m9.py`: the Eren/Lantern Squad lesson on answer claims, missing reports, invented citations, and incomplete support.
 - `scripts/study_m10.py`: real paper receipts, corpus/benchmark separation, and the difference between document count and reasoning hops.
 - `scripts/study_m10_expansion.py`: real bridge questions, shortcuts, source coverage, and independent-review boundaries.
+- `scripts/export_extraction_review.py`: pending source-bound reviewer packets for draft extraction checks.
+- `scripts/diagnose_multihop.py`: a labelled oracle diagnostic that reports annotation coverability, retrieval rank depth, and graph seeding for multi-document questions.
 - `datasets/papers/pilot/`: three-paper acquisition catalog, source-authored draft annotations, and source licensing notice.
 - `datasets/papers/research/`: 30-paper catalog, candidate screening record, 40 draft dev questions, and complete attribution.
 - `datasets/fixtures/tiny/corpus/`: eight fictional technical documents.
