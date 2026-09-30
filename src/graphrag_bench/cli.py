@@ -30,6 +30,7 @@ from graphrag_bench.embeddings.config import EmbeddingConfig, load_embedding_con
 from graphrag_bench.embeddings.sentence_transformers import SentenceTransformerProvider
 from graphrag_bench.extraction.config import ExtractionError, load_rules
 from graphrag_bench.extraction.llm.config import load_llm_config
+from graphrag_bench.extraction.llm.host import positive_gib, require_memory
 from graphrag_bench.extraction.llm.pipeline import (
     LLMGraphManifest,
     build_llm_graph_to_directory,
@@ -148,6 +149,7 @@ def _build_llm_graph(args: argparse.Namespace) -> dict:
     validate_llm_output(args.source, args.output, args.response_cache)
     config = load_llm_config(args.config)
     load_ingestion(args.source)
+    require_memory(args.min_available_gib)
     provider = LocalTransformersProvider(
         config.model, allow_download=args.allow_download, cache_folder=args.cache_folder
     )
@@ -398,6 +400,11 @@ def main(argv: list[str] | None = None) -> int:
     llm.add_argument("--response-cache", type=Path, help="optional saved inference receipts")
     llm.add_argument("--allow-download", action="store_true", help="fetch the pinned local model")
     llm.add_argument("--cache-folder", type=Path, help="model cache directory")
+    llm.add_argument(
+        "--min-available-gib",
+        type=positive_gib,
+        help="refuse to load a model unless this much RAM is available (Linux MemAvailable)",
+    )
     replay = commands.add_parser(
         "replay-llm-graph", help="rebuild an LLM graph from saved responses without inference"
     )

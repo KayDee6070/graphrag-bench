@@ -7,7 +7,6 @@ full-corpus runtime projection is produced.
 
 import argparse
 import json
-import math
 from collections import Counter
 from hashlib import sha256
 from pathlib import Path
@@ -20,6 +19,7 @@ from graphrag_bench.extraction.llm.extractor import (
     complete_chunk,
     validate_sample_responses,
 )
+from graphrag_bench.extraction.llm.host import available_memory_bytes, positive_gib
 from graphrag_bench.extraction.llm.prompt import extraction_fingerprint, request_fingerprint
 from graphrag_bench.extraction.llm.provider import LocalTransformersProvider
 from graphrag_bench.ingestion.reader import load_ingestion
@@ -38,32 +38,6 @@ def load_checks(source: Path, checks_path: Path) -> tuple[dict, str, CorpusIndex
     if len(set(ids)) != len(ids) or not set(ids) <= corpus.chunks.keys():
         raise ValueError("draft checks need unique, known source chunk IDs")
     return checks, sha256(raw).hexdigest(), corpus, hashes
-
-
-def available_memory_bytes(path: Path = Path("/proc/meminfo")) -> int | None:
-    """Read Linux's available RAM estimate; unknown is never treated as sufficient."""
-    try:
-        for line in path.read_text(encoding="ascii").splitlines():
-            fields = line.split()
-            if fields and fields[0] == "MemAvailable:":
-                if len(fields) == 3 and fields[2] == "kB" and fields[1].isdigit():
-                    return int(fields[1]) * 1024
-                return None
-    except (OSError, UnicodeError):
-        pass
-    return None
-
-
-def positive_gib(value: str) -> float:
-    try:
-        gib = float(value)
-    except ValueError as error:
-        raise argparse.ArgumentTypeError(
-            "RAM threshold must be a finite positive GiB value"
-        ) from error
-    if not math.isfinite(gib) or gib <= 0:
-        raise argparse.ArgumentTypeError("RAM threshold must be a finite positive GiB value")
-    return gib
 
 
 def preflight(source: Path, checks_path: Path, config: LLMExtractionConfig) -> dict:

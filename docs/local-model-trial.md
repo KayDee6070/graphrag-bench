@@ -142,6 +142,23 @@ model quality, or actual peak memory. Without `--min-available-gib`, it reports 
 without enforcing a threshold. Always include the threshold for this 3B trial.
 The same threshold works on an inference command and is checked before loading.
 
+`build-llm-graph` accepts the same `--min-available-gib` and refuses before
+constructing a provider. Use it on any long run: the measured 18.1 GiB peak child RSS
+exceeds what a busy desktop leaves free, and without the gate a full-corpus run starts
+anyway and can be killed after hours of completed work. A threshold is headroom
+guidance, not a reservation; another process can take the memory a moment later.
+
+### Thread count and the full-corpus recipe
+
+[llm-extraction-indexed-3b-threads16.toml](../configs/llm-extraction-indexed-3b-threads16.toml)
+differs from the accepted 3B recipe in exactly one line, `cpu_threads = 16`, to make a
+full-corpus run tractable. Because `cpu_threads` is part of the recipe fingerprint,
+this is a **new recipe**: the 2/6 eight-chunk result was measured at four threads and
+does not describe it. Re-run the eight-case diagnostic under this config and compare
+matched facts, schema validity, and rejections before launching a full extraction.
+CPU reduction order can differ with thread count, so identical outputs are not
+guaranteed and must be observed rather than assumed.
+
 ### 2. Download the pinned files only after approval
 
 The approximately 6.18 GB download was explicitly approved before it began.
