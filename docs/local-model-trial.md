@@ -148,6 +148,18 @@ exceeds what a busy desktop leaves free, and without the gate a full-corpus run 
 anyway and can be killed after hours of completed work. A threshold is headroom
 guidance, not a reservation; another process can take the memory a moment later.
 
+### Why the reference recipe is slow, and the two ways off it
+
+The accepted recipe is CPU, float32, four threads. That combination was chosen for a
+bounded eight-chunk trial, where a fixed, reproducible arithmetic path mattered more
+than throughput. It is a poor choice for 6,996 chunks: at the measured 40.71-second
+mean it projects to about **79 hours**. Neither available RAM nor chunk count is the
+bottleneck there; single-precision matrix arithmetic on CPU cores is.
+
+Two recipes exist for long runs. Both change the fingerprint, so both need the
+eight-case diagnostic re-run before they are trusted, and neither is described by the
+2/6 result measured on the reference recipe.
+
 ### Thread count and the full-corpus recipe
 
 [llm-extraction-indexed-3b-threads16.toml](../configs/llm-extraction-indexed-3b-threads16.toml)
@@ -158,6 +170,28 @@ does not describe it. Re-run the eight-case diagnostic under this config and com
 matched facts, schema validity, and rejections before launching a full extraction.
 CPU reduction order can differ with thread count, so identical outputs are not
 guaranteed and must be observed rather than assumed.
+
+### Local GPU with reduced precision
+
+[llm-extraction-indexed-3b-cuda-fp16.toml](../configs/llm-extraction-indexed-3b-cuda-fp16.toml)
+differs from the accepted recipe in two lines, `device = "cuda"` and
+`dtype = "float16"`. `LocalModelConfig` accepts `cpu`, `cuda`, and `float32`,
+`float16`, `bfloat16`, and still refuses reduced precision on CPU so the reference
+path cannot drift. A CUDA recipe records provider version
+`transformers-causal-cuda-v1` rather than `transformers-causal-cpu-v1`, so any saved
+run states which arithmetic produced it. Requesting `cuda` from a CPU-only torch
+build fails before the model loads.
+
+This needs a CUDA torch wheel; the pinned `requirements-embeddings-cpu.txt` build has
+no CUDA support. Qwen2.5-3B in float16 is about 6.2 GiB of weights plus a small
+grouped-query KV cache, so it fits an 8 GiB device. Weights sit in VRAM, which is why
+`--min-available-gib` does not apply to this recipe.
+
+**float16 is a larger change than thread count.** Halving mantissa precision can change
+generated tokens, and extraction here depends on exact quoted substrings, so a
+degraded response fails validation rather than degrading quietly. Compare matched
+facts, schema validity, and rejections against the CPU reference on the same eight
+cases, and keep the CPU float32 recipe as the reference regardless of the outcome.
 
 ### 2. Download the pinned files only after approval
 

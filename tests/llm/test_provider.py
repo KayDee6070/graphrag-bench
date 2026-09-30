@@ -11,7 +11,14 @@ from graphrag_bench.extraction.llm.provider import LocalTransformersProvider
 
 @pytest.fixture
 def inference_stub(monkeypatch):
-    state = {"input_tokens": 4, "generated": [20, 7], "capacity": 16, "eos": [7, 8], "calls": []}
+    state = {
+        "input_tokens": 4,
+        "generated": [20, 7],
+        "capacity": 16,
+        "eos": [7, 8],
+        "cuda": False,
+        "calls": [],
+    }
 
     class Tokenizer:
         pad_token_id = None
@@ -25,7 +32,7 @@ def inference_stub(monkeypatch):
 
         def __call__(self, text, **kwargs):
             state["calls"].append(("tokenize", text, kwargs))
-            return {"input_ids": SimpleNamespace(shape=(1, state["input_tokens"]))}
+            return {"input_ids": Tensor(state["input_tokens"])}
 
         def decode(self, tokens, **kwargs):
             state["calls"].append(("decode", tokens, kwargs))
@@ -34,6 +41,14 @@ def inference_stub(monkeypatch):
         def encode(self, text, **kwargs):
             state["calls"].append(("encode", text, kwargs))
             return list(range(len(text)))
+
+    class Tensor:
+        def __init__(self, count):
+            self.shape = (1, count)
+
+        def to(self, device):
+            state["calls"].append(("place_input", device))
+            return self
 
     class Model:
         def __init__(self):
@@ -71,6 +86,9 @@ def inference_stub(monkeypatch):
         SimpleNamespace(
             set_num_threads=lambda n: state["calls"].append(("threads", n)),
             float32="float32",
+            float16="float16",
+            bfloat16="bfloat16",
+            cuda=SimpleNamespace(is_available=lambda: state["cuda"]),
             inference_mode=nullcontext,
         ),
     )
@@ -191,3 +209,72 @@ def test_shared_provider_accepts_answer_messages_without_an_extraction_chunk(inf
 
     request = SimpleNamespace(messages=(Message(role="user", content="Answer this question."),))
     assert LocalTransformersProvider(config()).complete(request).finish_reason == "eos"
+
+
+def gpu_config(dtype="float16"):
+    return LocalModelConfig(
+        model_id="test/model",
+        revision="a" * 40,
+        device="cuda",
+        dtype=dtype,
+        max_input_tokens=8,
+        max_new_tokens=4,
+    )
+
+
+def test_cpu_recipe_is_pinned_to_full_precision():
+    with pytest.raises(ValueError, match="cpu inference in this project is pinned to float32"):
+        LocalModelConfig(model_id="test/model", revision="a" * 40, dtype="float16")
+
+
+@pytest.mark.parametrize("dtype", ["float64", "int8", ""])
+def test_unsupported_dtypes_are_rejected(dtype):
+    with pytest.raises(ValueError):
+        LocalModelConfig(model_id="test/model", revision="a" * 40, device="cuda", dtype=dtype)
+
+
+def test_unsupported_devices_are_rejected():
+    with pytest.raises(ValueError):
+        LocalModelConfig(model_id="test/model", revision="a" * 40, device="mps")
+
+
+def test_cuda_request_without_a_cuda_build_fails_before_loading(inference_stub):
+    inference_stub["cuda"] = False
+
+    with pytest.raises(LLMError, match="reports no available device"):
+        LocalTransformersProvider(gpu_config())
+
+    assert not [call for call in inference_stub["calls"] if call[0].startswith("load_")]
+
+
+@pytest.mark.parametrize("dtype", ["float16", "bfloat16"])
+def test_cuda_recipe_places_model_and_inputs_on_the_device(
+    inference_stub, source_pair, llm_config, dtype
+):
+    inference_stub["cuda"] = True
+
+    provider = LocalTransformersProvider(gpu_config(dtype))
+    provider.complete(make_request(source_pair[1][0], llm_config))
+
+    model = next(c for c in inference_stub["calls"] if c[0] == "load_model")
+    assert model[2]["dtype"] == dtype
+    assert ("device", "cuda") in inference_stub["calls"]
+    assert ("place_input", "cuda") in inference_stub["calls"]
+
+
+def test_cuda_recipe_is_a_different_provider_version(inference_stub):
+    inference_stub["cuda"] = True
+
+    cpu = LocalTransformersProvider(config()).spec
+    gpu = LocalTransformersProvider(gpu_config()).spec
+
+    assert cpu.provider == "transformers-causal-cpu-v1"
+    assert gpu.provider == "transformers-causal-cuda-v1"
+    assert gpu.settings["device"] == "cuda" and gpu.settings["dtype"] == "float16"
+
+
+def test_cpu_path_never_moves_inputs(inference_stub, source_pair, llm_config):
+    provider = LocalTransformersProvider(config())
+    provider.complete(make_request(source_pair[1][0], llm_config))
+
+    assert not [call for call in inference_stub["calls"] if call[0] == "place_input"]

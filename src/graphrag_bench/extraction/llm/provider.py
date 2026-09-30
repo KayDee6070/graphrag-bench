@@ -1,4 +1,9 @@
-"""Optional, pinned CPU Transformers inference; no hosted service or implicit downloads."""
+"""Optional, pinned local Transformers inference; no hosted service or implicit downloads.
+
+CPU float32 remains the default and the reference recipe. A CUDA device with reduced
+precision is available for long runs and is recorded as a different provider version,
+because its outputs are not guaranteed to match the CPU reference.
+"""
 
 from importlib.metadata import version
 from pathlib import Path
@@ -9,6 +14,7 @@ from graphrag_bench.extraction.llm.contracts import ChatRequest, Completion, Mod
 from graphrag_bench.models import text_sha256
 
 PROVIDER_VERSION = "transformers-causal-cpu-v1"
+CUDA_PROVIDER_VERSION = "transformers-causal-cuda-v1"
 
 
 class LocalTransformersProvider:
@@ -31,6 +37,11 @@ class LocalTransformersProvider:
             ) from error
         self._config = config
         self._torch = torch
+        if config.device == "cuda" and not torch.cuda.is_available():
+            raise LLMError(
+                "config requests cuda but this torch build reports no available device; "
+                'install a CUDA torch wheel or pin device = "cpu" in the recipe.'
+            )
         try:
             torch.set_num_threads(config.cpu_threads)
             loading = {
@@ -45,9 +56,9 @@ class LocalTransformersProvider:
                 config.model_id,
                 **loading,
                 use_safetensors=True,
-                dtype=torch.float32,
+                dtype=getattr(torch, config.dtype),
                 attn_implementation="eager",
-            ).to("cpu")
+            ).to(config.device)
             self._model.eval()
             capacity = self._model.config.max_position_embeddings
             if config.max_input_tokens + config.max_new_tokens > capacity:
@@ -73,7 +84,7 @@ class LocalTransformersProvider:
             # defaults too so a publisher's sampling/repetition settings cannot leak in.
             self._model.generation_config = self._generation
             self._spec = ModelSpec(
-                provider=PROVIDER_VERSION,
+                provider=CUDA_PROVIDER_VERSION if config.device == "cuda" else PROVIDER_VERSION,
                 model_id=config.model_id,
                 revision=config.revision,
                 settings=config.model_dump(mode="json")
@@ -126,6 +137,10 @@ class LocalTransformersProvider:
                     f"prompt has {input_count} tokens; limit is {self._config.max_input_tokens}. "
                     "Use smaller chunks or an explicitly larger input limit; no truncation."
                 )
+            # Tokenizers return CPU tensors. Moving them is only needed off-CPU, so the
+            # reference path stays exactly as it was before device support existed.
+            if self._config.device != "cpu":
+                inputs = {name: value.to(self._config.device) for name, value in inputs.items()}
             with self._torch.inference_mode():
                 output = self._model.generate(**inputs, generation_config=self._generation)
             generated = output[0][input_count:]

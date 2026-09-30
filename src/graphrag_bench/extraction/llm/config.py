@@ -16,13 +16,26 @@ class LLMError(ExtractionError):
 
 
 class LocalModelConfig(Record):
+    """Device and dtype are part of the recipe: changing either changes the fingerprint.
+
+    Reduced precision is not a free speedup. float16 and bfloat16 can produce different
+    tokens than float32 for the same prompt, so a recipe that changes dtype must have its
+    extraction quality re-measured rather than assumed.
+    """
+
     model_id: Annotated[str, StringConstraints(pattern=r"^[\w.-]+/[\w.-]+$")]
     revision: Annotated[str, StringConstraints(pattern=r"^[0-9a-f]{40}$")]
-    device: Literal["cpu"] = "cpu"
-    dtype: Literal["float32"] = "float32"
+    device: Literal["cpu", "cuda"] = "cpu"
+    dtype: Literal["float32", "float16", "bfloat16"] = "float32"
     cpu_threads: Annotated[int, Field(gt=0, le=32, strict=True)] = 4
     max_input_tokens: PositiveInt = 2048
     max_new_tokens: PositiveInt = 768
+
+    @model_validator(mode="after")
+    def reduced_precision_needs_a_gpu(self) -> Self:
+        if self.device == "cpu" and self.dtype != "float32":
+            raise ValueError("cpu inference in this project is pinned to float32")
+        return self
 
 
 class RelationType(Record):
