@@ -80,7 +80,11 @@ a development diagnostic and none supports a research claim:
    writes 40 pending rows, `scripts/blind_review_sheet.py` strips the author's reasoning
    from the worksheet, and `verify-paper-review` validates the filled result. What is
    missing is a reviewer who did not author the labels. Procedure and its limits:
-   [annotation-review.md](../docs/annotation-review.md).
+   [annotation-review.md](../docs/annotation-review.md). An automated cross-check has
+   already triaged the 40 questions down to 13 worth reading closely, and confirmed that
+   every quote is verbatim text on its claimed page: [annotation-crosscheck.md](annotation-crosscheck.md).
+   That is triage, not review — the agents share a model family with the annotation
+   author, so their agreement carries little weight and only their disagreement does.
 2. **Held-out questions.** There are zero. All 40 were visible throughout. The plan calls
    for 80 sealed questions, and they should be written after review, not before, or they
    inherit whatever review finds.
@@ -89,9 +93,32 @@ a development diagnostic and none supports a research claim:
 and produced 111 assertions from 6,996 chunks. The graph column therefore measures this
 extractor at least as much as it measures graph retrieval. No assertion has been reviewed.
 
-**Smaller open items.** The five draft two-hop questions still need a shortcut check. The
-fusion sign flip is unexplained. M12 ablations, M13–M14 polish, charts, and the optional
-demonstration UI are untouched.
+**Two confirmed label defects, awaiting the reviewer's decision.** An automated
+cross-check found them and they were verified against the source documents; see
+[annotation-crosscheck.md](annotation-crosscheck.md) for the exact text and offsets. They
+are deliberately **not applied**: these are gold labels, the reviewer is the person
+entitled to change them, and a label change signed by a reviewer is worth more than one
+signed by an agent.
+
+- `paper-b01` — the `raptor-encoder` quote stops one sentence short of the line that ties
+  SBERT embeddings to leaf nodes, which is what the question asks about. Extending the
+  span end from 10642 to 10737 fixes it.
+- `paper-l01` — a single page-2 sentence covers both annotated page-4 facts. Because the
+  metrics credit only annotated spans, a retriever that found it would score zero. The
+  fix is to add that sentence as a second sufficient evidence set.
+
+Applying `paper-l01` **will change the published numbers**, correctly: it removes a
+scoring artifact. Doing so requires re-preparing the bundle and re-running the
+comparison, after which the current `m11-research-comparison-01` fingerprint is no longer
+the headline. That is a reason to apply both fixes once, together with whatever else the
+review finds, rather than piecemeal.
+
+**Smaller open items.** The five draft two-hop questions still need a shortcut check; a
+heuristic sweep found no unannotated alternative route for any of the 8 multi-document
+questions, which is evidence but not proof. The fusion sign flip is unexplained. Nobody
+has checked whether any hop count is *under*-stated — the cross-check could only report
+labels as correct or too high, so that direction went unexamined across all 40 questions.
+M12 ablations, M13–M14 polish, charts, and the optional demonstration UI are untouched.
 
 **Not claimed anywhere.** No general ranking of retrieval methods, no answer-quality or
 abstention evaluation, no confidence intervals, no significance tests. Forty questions with
