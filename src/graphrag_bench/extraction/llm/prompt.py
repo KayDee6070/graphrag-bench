@@ -43,6 +43,12 @@ _RELATION_CUE = re.compile(
     r"evaluated\s+(?:on|using)|measured\s+by|proposes?|proposed|introduces?|introduced)\b",
     re.IGNORECASE,
 )
+_RELATION_CUE_V2 = re.compile(
+    r"\b(?:based\s+on|built\s+on|builds\s+on|uses?|used\s+by|"
+    r"evaluated\s+(?:on|using)|measured\s+by|proposes?|proposed|introduces?|introduced|"
+    r"initiali[sz](?:e|es|ed|ing)\s+from|modification\s+of)\b",
+    re.IGNORECASE,
+)
 _SENTENCE_END = re.compile(r"[.!?]+[\"'”’)\]]*(?=\s|$)")
 _MAX_SELECTED_SENTENCES = 2
 
@@ -73,13 +79,14 @@ def selected_ranges(text: str, config: LLMExtractionConfig) -> tuple[tuple[int, 
         cursor = match.end()
     if cursor < len(text):
         spans.append((cursor, len(text)))
+    cue = _RELATION_CUE if config.passage_selection == "relation-cues-v1" else _RELATION_CUE_V2
     selected = []
     for start, end in spans:
         raw = text[start:end]
         start += len(raw) - len(raw.lstrip())
         end -= len(raw) - len(raw.rstrip())
         candidate = text[start:end]
-        if candidate and _RELATION_CUE.search(candidate):
+        if candidate and cue.search(candidate):
             selected.append((start, end))
         if len(selected) == _MAX_SELECTED_SENTENCES:
             break
@@ -273,13 +280,19 @@ def extraction_fingerprint(config: LLMExtractionConfig, spec: ModelSpec) -> str:
             "conversion": "named-or-positional-six-field-rows-to-exact-sentence-proposals-v1",
         }
     if config.passage_selection != "full":
+        cue = _RELATION_CUE if config.passage_selection == "relation-cues-v1" else _RELATION_CUE_V2
         recipe_config["selection_policy"] = {
-            "cue_pattern": _RELATION_CUE.pattern,
-            "cue_flags": int(_RELATION_CUE.flags),
+            "cue_pattern": cue.pattern,
+            "cue_flags": int(cue.flags),
             "sentence_end_pattern": _SENTENCE_END.pattern,
             "sentence_end_flags": int(_SENTENCE_END.flags),
             "max_sentences": _MAX_SELECTED_SENTENCES,
-            "algorithm": "first-matching-trimmed-spans-double-newline-v1",
+            "algorithm": {
+                "relation-cues-v1": "first-matching-trimmed-spans-double-newline-v1",
+                # Preserve the v2 diagnostic recipe issued before this compatibility
+                # branch was added. Recipe labels are part of replay validation.
+                "relation-cues-v2": "first-matching-trimmed-spans-double-newline-relation-cues-v2",
+            }[config.passage_selection],
             "validation": "selected-span-evidence-and-exact-abstention-v1",
         }
 

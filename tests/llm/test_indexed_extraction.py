@@ -12,6 +12,7 @@ from graphrag_bench.extraction.llm.prompt import (
     extraction_fingerprint,
     make_request,
     numbered_spans,
+    selected_passage,
 )
 from graphrag_bench.ingestion.reader import load_ingestion
 from graphrag_bench.models import Chunk, text_sha256
@@ -210,6 +211,52 @@ def test_cue_selection_numbering_has_original_offsets(indexed, source):
     assert [s["text"] for s in content["sentences"]] == [text[a:b] for a, b in spans]
     assert content["sentences"][0]["text"] == "Orion uses Nova."
     assert spans[0][0] == 12
+
+
+def test_cue_v2_selects_initialization_and_modification_without_changing_v1(indexed, source):
+    v1 = indexed.model_copy(update={"passage_selection": "relation-cues-v1"})
+    v2 = indexed.model_copy(update={"passage_selection": "relation-cues-v2"})
+    text = (
+        "Background. Aurora initializes from Quartz. "
+        "Nova is a modification of Orion. Helix uses Comet."
+    )
+    assert selected_passage(text, v1) == "Helix uses Comet."
+    assert selected_passage(text, v2) == (
+        "Aurora initializes from Quartz.\n\nNova is a modification of Orion."
+    )
+    assert [
+        item["text"]
+        for item in json.loads(make_request(source(text)[1][0], v2).messages[-1].content)[
+            "sentences"
+        ]
+    ] == [
+        "Aurora initializes from Quartz.",
+        "Nova is a modification of Orion.",
+    ]
+
+
+def test_cue_v2_is_a_separate_recipe(indexed, source, make_provider):
+    v1 = indexed.model_copy(update={"passage_selection": "relation-cues-v1"})
+    v2 = indexed.model_copy(update={"passage_selection": "relation-cues-v2"})
+    spec = make_provider(config=v1).spec
+    assert extraction_fingerprint(v1, spec) != extraction_fingerprint(v2, spec)
+    assert make_request(source("Aurora initializes from Quartz.")[1][0], v1) != make_request(
+        source("Aurora initializes from Quartz.")[1][0], v2
+    )
+
+
+def test_3b_candidate_configs_change_only_their_declared_dimension():
+    base = load_llm_config(ROOT / "configs/llm-extraction-indexed-3b.toml")
+    examples = load_llm_config(ROOT / "configs/llm-extraction-indexed-3b-examples.toml")
+    cues = load_llm_config(ROOT / "configs/llm-extraction-indexed-3b-cues-v2.toml")
+    assert examples.model_copy(update={"examples": base.examples}) == base
+    assert cues.model_copy(update={"passage_selection": "full"}) == base
+
+
+def test_cue_v1_recipe_remains_compatible(indexed, make_provider):
+    config = indexed.model_copy(update={"passage_selection": "relation-cues-v1"})
+    recipe = extraction_fingerprint(config, make_provider(config=config).spec)
+    assert recipe == "82ef2f31a8d07eabb61352ff859779b298b59806dd75aacb4f1ee40d8a9c2b4c"
 
 
 def test_indexed_graph_roundtrip_and_legacy_hash(

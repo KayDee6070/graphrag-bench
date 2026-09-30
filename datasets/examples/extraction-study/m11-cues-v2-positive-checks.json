@@ -1,0 +1,45 @@
+{
+  "kind": "source-reviewed-extraction-positive-slice-v1",
+  "review_status": "draft; independent human review pending",
+  "selection": "Five positive development chunks copied from m11-source-checks.json. The three negative cases are excluded because relation-cues-v2 exposes a real initialization relation in the former generic-hyperparameters chunk. This slice measures only draft-fact recovery, not precision or abstention.",
+  "source_hashes": {
+    "chunks.jsonl": "b7736aaebcafeb92347846305e20c1ab6836ed2f8d5bbdaa4142d6d7a8a0cf04",
+    "documents.jsonl": "a7a2a000f9991d6667a3c2a520237e7cdd7d77d81bb50de031927247fff6d2bc",
+    "manifest.json": "27e11462a07f87ebc37f9d31f1720ebe36e24991b5610dbdc028c69a0b702c0c"
+  },
+  "cases": [
+    {
+      "id": "ragas-judge",
+      "chunk_id": "chunk-6e856ae0eed4a3cadd19417d5dca9ad3a75f86cfc8449d5c0a708ecf01c24d02",
+      "reason": "Copied from m11-source-checks.json: RAGAS uses GPT-3.5 as its judge.",
+      "expected": [{"subjects": ["RAGAS"], "predicate": "USES", "objects": ["GPT-3.5"]}]
+    },
+    {
+      "id": "rag-components",
+      "chunk_id": "chunk-09d4ac79eb48bfe3cd066de50f7a0b8c1fc886d849440adfdda562d298622f7f",
+      "reason": "Copied from m11-source-checks.json: Facebook RAG uses DPR and BART.",
+      "expected": [
+        {"subjects": ["Facebook RAG", "RAG"], "predicate": "USES", "objects": ["DPR"]},
+        {"subjects": ["Facebook RAG", "RAG"], "predicate": "USES", "objects": ["BART"]}
+      ]
+    },
+    {
+      "id": "jina-backbone",
+      "chunk_id": "chunk-13e09f04d93bc29c0d540a3ddd7ca71a8cce04ef8ef799dc3fe68f05ea8d955f",
+      "reason": "Copied from m11-source-checks.json: jina-embeddings-v3 is based on XLM-RoBERTa.",
+      "expected": [{"subjects": ["jina-embeddings-v3"], "predicate": "BASED_ON", "objects": ["XLM-RoBERTa"]}]
+    },
+    {
+      "id": "bert-initialization",
+      "chunk_id": "chunk-a44871dfb80a320ae5fc340fbf21d9f3c99a05935abaee772e77c699fd5c62b0",
+      "reason": "Copied from m11-source-checks.json: BERT-FTbase initializes from BERTbase.",
+      "expected": [{"subjects": ["BERT-FTbase"], "predicate": "BASED_ON", "objects": ["BERTbase"]}]
+    },
+    {
+      "id": "sbert-backbone",
+      "chunk_id": "chunk-60f70827f8c7e6a679cafd93b78bf4ef6b1b47a3fa4fe41d318f6b98db00d2f1",
+      "reason": "Copied from m11-source-checks.json: Sentence-BERT is a modification of pretrained BERT.",
+      "expected": [{"subjects": ["Sentence-BERT", "SBERT"], "predicate": "BASED_ON", "objects": ["BERT"]}]
+    }
+  ]
+}

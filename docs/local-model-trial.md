@@ -50,7 +50,7 @@ they cannot establish held-out accuracy or performance across the entire corpus.
 | Schema-valid responses | 1/8 | 7/8 |
 | Rejected responses | 7/8 | 1/8 |
 | Output-limit responses | 4/8 | 0/8 |
-| Usable empty negative cases | 0/3 | 3/3 |
+| Negative cases with no accepted assertion or whole rejection | 0/3 | 3/3 |
 | Mean recorded completion time | 23.47 s | 40.71 s |
 
 The two 3B assertions were:
@@ -69,6 +69,10 @@ used `BASED_ON` where the draft labels use `USES`, and proposed an invalid
 `Model SUPPORTS_TASK Task` row. The program rejected the complete response; it did
 not salvage plausible fragments. RAGAS and BERT initialization were valid empty
 responses, so four positive draft facts were still missed.
+
+The generic-hyperparameters and comparison negatives were clean empty responses.
+The unsuitable-tasks response proposed an unsupported row, which validation
+discarded; it therefore had no accepted assertion but was not a clean empty answer.
 
 The larger reader therefore improved instruction following and bounded precision,
 but recall remains insufficient: it recovered only one third of the six positive

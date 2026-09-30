@@ -1,6 +1,6 @@
 # M11 development comparison and extraction feasibility
 
-Work began 2026-09-28 and continued through 2026-09-30 (Europe/Berlin). Packages 0.11.0–0.11.3.
+Work began 2026-09-28 and continued through 2026-09-30 (Europe/Berlin). Packages 0.11.0–0.11.4.
 The full four-method study is **incomplete**. This report separates the completed
 baseline from source-only extraction diagnostics. All 40 questions are draft dev
 labels pending independent review; there are zero held-out questions.
@@ -531,7 +531,7 @@ measurements are descriptive.
 | Schema-valid responses | 1/8 | 7/8 |
 | Entire responses rejected | 7/8 | 1/8 |
 | Responses stopped at output limit | 4/8 | 0/8 |
-| Negative cases with usable empty responses | 0/3 | 3/3 |
+| Negative cases with no accepted assertion or whole rejection | 0/3 | 3/3 |
 | Mean recorded completion time | 23.47 s | 40.71 s |
 
 The accepted assertions are `jina-embeddings-v3 BASED_ON XLM-RoBERTa` and
@@ -547,8 +547,10 @@ response remains in the diagnostic. No prefix or plausible row was salvaged.
 RAGAS and BERT initialization yielded valid empty responses, leaving four positive
 draft facts undetected.
 
-The 3B reader markedly improved schema compliance and handled all three negative
-cases, but 2/6 draft-fact recall is not sufficient for a complete graph. The sample
+Two 3B negative responses were clean empty results. The third proposed an unsupported
+row, which validation discarded, so it had no accepted assertion but was not clean.
+The 3B reader markedly improved schema compliance, but 2/6 draft-fact recall is not
+sufficient for a complete graph. The sample
 is small, purposive, previously used for development, and lacks independent labels.
 No corpus-wide accuracy, retrieval gain, or causal parameter-count claim follows.
 
@@ -567,6 +569,49 @@ model-free replay. Runner tests cover frozen config/check copies, cache-only inf
 weight checks, memory waiting, timeout/failure status, and offline replay. Ruff passes.
 Both saved 0.5B diagnostics and the new 3B diagnostic replay against their source
 and draft case file.
+
+### Follow-up candidates: richer examples and relation cues
+
+Two further bounded 3B candidates were evaluated after inspecting the 2/6 result.
+Both are development adaptation, not held-out experiments. They use the same pinned
+model and no paid service.
+
+The richer-examples candidate replaces four short fictional demonstrations with five
+fictional examples covering two components in one sentence, initialization, late
+evidence, comparisons, negation, and generic hyperparameters. It changed only the
+examples. On the original eight cases it still matched **2/6** draft facts; schema
+validity fell from 7/8 to 6/8, whole-response rejection rose from 1/8 to 2/8, and
+mean recorded completion time rose from 40.71 to 47.61 seconds. The RAGAS response
+copied nearby ARES text, and the RAG-components response still omitted sentence IDs.
+The Jina and SBERT matches remained. This candidate is rejected. Its replayed
+report SHA-256 is
+`82d66bc9d823c2fcbc7687d1480144645a4dbe2c9b52509b3b5a6fa651130275`, and
+its recipe SHA-256 is
+`383bd8ad5be9b52a14442688a3c0be8b62f2ae2c853c5f6004be8d592148a66a`.
+The [example lesson](../docs/extraction-examples.md) records the exact change.
+
+The relation-cues-v2 candidate retained only the first two sentences with explicit
+relationship wording. It adds `initializes from` and `modification of` to the
+unchanged v1 cue list. The original generic-hyperparameters negative could not be
+used because v2 exposes a real initialization statement in that chunk. The trial
+therefore used a five-positive-case slice, which measures draft-fact recovery only.
+
+This candidate matched **1/6** facts. It recovered RAGAS–GPT-3.5 but lost the Jina
+match after PDF figure layout became the entire model input. It proposed
+`BERT-FTbase USES E5` rather than the draft BERTbase ancestry relationship; the
+source supports the words used but the ontology interpretation needs review. It
+also failed the RAG-components schema and used an incompatible predicate for SBERT.
+This candidate is rejected. Its report SHA-256 is
+`fb6c3bbb84350e34ed361979e2e6b11d2071dd2d57ad2ece098bd925cad8e705`, and
+its recipe SHA-256 is
+`f6a846cc6bde07415f826f453ef9615f58723377d16cd2f544dd4e4b8f77e73b`.
+The [cue-selection lesson](../docs/relation-cue-trial.md) explains why its negative
+labels need recipe-specific review.
+
+The original full-context 3B indexed recipe remains the best observed development
+candidate at 2/6 draft-fact recovery. Its recall remains too low for a full graph.
+Further prompt-only changes should not proceed without a source-label review plan
+and an extractor design that addresses PDF layout and semantic ontology decisions.
 
 ## Remaining study requirements
 
