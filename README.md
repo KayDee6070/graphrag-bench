@@ -265,6 +265,7 @@ GitHub Actions defines these checks for Python 3.11, 3.12, and 3.13. Fixture fil
 - `scripts/study_m10.py`: real paper receipts, corpus/benchmark separation, and the difference between document count and reasoning hops.
 - `scripts/study_m10_expansion.py`: real bridge questions, shortcuts, source coverage, and independent-review boundaries.
 - `scripts/export_extraction_review.py`: pending source-bound reviewer packets for draft extraction checks.
+- `scripts/blind_review_sheet.py`: removes the annotation author's reasoning from a review worksheet, keeping every question, label, quote, and page link.
 - `scripts/diagnose_multihop.py`: a labelled oracle diagnostic that reports annotation coverability, retrieval rank depth, and graph seeding for multi-document questions.
 - `datasets/papers/pilot/`: three-paper acquisition catalog, source-authored draft annotations, and source licensing notice.
 - `datasets/papers/research/`: 30-paper catalog, candidate screening record, 40 draft dev questions, and complete attribution.

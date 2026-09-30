@@ -75,10 +75,12 @@ Detail: [M11 development report](m11-development.md). Reproduction commands:
 **Two blockers, neither of which is code.** Until both are resolved, every number above is
 a development diagnostic and none supports a research claim:
 
-1. **Independent annotation review.** All 40 questions were written by this project and
-   checked by nobody else. Reviewer packets exist for extraction checks
-   (`scripts/export_extraction_review.py`); no packet exists yet for the question
-   annotations. This requires a person who did not author the labels.
+1. **Independent annotation review.** All 40 questions were authored by an AI agent from
+   paper text and checked by nobody else. The tooling is ready: `export-paper-review`
+   writes 40 pending rows, `scripts/blind_review_sheet.py` strips the author's reasoning
+   from the worksheet, and `verify-paper-review` validates the filled result. What is
+   missing is a reviewer who did not author the labels. Procedure and its limits:
+   [annotation-review.md](../docs/annotation-review.md).
 2. **Held-out questions.** There are zero. All 40 were visible throughout. The plan calls
    for 80 sealed questions, and they should be written after review, not before, or they
    inherit whatever review finds.
