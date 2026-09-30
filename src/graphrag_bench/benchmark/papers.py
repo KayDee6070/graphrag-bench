@@ -1,5 +1,6 @@
 """Compare frozen paper artifacts without rechunking, extraction, or index rebuilding."""
 
+import json
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from hashlib import sha256
@@ -30,6 +31,7 @@ from graphrag_bench.corpus import CorpusIndex
 from graphrag_bench.embeddings.base import EmbeddingSpec
 from graphrag_bench.extraction.llm.pipeline import read_llm_run
 from graphrag_bench.graph.builder import KnowledgeGraph
+from graphrag_bench.graph.pipeline import GraphManifest, load_graph
 from graphrag_bench.ingestion.reader import load_ingestion
 from graphrag_bench.models import JsonValue, NonNegativeInt, Record, Sha256, Text, require_unique
 from graphrag_bench.papers.pipeline import BUNDLE_FILES, verify_papers
@@ -44,7 +46,19 @@ EXPERIMENT_VERSION = "frozen-paper-comparison-v1"
 PAPER_FILES = BUNDLE_FILES | {"manifest.json"}
 VECTOR_FILES = {"vectors.npy", "rows.json", "manifest.json"}
 GRAPH_FILES = {"graph.json", "issues.jsonl", "responses.jsonl", "manifest.json"}
+RULE_GRAPH_FILES = {"graph.json", "issues.jsonl", "manifest.json"}
 RESULT_FILES = {"results.jsonl", "summary.json", "report.md"}
+LLM_EXTRACTOR_VERSION = "llm-source-proposals-v1"
+GraphStatus = Literal["unreviewed", "rule-based-unreviewed", "not-used"]
+GRAPH_FILES_BY_STATUS: dict[str, set[str]] = {
+    "unreviewed": GRAPH_FILES,
+    "rule-based-unreviewed": RULE_GRAPH_FILES,
+}
+GRAPH_DESCRIPTION: dict[str, str] = {
+    "unreviewed": "model graph",
+    "rule-based-unreviewed": "deterministic rule graph",
+    "not-used": "no graph",
+}
 
 
 class PaperExperimentManifest(Record):
@@ -55,7 +69,7 @@ class PaperExperimentManifest(Record):
     embedding: EmbeddingSpec
     split: Literal["dev"] = "dev"
     annotation_status: Literal["pending-independent-review"] = "pending-independent-review"
-    graph_status: Literal["unreviewed", "not-used"]
+    graph_status: GraphStatus
     metrics_version: Literal["complete-facts-source-coverage-v1"] = METRICS_VERSION
     context_version: Literal["source-union-greedy-v1"] = CONTEXT_VERSION
     source_hashes: dict[str, Sha256]
@@ -74,18 +88,45 @@ class PaperInputs:
     issue_count: int
     artifacts: dict[str, bytes]
     source_hashes: dict[str, str]
+    graph_status: str = "not-used"
 
 
 def _needs_graph(config: BenchmarkConfig) -> bool:
     return bool({"graph", "hybrid"} & set(config.strategies))
 
 
-def _input_names(config: BenchmarkConfig) -> set[str]:
+def _input_names(config: BenchmarkConfig, graph_status: str) -> set[str]:
+    if _needs_graph(config) != (graph_status != "not-used"):
+        raise BenchmarkError("recorded graph status disagrees with the compared strategies")
     return (
         {f"papers/{name}" for name in PAPER_FILES}
         | {f"vector/{name}" for name in VECTOR_FILES}
-        | ({f"graph/{name}" for name in GRAPH_FILES} if _needs_graph(config) else set())
+        | {f"graph/{name}" for name in GRAPH_FILES_BY_STATUS.get(graph_status, set())}
     )
+
+
+def _graph_status(directory: Path) -> str:
+    """Tell an LLM-proposed graph from a deterministic rule graph by its own receipt."""
+    try:
+        data = json.loads((directory / "manifest.json").read_bytes())
+    except (OSError, UnicodeError, ValueError) as error:
+        raise BenchmarkError(f"cannot read graph manifest in {directory}: {error}") from error
+    if not isinstance(data, dict) or "extractor_version" not in data:
+        raise BenchmarkError("graph manifest must record an extractor version")
+    if data["extractor_version"] == LLM_EXTRACTOR_VERSION:
+        return "unreviewed"
+    return "rule-based-unreviewed"
+
+
+def _load_graph(directory: Path, source: Path) -> tuple[KnowledgeGraph, int, str]:
+    """Load either graph kind. Neither kind's assertions are independently reviewed."""
+    status = _graph_status(directory)
+    if status == "unreviewed":
+        manifest, _, graph = read_llm_run(directory, source)
+        return graph, manifest.issue_count, status
+    graph = load_graph(directory, source)
+    rules = GraphManifest.model_validate_json((directory / "manifest.json").read_bytes())
+    return graph, rules.issue_count, status
 
 
 def load_paper_inputs(
@@ -103,12 +144,11 @@ def load_paper_inputs(
     if config.chunking != batch.config:
         raise BenchmarkError("comparison chunking must match frozen paper chunks; no rechunking")
     index = load_vector_index(index_directory, source)
-    graph, issue_count = None, 0
+    graph, issue_count, graph_status = None, 0, "not-used"
     directories = [("papers", bundle, PAPER_FILES), ("vector", index_directory, VECTOR_FILES)]
     if graph_directory is not None:
-        manifest, _, graph = read_llm_run(graph_directory, source)
-        issue_count = manifest.issue_count
-        directories.append(("graph", graph_directory, GRAPH_FILES))
+        graph, issue_count, graph_status = _load_graph(graph_directory, source)
+        directories.append(("graph", graph_directory, GRAPH_FILES_BY_STATUS[graph_status]))
     artifacts = {
         f"{prefix}/{name}": (directory / name).read_bytes()
         for prefix, directory, names in directories
@@ -127,6 +167,7 @@ def load_paper_inputs(
         issue_count,
         artifacts,
         hashes,
+        graph_status,
     )
 
 
@@ -182,12 +223,14 @@ def _summary(inputs: PaperInputs, records: tuple[QuestionRun, ...]) -> Benchmark
     )
 
 
-def _report(summary: BenchmarkSummary, config: BenchmarkConfig) -> str:
+def _report(summary: BenchmarkSummary, config: BenchmarkConfig, graph_status: str) -> str:
     return (
         "# Frozen real-paper development comparison\n\n"
         "Annotations: pending independent review. Split: dev. Held-out questions: 0.\n"
         f"Strategies: {', '.join(config.strategies)}. Graph assertions, if used, are unreviewed.\n"
-        "Existing PDF chunks, vector rows, and model graph are reused without rebuilding.\n"
+        f"Graph source: {GRAPH_DESCRIPTION[graph_status]}. A deterministic rule graph reports\n"
+        "line-grammar extraction on prose papers; it is a floor, not a graph-method ceiling.\n"
+        "Existing PDF chunks, vector rows, and graph are reused without rebuilding.\n"
         "This is a development diagnostic; no general retrieval advantage is established.\n"
         "Loading and artifact validation are excluded from warm retrieval timings.\n\n"
         + render_report(summary)
@@ -216,14 +259,14 @@ def run_paper_benchmark(
     artifacts = inputs.artifacts | {
         "results.jsonl": b"".join(json_bytes(r) for r in records),
         "summary.json": json_bytes(summary),
-        "report.md": _report(summary, config).encode(),
+        "report.md": _report(summary, config, inputs.graph_status).encode(),
     }
     manifest = PaperExperimentManifest(
         package_version=__version__,
         created_at=datetime.now(UTC),
         comparison=config,
         embedding=provider.spec,
-        graph_status="unreviewed" if inputs.graph is not None else "not-used",
+        graph_status=inputs.graph_status,
         source_hashes=inputs.source_hashes,
         extraction_issue_count=inputs.issue_count,
         setup_ms=setup_ms,
@@ -325,7 +368,7 @@ def verify_paper_benchmark(directory: Path) -> BenchmarkSummary:
             (directory / "manifest.json").read_bytes()
         )
         config = manifest.comparison
-        names = _input_names(config) | RESULT_FILES
+        names = _input_names(config, manifest.graph_status) | RESULT_FILES
         if set(manifest.artifact_hashes) != names:
             raise BenchmarkError("unexpected paper experiment artifact file list")
         raw = {name: (directory / name).read_bytes() for name in names}
@@ -343,7 +386,7 @@ def verify_paper_benchmark(directory: Path) -> BenchmarkSummary:
             manifest.embedding != inputs.index.spec
             or manifest.source_hashes != inputs.source_hashes
             or manifest.extraction_issue_count != inputs.issue_count
-            or manifest.graph_status != ("unreviewed" if _needs_graph(config) else "not-used")
+            or manifest.graph_status != inputs.graph_status
         ):
             raise BenchmarkError("paper experiment input provenance mismatch")
         records = tuple(
@@ -353,7 +396,7 @@ def verify_paper_benchmark(directory: Path) -> BenchmarkSummary:
         summary = _summary(inputs, records)
         if (
             json_bytes(summary) != raw["summary.json"]
-            or _report(summary, config).encode() != raw["report.md"]
+            or _report(summary, config, manifest.graph_status).encode() != raw["report.md"]
         ):
             raise BenchmarkError("paper summary or report differs from recomputed results")
         return summary

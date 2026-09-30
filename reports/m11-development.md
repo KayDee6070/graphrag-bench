@@ -613,9 +613,69 @@ candidate at 2/6 draft-fact recovery. Its recall remains too low for a full grap
 Further prompt-only changes should not proceed without a source-label review plan
 and an extractor design that addresses PDF layout and semantic ontology decisions.
 
+## Four-method run with a deterministic graph floor (0.11.5, 2026-09-30)
+
+The comparison runner now accepts either graph kind and records which one it used.
+A deterministic rule graph is identified by its own `extractor_version` receipt and
+copied as three artifacts without `responses.jsonl`; the outer manifest stores
+`graph_status = "rule-based-unreviewed"`. Relabelling a saved run's graph kind fails
+offline verification because the recorded artifact file list no longer matches.
+
+Running `build-graph` with `configs/extraction.toml` over the 6,996 real chunks took
+about 3 seconds and produced **0 entities, 0 assertions, and 36,583 unsupported
+statements**. The M3 grammar requires one complete controlled-English statement per
+line with a final period. Wrapped PDF prose lines do not match any rule. This is a
+measured transfer result for that extractor, not a property of graph retrieval.
+
+The full four-method run over the same frozen bundle and vector index is
+`experiments/runs/m11-rule-graph-comparison-01`: 40 questions, 4 strategies, 3
+repeats, 480 records, about 48 seconds of wall time after model loading. Offline
+verification reproduced its source metrics, summary, and report.
+
+| Method | K | Complete evidence after budget | Mean fraction of fully covered facts |
+| --- | ---: | ---: | ---: |
+| Vector | 5 | 12/40 = 30.0% | 33.3% |
+| BM25 | 5 | 22/40 = 55.0% | 61.3% |
+| Graph | 5 | 0/40 = 0.0% | 0.0% |
+| Hybrid | 5 | 12/40 = 30.0% | 33.3% |
+| Vector | 10 | 19/40 = 47.5% | 50.8% |
+| BM25 | 10 | 25/40 = 62.5% | 68.8% |
+| Graph | 10 | 0/40 = 0.0% | 0.0% |
+| Hybrid | 10 | 19/40 = 47.5% | 50.8% |
+
+Evaluation fingerprint:
+
+```text
+70eabebe2beb9205136dc336178cb7459dd5bff0429cf6910e4b41abdc25541b
+```
+
+Three observations, none of which is a retrieval-method result:
+
+The vector and BM25 columns reproduce the earlier two-method baseline exactly,
+which is the intended behaviour of adding strategies to a frozen comparison.
+
+The graph arm scores zero because its graph is empty. Graph retrieval returned no
+candidates and assembled no context, so its 0.13 ms p95 measures an empty traversal.
+This run therefore establishes a floor for this extractor, not for graph retrieval.
+
+Hybrid equals vector on every question at both cutoffs: 0 wins, 40 ties, 0 losses.
+Reciprocal rank fusion with one empty component correctly degenerates to the other
+component's ranking. That is a wiring check, not evidence about fusion.
+
+The one substantive pattern remains the lexical advantage: BM25 recovers complete
+annotated evidence for 25 percentage points more questions than dense retrieval at
+K=5 under an identical 2,000-token budget. The draft annotations, their exact
+quoted coordinates, the question wording, and the pinned encoder all shape that
+number, and no alternative unannotated support receives credit. It is a development
+observation on unreviewed labels with no held-out split and no significance test.
+
 ## Remaining study requirements
 
-A usable complete real-paper graph, the four-method comparison, independently
-reviewed annotations, and 80 genuinely held-out questions remain. The five draft
-two-hop questions still need shortcut checks. No M12 ablation study has started.
+A usable complete real-paper graph, a four-method comparison with a non-empty graph,
+independently reviewed annotations, and 80 genuinely held-out questions remain. The
+deterministic graph arm above does not satisfy the graph requirement.
+Producing an LLM graph over the 1,416 cue-eligible chunks is projected at about
+11.95 hours of local provider time at 2/6 sampled draft-fact recovery; that run has
+not been launched and its quality gate is undecided.
+The five draft two-hop questions still need shortcut checks. No M12 ablation study has started.
 The beginner lesson and reproduction commands are in [paper-comparison.md](../docs/paper-comparison.md).

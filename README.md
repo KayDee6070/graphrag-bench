@@ -18,6 +18,14 @@ replay checks, and limits. This result does not establish full-corpus readiness.
 Two follow-up candidates with richer examples and cue-selected sentences did not
 improve that result; their evidence is in the development report.
 
+All four methods have now run together on the real corpus (0.11.5), using a
+deterministic graph as a floor: **BM25 22/40, vector 12/40, hybrid 12/40, graph 0/40**
+complete evidence at K=5 under one 2,000-token budget, verified offline. The M3
+line grammar matches 0 statements in 6,996 PDF chunks, so that graph is empty and the
+graph and hybrid columns measure wiring, not method quality. The only substantive
+pattern is the 25-point lexical advantage over dense retrieval on unreviewed draft
+labels. A four-method comparison with a non-empty graph remains open.
+
 ## Quick start
 
 Python 3.11 or newer is required. From this repository:
@@ -301,7 +309,7 @@ Read the [M0 design and experiment plan](docs/design.md), [data contracts](docs/
 9. **M8:** Local LLM-assisted extraction, source checks, inference receipts, graph replay, and study documentation — complete; the small controlled pilot is not a real-paper quality benchmark.
 10. **M9:** Local answer proposals, exact citation references, token-budget receipts, offline replay, and study documentation — complete; semantic correctness and abstention reliability are not established.
 11. **M10:** Real-paper acquisition, PDF provenance, 30-paper expansion, 40 draft development questions, coverage audits, and review tooling — implemented; independent annotation review and 80 held-out questions remain open.
-12. **M11:** Frozen real-paper comparison runner and offline source-metric verification implemented; development baseline and extraction preflight documented. Full graph, four-method study, independent review, and held-out evaluation remain.
+12. **M11:** Frozen real-paper comparison runner and offline source-metric verification implemented; development baseline, extraction preflight, reviewer packets, and a four-method run over a deterministic graph floor documented. A non-empty real-paper graph, independent review, and held-out evaluation remain.
 13. **M12:** Ablations and error analysis — not started.
 14. **M13–M14:** CLI polish, documentation, charts, and release preparation; optional demonstration UI.
 

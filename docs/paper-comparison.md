@@ -169,6 +169,28 @@ measured runtime report. Once a complete graph exists, the command is:
 
 That last command is a future run recipe, not a claim that its graph exists.
 
+`--graph` also accepts a deterministic `build-graph` directory. The runner reads the
+graph's own manifest to tell the two kinds apart and records `graph_status` as either
+`unreviewed` or `rule-based-unreviewed`, so a saved run always says which graph it
+compared. Use it to exercise all four methods without any model inference:
+
+```bash
+.venv/bin/graphrag-bench build-graph datasets/processed/m10-expanded-03/ingestion \
+  --rules configs/extraction.toml \
+  --output experiments/runs/m11-rule-graph-01
+.venv/bin/graphrag-bench benchmark-papers datasets/processed/m10-expanded-03 \
+  --index experiments/runs/m11-research-vectors \
+  --graph experiments/runs/m11-rule-graph-01 \
+  --config configs/benchmark-papers.toml \
+  --output experiments/runs/m11-rule-graph-comparison-01
+```
+
+Read that run's numbers carefully. The M3 grammar matches **0 statements** in 6,996
+real paper chunks, so its graph is empty, the graph arm scores zero, and hybrid
+collapses onto vector on all 40 questions. That is a floor measurement for a
+line-grammar extractor on PDF prose. It is not a measurement of graph retrieval, and
+a zero there is not evidence against the project's hypothesis.
+
 ## 7. Why sample extraction cost first?
 
 Before sending thousands of chunks through the small local language model, measure
