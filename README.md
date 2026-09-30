@@ -15,7 +15,7 @@ yielding a sparse real graph: 330 entities and 111 assertions from 6,996 chunks.
 Complete evidence at K=5 under one 2,000-token budget, verified offline:
 **BM25 22/40, hybrid 14/40, vector 12/40, graph 7/40**.
 
-The headline is negative. On the 5 two-hop and 8 cross-document questions — exactly what
+The headline is negative. On the 8 questions needing evidence from two documents, 5 of them also labelled two-hop — exactly what
 this project set out to test — **no method completed a single one**, at either cutoff.
 BM25 leads every other row, and fusion flips sign: +5 points at K=5, −7.5 at K=10.
 
@@ -265,6 +265,7 @@ GitHub Actions defines these checks for Python 3.11, 3.12, and 3.13. Fixture fil
 - `scripts/study_m10.py`: real paper receipts, corpus/benchmark separation, and the difference between document count and reasoning hops.
 - `scripts/study_m10_expansion.py`: real bridge questions, shortcuts, source coverage, and independent-review boundaries.
 - `scripts/export_extraction_review.py`: pending source-bound reviewer packets for draft extraction checks.
+- `scripts/sweep_alternative_evidence.py`: heuristic sweep for unannotated passages that may answer a question and earn no credit; mostly false positives, use as a reading list.
 - `scripts/blind_review_sheet.py`: removes the annotation author's reasoning from a review worksheet, keeping every question, label, quote, and page link.
 - `scripts/diagnose_multihop.py`: a labelled oracle diagnostic that reports annotation coverability, retrieval rank depth, and graph seeding for multi-document questions.
 - `datasets/papers/pilot/`: three-paper acquisition catalog, source-authored draft annotations, and source licensing notice.

@@ -103,6 +103,43 @@ Agent-reported, listed for the human reviewer to judge. I have not checked these
 - **paper-d04, paper-d12, paper-d23, paper-l03** — minor: implicit subjects, a quote
   narrower than the question's wording, or a span split across two chunks.
 
+## Follow-up sweep: are there more paper-l01-style scoring artifacts?
+
+`scripts/sweep_alternative_evidence.py` looks for the paper-l01 shape across all 40
+questions: a passage that may answer a question while earning no credit, because the
+metrics score annotated spans only. It ranks unannotated chunks by term overlap against
+the fact statements and the reference answer. Output:
+`experiments/runs/m11-alt-evidence-sweep.json`.
+
+It flagged **16 questions** at an overlap threshold of 0.55. Reading the strongest
+candidates shows the heuristic is **mostly false positives**, and the honest number is
+much smaller:
+
+- `paper-d05`, overlap 0.857 — the candidate discusses *training* M3-Embedding and never
+  lists the three retrieval functionalities. Not an alternative.
+- `paper-d17`, overlap 0.857 — the candidate discusses supervision gains generally and
+  never states that ColBERTv2 combines residual compression with denoised supervision.
+  Not an alternative.
+- `paper-r02`, overlap 0.833 — borderline. The candidate says "We run an ablation
+  comparing GMM Clustering with summarization", which arguably does establish that
+  RAPTOR's clustering uses GMMs. A reviewer call.
+- `paper-l01`, overlap 0.667 — the known true positive.
+
+So term overlap finds topical similarity, not answer equivalence. Treat the 16 as a
+reading list, not a defect count: one confirmed, one borderline, the rest noise.
+
+**The finding that matters is negative.** Of the 8 questions that require evidence from
+two documents, **the sweep flagged none**. Every candidate it produced was for a
+single-document one-hop question. So the headline result — that no method completed a
+multi-document question — is **not** explained away by unannotated alternative routes.
+The sweep looked for that escape hatch and did not find one, which strengthens the
+original conclusion rather than undermining it.
+
+A count correction while confirming this: earlier drafts of the reports and README said
+"13 multi-document questions". That double-counted. There are **8 distinct** such
+questions (`paper-b01`–`b05`, `paper-c01`–`c03`); the 5 labelled two-hop are also
+two-document, so 5 + 8 was not a sum. Corrected throughout.
+
 ## What this does not establish
 
 It cannot supply the `independent_of_annotation_author` attestation in any meaningful

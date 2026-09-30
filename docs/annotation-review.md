@@ -15,7 +15,7 @@ so a project owner reading the quotes fresh is a genuine second judgement and ma
 truthfully attest `independent_of_annotation_author: true`.
 
 **Record it honestly if you have already seen the comparison results.** Knowing that all
-13 multi-document questions failed creates quiet pressure to revise exactly those 13. A
+8 multi-document questions failed creates quiet pressure to revise exactly those 8. A
 results-aware review is worth far more than no review and less than a blind one. Write
 which you did in your notes; do not imply the stronger claim.
 
@@ -86,5 +86,5 @@ review turns out. The 80 held-out questions are separate work, and should be wri
 after this review so they do not inherit whatever it finds.
 
 Expect roughly 2 to 3 hours. Any `revise` decision is a useful result, not a failure —
-especially among the 13 multi-document questions, where a mislabelled hop count would
+especially among the 8 multi-document questions, where a mislabelled hop count would
 change what the comparison means.

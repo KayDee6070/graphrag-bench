@@ -51,7 +51,7 @@ Three findings, in descending confidence:
 
 1. **Lexical retrieval beat dense retrieval** on these questions, at both cutoffs, under
    an identical budget. It leads every non-zero subgroup.
-2. **No method completed any of the 13 multi-document or two-hop questions.** A labelled
+2. **No method completed any of the 8 multi-document questions, 5 of which are also labelled two-hop.** A labelled
    oracle diagnostic explains why: the annotations are sound (0 of 17 facts uncoverable),
    but **19 of 26 reachable fact/method pairs sit deeper than rank 10**. These questions
    need two facts; typically one lands at rank 1–5 and its partner at 26–363, and half a
