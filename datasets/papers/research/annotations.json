@@ -183,12 +183,25 @@
               }
             ]
           }
+        ],
+        [
+          {
+            "fact_id": "lightrag-dual-level",
+            "statement": "LightRAG's dual-level retrieval pairs low-level retrieval of specific entities and their relationships with high-level retrieval of broader topics and themes.",
+            "spans": [
+              {
+                "paper_id": "lightrag",
+                "page": 2,
+                "quote": "LightRAG employs efficient dual-level retrieval\nstrategies: low-level retrieval, which focuses on precise information about specific entities and their\nrelationships, and high-level retrieval, which encompasses broader topics and themes."
+              }
+            ]
+          }
         ]
       ],
       "reasoning_hops": 1,
       "difficulty": "medium",
       "group_id": "rag-pilot-connected-methods",
-      "rationale": "Two directly stated complementary facts on one PDF page. Both levels are required for a complete answer; this is not a multi-hop graph chain."
+      "rationale": "Two directly stated complementary facts on one PDF page. Both levels are required for a complete answer; this is not a multi-hop graph chain. A second sufficient set records the page 2 summary sentence, which states both levels in one passage: an automated sweep found it and it was verified against the source, so retrieval that finds only that sentence must not be scored as a miss. Independent review should confirm both sets."
     },
     {
       "question_id": "paper-l02",
@@ -368,12 +381,12 @@
         [
           {
             "fact_id": "raptor-encoder",
-            "statement": "RAPTOR embeds initial text chunks using SBERT multi-qa-mpnet-base-cos-v1.",
+            "statement": "RAPTOR embeds initial text chunks using SBERT multi-qa-mpnet-base-cos-v1, and those chunks with their embeddings form the leaf nodes.",
             "spans": [
               {
                 "paper_id": "raptor",
                 "page": 3,
-                "quote": "These texts\nare then embedded using SBERT, a BERT-based encoder ( multi-qa-mpnet-base-cos-v1)\n(Reimers & Gurevych, 2019)."
+                "quote": "These texts\nare then embedded using SBERT, a BERT-based encoder ( multi-qa-mpnet-base-cos-v1)\n(Reimers & Gurevych, 2019). The chunks and their corresponding SBERT embeddings form the\nleaf nodes of our tree structure."
               }
             ]
           },

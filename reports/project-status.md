@@ -93,25 +93,28 @@ a development diagnostic and none supports a research claim:
 and produced 111 assertions from 6,996 chunks. The graph column therefore measures this
 extractor at least as much as it measures graph retrieval. No assertion has been reviewed.
 
-**Two confirmed label defects, awaiting the reviewer's decision.** An automated
-cross-check found them and they were verified against the source documents; see
-[annotation-crosscheck.md](annotation-crosscheck.md) for the exact text and offsets. They
-are deliberately **not applied**: these are gold labels, the reviewer is the person
-entitled to change them, and a label change signed by a reviewer is worth more than one
-signed by an agent.
+**Two label fixes applied to source, not yet reflected in any measured result.** An
+automated cross-check found both defects and each was verified against the source
+documents; see [annotation-crosscheck.md](annotation-crosscheck.md). Both are now in
+`datasets/papers/research/annotations.json`, on the authorisation of the project owner:
 
-- `paper-b01` — the `raptor-encoder` quote stops one sentence short of the line that ties
-  SBERT embeddings to leaf nodes, which is what the question asks about. Extending the
-  span end from 10642 to 10737 fixes it.
+- `paper-b01` — the `raptor-encoder` quote stopped one sentence short of the line tying
+  SBERT embeddings to leaf nodes, which is what the question asks about. The quote now
+  runs to the end of that sentence, 121 to 216 characters, and the statement says so.
 - `paper-l01` — a single page-2 sentence covers both annotated page-4 facts. Because the
-  metrics credit only annotated spans, a retriever that found it would score zero. The
-  fix is to add that sentence as a second sufficient evidence set.
+  metrics credit only annotated spans, a retriever that found it scored zero. That
+  sentence is now a **second sufficient evidence set**, so either route scores.
 
-Applying `paper-l01` **will change the published numbers**, correctly: it removes a
-scoring artifact. Doing so requires re-preparing the bundle and re-running the
-comparison, after which the current `m11-research-comparison-01` fingerprint is no longer
-the headline. That is a reason to apply both fixes once, together with whatever else the
-review finds, rather than piecemeal.
+**The measured results in this report predate both fixes.** Every number above, including
+the fingerprint `30bf9bf4…`, was produced from the previous annotations. Making them
+current requires re-running `prepare-papers` into a fresh bundle and re-running the
+comparison against it. Until that happens, treat this report's tables as describing the
+pre-fix labels, and expect `paper-l01` to move: adding a valid route can only leave a
+score equal or better, so the comparison's floor rises slightly.
+
+Independent review should confirm both fixes rather than inherit them. They were proposed
+by an agent of the same model family that authored the original labels, which is precisely
+the correlation the review exists to break.
 
 **Smaller open items.** The five draft two-hop questions still need a shortcut check; a
 heuristic sweep found no unannotated alternative route for any of the 8 multi-document
