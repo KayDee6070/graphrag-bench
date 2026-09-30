@@ -108,9 +108,17 @@ documents; see [annotation-crosscheck.md](annotation-crosscheck.md). Both are no
 **The measured results in this report predate both fixes.** Every number above, including
 the fingerprint `30bf9bf4…`, was produced from the previous annotations. Making them
 current requires re-running `prepare-papers` into a fresh bundle and re-running the
-comparison against it. Until that happens, treat this report's tables as describing the
-pre-fix labels, and expect `paper-l01` to move: adding a valid route can only leave a
-score equal or better, so the comparison's floor rises slightly.
+comparison against it.
+
+The effect is already computable from the saved records, and it is not trivial. BM25,
+vector, and hybrid each retrieved the `paper-l01` page-2 sentence into their **top five**,
+within budget, in every repeat — and each was scored as failing the question, because the
+sentence was unannotated. Expected once re-run: **BM25 22→23, hybrid 14→15, vector 12→13**
+at K=5, and **25→26, 16→17, 19→20** at K=10. Graph does not move. Relative ordering is
+unchanged and no conclusion reverses, but three of four methods were under-credited by
+one question. The `paper-b01` fix changes nothing measured, and in fact makes that fact
+harder to retrieve: satisfying chunks drop from two to one. Derivation in
+[annotation-crosscheck.md](annotation-crosscheck.md).
 
 Independent review should confirm both fixes rather than inherit them. They were proposed
 by an agent of the same model family that authored the original labels, which is precisely

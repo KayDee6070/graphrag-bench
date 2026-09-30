@@ -140,6 +140,53 @@ A count correction while confirming this: earlier drafts of the reports and READ
 questions (`paper-b01`–`b05`, `paper-c01`–`c03`); the 5 labelled two-hop are also
 two-document, so 5 + 8 was not a sum. Corrected throughout.
 
+## What the two fixes change, computed from the saved run
+
+Both fixes are applied to `datasets/papers/research/annotations.json`. Re-preparing the
+bundle and re-running the comparison is still pending, so the effect below is derived
+from the saved records of `m11-research-comparison-01` rather than measured. The
+derivation is deterministic: a fact is satisfied when an annotated span lies inside the
+selected context, and the saved records contain both.
+
+### paper-l01 — the scoring artifact cost three methods a point each
+
+BM25, vector, and hybrid all retrieved a chunk containing the page-2 sentence **into
+their top five**, in every repeat, and the chunk survived the token budget
+(`alt_selected=True`, `alt_skipped_for_budget=False`). Each was nonetheless scored
+`complete_evidence = False`, because that sentence was not annotated.
+
+So three methods fully answered `paper-l01` and were recorded as failing it. The caveat
+that "alternative unannotated support earns no credit" was not hypothetical; it cost
+real points. Expected once re-run:
+
+| Method | K=5 | K=10 |
+| --- | --- | --- |
+| BM25 | 22 → **23** | 25 → **26** |
+| Hybrid | 14 → **15** | 16 → **17** |
+| Vector | 12 → **13** | 19 → **20** |
+| Graph | 7 → 7 | 8 → 8 |
+
+Graph does not move: it never retrieved the chunk. Relative ordering is unchanged, so no
+conclusion in the reports reverses, but three of four methods were being under-credited
+by one question.
+
+### paper-b01 — the fix costs nothing here, but it does make the fact harder
+
+Extending the quote **reduces** the chunks that can satisfy `raptor-encoder` from two to
+one, because the longer span no longer fits inside chunk 10132–10642. A stricter quote is
+the correct outcome — the old one did not prove its statement — but it is worth naming
+that the fix makes retrieval harder rather than easier.
+
+It changes nothing measured: no method retrieved either candidate chunk in its top ten,
+so `paper-b01` was already failing for reasons unrelated to this span. The effect would
+only appear at a much deeper cutoff.
+
+### Net effect on the headline
+
+None. The 8 multi-document questions are untouched by both fixes; `paper-l01` is a
+single-document one-hop question. No method completed a multi-document question before
+the fixes and none does after.
+
 ## What this does not establish
 
 It cannot supply the `independent_of_annotation_author` attestation in any meaningful
