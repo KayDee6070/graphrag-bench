@@ -1,6 +1,6 @@
 # M11 development comparison and extraction feasibility
 
-Work began 2026-09-28 and continued through 2026-09-30 (Europe/Berlin). Packages 0.11.0–0.11.4.
+Work began 2026-09-28 and continued through 2026-09-30 (Europe/Berlin). Packages 0.11.0–0.11.6.
 The full four-method study is **incomplete**. This report separates the completed
 baseline from source-only extraction diagnostics. All 40 questions are draft dev
 labels pending independent review; there are zero held-out questions.

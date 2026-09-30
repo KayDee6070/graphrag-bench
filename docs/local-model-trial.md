@@ -182,7 +182,9 @@ path cannot drift. A CUDA recipe records provider version
 run states which arithmetic produced it. Requesting `cuda` from a CPU-only torch
 build fails before the model loads.
 
-This needs a CUDA torch wheel; the pinned `requirements-embeddings-cpu.txt` build has
+This needs a CUDA torch wheel from `requirements-embeddings-cuda.txt`, installed instead
+of the CPU file; it differs in two lines and pulls about 3 GB of NVIDIA runtime
+libraries. The pinned `requirements-embeddings-cpu.txt` build has
 no CUDA support. Qwen2.5-3B in float16 is about 6.2 GiB of weights plus a small
 grouped-query KV cache, so it fits an 8 GiB device. Weights sit in VRAM, which is why
 `--min-available-gib` does not apply to this recipe.

@@ -110,6 +110,8 @@ For the tested Linux x86_64 / Python 3.12 CPU setup:
 
 The first model setup downloads roughly 91 MB of weights plus the optional CPU libraries. Later commands use the cached pinned revision and local inference; omit `--allow-download` when cached. The two-file example produces a **4 × 384** matrix. Query output includes ranked chunk IDs, scores, original text, and source coordinates. Repeated runs need fresh output directories.
 
+CPU float32 is the reference stack for every result in this repository. Only the optional GPU extraction recipe needs `requirements-embeddings-cuda.txt`, installed instead of the CPU file; it differs in two lines and pulls about 3 GB of NVIDIA runtime libraries. See [the measured recipe comparison](docs/local-model-trial.md) before using it.
+
 For a lexical comparison or a study session without model setup:
 
 ```bash
