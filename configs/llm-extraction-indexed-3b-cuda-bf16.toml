@@ -1,11 +1,9 @@
-# REJECTED recipe, kept only as a recorded negative result: do not use for extraction.
-# On the eight draft check cases float16 matched 1/6 draft facts instead of 2/6, losing
-# Sentence-BERT BASED_ON BERT, and raised rejections from 1/8 to 2/8. Use the bfloat16
-# recipe, which reproduced the CPU reference exactly.
+# M11 full-corpus recipe: the accepted indexed 3B recipe moved to a local GPU.
 # Only device and dtype differ from configs/llm-extraction-indexed-3b.toml, so this is a
-# NEW recipe fingerprint and a different provider version. Reduced precision can change
-# generated tokens, so the 2/6 CPU float32 result does not describe this recipe: re-run
-# the eight-case diagnostic before any full extraction. See docs/local-model-trial.md.
+# NEW recipe fingerprint and a different provider version. On the eight draft check cases
+# this recipe reproduced the CPU float32 reference exactly, including both accepted
+# assertions and their evidence, at 1.81 versus 40.71 seconds per chunk. Eight cases do
+# not prove the two recipes agree in general. See docs/local-model-trial.md.
 # Weights live in VRAM, so the 18 GiB system-RAM threshold does not apply here.
 [llm_extraction]
 prompt_style = "indexed-v1"
@@ -15,7 +13,7 @@ strip_entity_whitespace = false
 model_id = "Qwen/Qwen2.5-3B-Instruct"
 revision = "aa8e72537993ba99e69dfaafa59ed015b17504d1"
 device = "cuda"
-dtype = "float16"
+dtype = "bfloat16"
 cpu_threads = 4
 max_input_tokens = 4096
 max_new_tokens = 320

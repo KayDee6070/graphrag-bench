@@ -613,6 +613,48 @@ candidate at 2/6 draft-fact recovery. Its recall remains too low for a full grap
 Further prompt-only changes should not proceed without a source-label review plan
 and an extractor design that addresses PDF layout and semantic ontology decisions.
 
+## Moving the accepted recipe to a local GPU (0.11.6, 2026-09-30)
+
+The accepted recipe is CPU float32 at four threads, chosen for a bounded eight-chunk
+trial. Projected over 6,996 chunks at its 40.71-second mean it needs about **79 hours**.
+The host has an RTX 4070 Laptop with 8 GiB VRAM that the pinned CPU-only torch wheel
+could not address, and `LocalModelConfig` forbade any device but `cpu` and any dtype
+but `float32`. Both restrictions are now widened; CPU still refuses reduced precision,
+and a CUDA recipe records provider `transformers-causal-cuda-v1`.
+
+Installing `torch==2.14.0+cu130` in place of `2.14.0+cpu` left all offline tests
+passing. Saved vector artifacts are unaffected because verification never re-embeds,
+but later embedding runs would use this different build.
+
+Both reduced-precision recipes were measured on the **same eight cases and the same
+draft checks file** (`4f475cf0…`) as the CPU reference, with no prompt, ontology, or
+selection change:
+
+| Same eight paper chunks | CPU float32 | CUDA float16 | CUDA bfloat16 |
+| --- | ---: | ---: | ---: |
+| Draft facts matched | 2/6 | 1/6 | 2/6 |
+| Accepted assertions | 2 | 1 | 2 |
+| Schema-valid responses | 7/8 | 6/8 | 7/8 |
+| Rejected responses | 1/8 | 2/8 | 1/8 |
+| Negative cases without assertions | 3 | 3 | 3 |
+| Mean completion seconds | 40.71 | 2.31 | **1.81** |
+
+float16 lost the `Sentence-BERT BASED_ON BERT` match and gained a rejection. bfloat16
+reproduced the reference exactly: the same two accepted assertions,
+`jina-embeddings-v3 BASED_ON XLM-RoBERTa` and `Sentence-BERT BASED_ON BERT`, with the
+same supporting chunk IDs, and every recorded count identical. bfloat16 keeps
+float32's exponent range and only reduces mantissa bits, which is the plausible
+explanation, but eight cases cannot establish that the two recipes agree in general.
+float16 is retained only as this recorded negative result and must not be used.
+
+bfloat16 is therefore **22.5x faster than the reference with no observed quality
+change on these cases**, and its recipe fingerprint is
+`93adda02c94a944f1ab30c47dc1de72fb20fc3d5a67d32d17bcb3ad0d61bb27c` against the
+reference `70e26d7258535535cacc3d6b495cbaa8fe96fcc380bd0c66df8a54ab1547c1e9`.
+Two GPU-recipe caveats remain: 2/6 recovery is still the accepted recipe's weak
+recall, not an improvement, and identical results on eight hand-picked chunks do not
+predict agreement across 6,996.
+
 ## Four-method run with a deterministic graph floor (0.11.5, 2026-09-30)
 
 The comparison runner now accepts either graph kind and records which one it used.

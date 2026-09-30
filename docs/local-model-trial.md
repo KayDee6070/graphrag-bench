@@ -187,11 +187,20 @@ no CUDA support. Qwen2.5-3B in float16 is about 6.2 GiB of weights plus a small
 grouped-query KV cache, so it fits an 8 GiB device. Weights sit in VRAM, which is why
 `--min-available-gib` does not apply to this recipe.
 
-**float16 is a larger change than thread count.** Halving mantissa precision can change
-generated tokens, and extraction here depends on exact quoted substrings, so a
-degraded response fails validation rather than degrading quietly. Compare matched
-facts, schema validity, and rejections against the CPU reference on the same eight
-cases, and keep the CPU float32 recipe as the reference regardless of the outcome.
+**Reduced precision is a larger change than thread count**, and the measurement showed
+why it must be made rather than assumed. On the same eight cases, `float16` matched
+**1/6** draft facts instead of 2/6, losing `Sentence-BERT BASED_ON BERT` and raising
+rejections from 1/8 to 2/8. `bfloat16` reproduced the reference exactly, including both
+accepted assertions and their evidence chunks, at 1.81 seconds per chunk against 40.71.
+
+So [llm-extraction-indexed-3b-cuda-bf16.toml](../configs/llm-extraction-indexed-3b-cuda-bf16.toml)
+is the recipe to use, and the float16 file is kept only as a recorded negative result.
+bfloat16 keeps float32's exponent range and reduces only mantissa bits, which is the
+plausible reason, but eight hand-picked chunks cannot show that two recipes agree
+across 6,996. The CPU float32 recipe remains the reference regardless. Extraction here
+demands exact quoted substrings, so a precision-degraded response tends to fail
+validation rather than pass with a subtly wrong quote; that is a safeguard, not a
+guarantee.
 
 ### 2. Download the pinned files only after approval
 
