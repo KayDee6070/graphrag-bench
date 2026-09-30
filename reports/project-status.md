@@ -105,20 +105,33 @@ documents; see [annotation-crosscheck.md](annotation-crosscheck.md). Both are no
   metrics credit only annotated spans, a retriever that found it scored zero. That
   sentence is now a **second sufficient evidence set**, so either route scores.
 
-**The measured results in this report predate both fixes.** Every number above, including
-the fingerprint `30bf9bf4…`, was produced from the previous annotations. Making them
-current requires re-running `prepare-papers` into a fresh bundle and re-running the
-comparison against it.
+**The comparison has been re-run on the fixed annotations** as
+`experiments/runs/m11-research-comparison-02`, bundle `m10-expanded-04`, fingerprint
+`b5d8b8d3…`, offline verification passed. Before re-running, the effect was derived from
+the saved records of the earlier run; **all eight predictions matched the measured result
+exactly**, which is a useful check on both the derivation and the metric implementation.
 
-The effect is already computable from the saved records, and it is not trivial. BM25,
-vector, and hybrid each retrieved the `paper-l01` page-2 sentence into their **top five**,
-within budget, in every repeat — and each was scored as failing the question, because the
-sentence was unannotated. Expected once re-run: **BM25 22→23, hybrid 14→15, vector 12→13**
-at K=5, and **25→26, 16→17, 19→20** at K=10. Graph does not move. Relative ordering is
-unchanged and no conclusion reverses, but three of four methods were under-credited by
-one question. The `paper-b01` fix changes nothing measured, and in fact makes that fact
-harder to retrieve: satisfying chunks drop from two to one. Derivation in
-[annotation-crosscheck.md](annotation-crosscheck.md).
+BM25, vector, and hybrid had each retrieved the `paper-l01` page-2 sentence into their top
+five, within budget, in every repeat, and each was scored as failing the question because
+that sentence was unannotated. With it annotated, each gains exactly one question:
+
+| Method | K=5 | K=10 |
+| --- | --- | --- |
+| BM25 | 22 → **23** | 25 → **26** |
+| Hybrid | 14 → **15** | 16 → **17** |
+| Vector | 12 → **13** | 19 → **20** |
+| Graph | 7 → 7 | 8 → 8 |
+
+Graph does not move; it never retrieved the chunk. The `paper-b01` fix changes nothing
+measured and in fact makes that fact harder to retrieve — satisfying chunks drop from two
+to one — which is correct, since the old quote did not prove its statement.
+
+**Nothing in the analysis reverses.** Relative ordering is unchanged, BM25 still leads
+every non-zero row, the fusion sign flip is unchanged at +5.0 pp (3/36/1) and −7.5 pp
+(0/37/3), and the multi-document subgroups are still **0.000 for every method at both
+cutoffs**. The tables in "What was measured" above report the pre-fix run; add one
+question to BM25, hybrid, and vector for the current figures. Derivation and defect
+details in [annotation-crosscheck.md](annotation-crosscheck.md).
 
 Independent review should confirm both fixes rather than inherit them. They were proposed
 by an agent of the same model family that authored the original labels, which is precisely

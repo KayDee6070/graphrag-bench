@@ -140,13 +140,24 @@ A count correction while confirming this: earlier drafts of the reports and READ
 questions (`paper-b01`–`b05`, `paper-c01`–`c03`); the 5 labelled two-hop are also
 two-document, so 5 + 8 was not a sum. Corrected throughout.
 
-## What the two fixes change, computed from the saved run
+## What the two fixes changed, predicted and then measured
 
-Both fixes are applied to `datasets/papers/research/annotations.json`. Re-preparing the
-bundle and re-running the comparison is still pending, so the effect below is derived
-from the saved records of `m11-research-comparison-01` rather than measured. The
-derivation is deterministic: a fact is satisfied when an annotated span lies inside the
-selected context, and the saved records contain both.
+Both fixes are applied to `datasets/papers/research/annotations.json`. The effect below
+was first **derived** from the saved records of `m11-research-comparison-01`, then
+**measured** by re-running on bundle `m10-expanded-04` as
+`experiments/runs/m11-research-comparison-02` (fingerprint `b5d8b8d3…`, offline
+verification passed).
+
+**All eight derived figures matched the measured result exactly.** That is a check on the
+derivation and on the metric implementation at once: the scoring rule behaved precisely
+as reading it predicted.
+
+Two incidental confirmations from the rebuild. The new bundle's `chunks.jsonl` and
+`documents.jsonl` are byte-identical to the old one — only `package_version` in the
+ingestion manifest differs, a side effect of the 0.11.6 bump — so the re-run changes
+nothing but labels. And rebuilding the graph from the response cache took **24 seconds
+instead of 72 minutes** and reproduced all four counts exactly: 330 entities, 111
+assertions, 519 issues, 152 rejected chunks.
 
 ### paper-l01 — the scoring artifact cost three methods a point each
 
@@ -157,7 +168,7 @@ their top five**, in every repeat, and the chunk survived the token budget
 
 So three methods fully answered `paper-l01` and were recorded as failing it. The caveat
 that "alternative unannotated support earns no credit" was not hypothetical; it cost
-real points. Expected once re-run:
+real points. Predicted, and confirmed by the re-run:
 
 | Method | K=5 | K=10 |
 | --- | --- | --- |
@@ -183,9 +194,11 @@ only appear at a much deeper cutoff.
 
 ### Net effect on the headline
 
-None. The 8 multi-document questions are untouched by both fixes; `paper-l01` is a
-single-document one-hop question. No method completed a multi-document question before
-the fixes and none does after.
+None, and this was checked rather than assumed. The 8 multi-document questions are
+untouched by both fixes; `paper-l01` is a single-document one-hop question. In the re-run,
+the `hops:2` and `documents:2` subgroups are still **0.000 for every method at both
+cutoffs**, the fusion sign flip is unchanged at +5.0 pp (3 wins/36 ties/1 loss) and
+−7.5 pp (0/37/3), no question is unreachable, and every repeat is stable.
 
 ## What this does not establish
 

@@ -13,7 +13,7 @@ measured, and what is open, in one page.
 reproduces the CPU reference exactly extracted the whole corpus in ~72 minutes,
 yielding a sparse real graph: 330 entities and 111 assertions from 6,996 chunks.
 Complete evidence at K=5 under one 2,000-token budget, verified offline:
-**BM25 22/40, hybrid 14/40, vector 12/40, graph 7/40**.
+**BM25 23/40, hybrid 15/40, vector 13/40, graph 7/40**.
 
 The headline is negative. On the 8 questions needing evidence from two documents, 5 of them also labelled two-hop — exactly what
 this project set out to test — **no method completed a single one**, at either cutoff.
