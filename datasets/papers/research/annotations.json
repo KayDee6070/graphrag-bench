@@ -284,10 +284,10 @@
           }
         ]
       ],
-      "reasoning_hops": 1,
+      "reasoning_hops": 2,
       "difficulty": "medium",
       "group_id": "rag-pilot-connected-methods",
-      "rationale": "Two direct facts from the respective primary papers are compared. This is a two-document comparison with reasoning_hops=1, not a two-edge bridge chain. The minimum document count is relative to the annotated evidence sets; independent review must check corpus shortcuts and alternative evidence."
+      "rationale": "Two direct facts from the respective primary papers are compared. Under the project's hop convention, reasoning_hops counts the facts that must be combined via the smallest sufficient evidence set, so this comparison is 2 rather than 1; it is not a two-edge bridge chain, which required_document_count and question_type record separately. The minimum document count is relative to the annotated evidence sets; independent review must check corpus shortcuts and alternative evidence."
     },
     {
       "question_id": "paper-c02",
@@ -320,10 +320,10 @@
           }
         ]
       ],
-      "reasoning_hops": 1,
+      "reasoning_hops": 2,
       "difficulty": "medium",
       "group_id": "rag-pilot-connected-methods",
-      "rationale": "Two direct facts from the respective primary papers are compared. This is a two-document comparison with reasoning_hops=1, not a two-edge bridge chain. The minimum document count is relative to the annotated evidence sets; independent review must check corpus shortcuts and alternative evidence. These operations happen at different pipeline stages; the question does not claim equivalent tasks or compare accuracy."
+      "rationale": "Two direct facts from the respective primary papers are compared. Under the project's hop convention, reasoning_hops counts the facts that must be combined via the smallest sufficient evidence set, so this comparison is 2 rather than 1; it is not a two-edge bridge chain, which required_document_count and question_type record separately. The minimum document count is relative to the annotated evidence sets; independent review must check corpus shortcuts and alternative evidence. These operations happen at different pipeline stages; the question does not claim equivalent tasks or compare accuracy."
     },
     {
       "question_id": "paper-c03",
@@ -367,10 +367,10 @@
           }
         ]
       ],
-      "reasoning_hops": 1,
+      "reasoning_hops": 3,
       "difficulty": "medium",
       "group_id": "rag-pilot-connected-methods",
-      "rationale": "Two direct facts from the respective primary papers are compared. This is a two-document comparison with reasoning_hops=1, not a two-edge bridge chain. The minimum document count is relative to the annotated evidence sets; independent review must check corpus shortcuts and alternative evidence."
+      "rationale": "Three direct facts from the respective primary papers are compared. Under the project's hop convention, reasoning_hops counts the facts that must be combined via the smallest sufficient evidence set, and this question's only set holds three, so it is 3 rather than 1. It is not a three-edge bridge chain, which required_document_count and question_type record separately. The minimum document count is relative to the annotated evidence sets; independent review must check corpus shortcuts and alternative evidence."
     },
     {
       "question_id": "paper-b01",
@@ -525,7 +525,7 @@
         [
           {
             "fact_id": "e5-mistral-backbone",
-            "statement": "E5-mistral fine-tunes a pretrained Mistral-7b checkpoint.",
+            "statement": "The embedding model in the pinned e5-mistral paper fine-tunes a pretrained Mistral-7b checkpoint.",
             "spans": [
               {
                 "paper_id": "e5-mistral",

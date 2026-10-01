@@ -88,3 +88,49 @@ after this review so they do not inherit whatever it finds.
 Expect roughly 2 to 3 hours. Any `revise` decision is a useful result, not a failure —
 especially among the 8 multi-document questions, where a mislabelled hop count would
 change what the comparison means.
+
+## The hop convention
+
+`reasoning_hops` counts **the facts that must be combined, via the smallest sufficient
+evidence set.** Settled by the project owner on 2026-10-02 and applied to all 40
+questions; every label now equals the size of its smallest set.
+
+Three consequences worth knowing, because they are not the only defensible reading:
+
+- A **comparison** question is multi-hop under this convention even though its facts are
+  independently findable. `paper-c01` and `paper-c02` became 2, and `paper-c03` became 3.
+  A stricter "dependency chain" reading would have left all three at 1. What makes
+  sequential dependency distinct is recorded separately by `question_type` and
+  `required_document_count`, so nothing is lost.
+- Counting the **smallest** set rather than the largest means adding a shorter alternative
+  route lowers the hop count. `paper-l01` stayed at 1 for exactly this reason: it has a
+  2-fact route and a 1-fact route, and a question answerable from one passage does not
+  force multi-hop reasoning.
+- The label therefore describes **the annotated evidence**, not an intrinsic property of
+  the question. Find a shorter route and the hop count should drop.
+
+A reviewer who disagrees with this convention should say so in their notes rather than
+answer `reasoning_hops_checked` inconsistently across questions.
+
+## If an AI model helps with the review
+
+Using a model to read quotes is reasonable, and for the bulk of these questions it is
+roughly as reliable as a careful human: every quote has already been confirmed verbatim
+on its claimed page, so what remains is judgement rather than lookup. Two constraints.
+
+**Pick a model family that did not author the annotations.** The labels were written by an
+AI agent and the repository does not record which one, so check before relying on a
+specific vendor. A model agreeing with its own family's output is not a second opinion.
+This is the same reason the cross-check in [annotation-crosscheck.md](../reports/annotation-crosscheck.md)
+is labelled triage rather than review.
+
+**Record what actually happened.** `reviewer` and `independent_of_annotation_author`
+describe provenance, and this project's value rests on its provenance being accurate. If a
+model answered, say so in the notes. An AI-assisted review is a real and useful artifact;
+it is simply a weaker one than independent human review, and the record should let a
+reader tell the difference.
+
+Questions that are **design decisions** rather than readings cannot be delegated at all.
+The hop convention above is the clearest example: no model can review a definition the
+project has not made, and if a model picks it, the project does not know what its own
+benchmark measures.
