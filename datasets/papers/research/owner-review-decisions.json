@@ -1,0 +1,56 @@
+{
+  "review_kind": "project-owner-review-not-blind-to-results",
+  "reviewer": "Kuntal Dive",
+  "reviewed_on": "2026-10-02",
+  "provenance": "Decisions were made by the project owner from the quoted text and the declared labels. Quote-to-page verification was machine-performed and independently spot-checked against documents.jsonl, not re-checked by hand per question. Entries were recorded by an agent on the owner's instruction. The reviewer had already seen the aggregate comparison results, so this is not a blind review. An external model review was attempted and rejected as unusable; see reports/annotation-crosscheck.md.",
+  "decisions": {
+    "paper-c01": {
+      "decision": "approved",
+      "notes": "Hop convention settled by the owner: reasoning_hops counts facts combined via the smallest sufficient set. Relabelled 1 to 2. A dependency-chain reading would have left it at 1; question_type and required_document_count record that distinction separately."
+    },
+    "paper-c02": {
+      "decision": "approved",
+      "notes": "Relabelled 1 to 2 under the owner's hop convention. The 'how do they differ' framing compares operations at different pipeline stages, which the rationale already records; the question does not claim equivalent tasks."
+    },
+    "paper-c03": {
+      "decision": "approved",
+      "notes": "Relabelled 1 to 3, not 2: this question's only sufficient set holds three facts. Caught while applying the owner's hop convention consistently."
+    },
+    "paper-b03": {
+      "decision": "approved",
+      "notes": "Owner judged Contriever-MS MARCO close enough to base Contriever for this question, which asks about the retriever family rather than the exact checkpoint. MS MARCO is a fine-tuned Contriever, so the architecture claim holds."
+    },
+    "paper-b05": {
+      "decision": "approved",
+      "notes": "Required revision and it was applied. The quote never names E5-mistral and extending the span cannot fix that: the paper prints 'E5-mistral-7b' only inside a garbled figure fragment on page 6. The statement now asserts what the quote proves, with model identity carried by the pinned catalog paper_id."
+    },
+    "paper-d04": {
+      "decision": "approved",
+      "notes": "Required revision and it was applied, matching the paper-b05 treatment for consistency. The quote's subject is implicit and the clause naming INSTRUCTOR sits outside the span, so the statement now names the pinned paper instead."
+    },
+    "paper-d12": {
+      "decision": "approved",
+      "notes": "Approved as written. The quote names ARES and states the fact exactly. Only the question's wording adds 'judge', which the fact statement does not claim, so the evidence supports the fact as annotated."
+    },
+    "paper-d13": {
+      "decision": "approved",
+      "notes": "Required revision and it was applied. The paper contradicts itself, 38 datasets in the abstract against 32 in section 3.3.1. The quote genuinely supports 38, so the evidence stands; the expected answer and statement now record the conflict and attribute 38 to the abstract."
+    },
+    "paper-d22": {
+      "decision": "approved",
+      "notes": "Required revision and it was applied. 'In the reported settings' was ambiguous because the paper reports more than one. The question now names the retriever setup the quote describes, and the separate top-five inference default is recorded in the rationale."
+    },
+    "paper-d23": {
+      "decision": "approved",
+      "notes": "Approved as written. The span crosses a chunk boundary so it requires two adjacent chunks, which the scoring rule permits by merging adjacent fragments. Shortening the quote would remove the mod-W mechanism that supports 'overwrites past positions'."
+    },
+    "paper-l03": {
+      "decision": "approved",
+      "notes": "Approved as written. 'Global keys' appears verbatim in the quote. That the source paper never defines the term is a limitation of that paper's writing, not a defect in this annotation."
+    }
+  },
+  "left_pending": {
+    "reason": "Not decided by the owner. paper-b01 and paper-l01 carry agent-proposed fixes that a reviewer should confirm rather than inherit. The remaining 27 had every quote machine-verified as real text on its claimed page and no visible defect, but nobody has judged their reasoning.",
+    "question_ids": ["paper-b01", "paper-l01"]
+  }
+}
