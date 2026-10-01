@@ -166,3 +166,73 @@ Six configurations, one corpus, 40 unreviewed draft questions, one sparse graph 
 assertions. The invariance of the K=10 result across every parameter is a strong signal
 about this fusion rule's structure, and says nothing about fusion rules in general. No
 significance test is implied by any number above.
+
+## Weighted fusion removes the penalty and keeps the gain
+
+The ablation concluded that fixing the sign flip needs a per-method weight. That
+capability now exists: `HybridRetrievalConfig` gained `vector_weight` and `graph_weight`,
+both defaulting to 1.0, so the score is `w / (c + rank)` summed per method. At the
+defaults the arithmetic is bit-identical to before — all previously saved runs still
+verify with unchanged fingerprints, which is how the change was checked.
+
+Three verified runs on bundle `m10-expanded-04`:
+
+| Variant | K=5 delta | K=5 W/T/L | K=10 delta | K=10 W/T/L |
+| --- | ---: | ---: | ---: | ---: |
+| `graph_weight = 0.25` | +5.0 pp | 3/36/1 | **+0.0 pp** | 0/40/0 |
+| `graph_weight = 0.50` | +5.0 pp | 3/36/1 | **+0.0 pp** | 0/40/0 |
+| `graph_weight = 0.75` | +5.0 pp | 3/36/1 | **+0.0 pp** | 0/40/0 |
+| `graph_weight = 1.00` (default) | +5.0 pp | 3/36/1 | **−7.5 pp** | 0/37/3 |
+
+Runs `m12-fusion-gw-0.25`, `m12-fusion-gw-0.5`, `m12-fusion-gw-0.75`, 240 records each,
+offline verification passed. **Any weight below 1.0 eliminates the K=10 penalty while
+preserving the K=5 gain in full.** Hybrid becomes weakly dominant over vector: better at
+K=5, never worse at K=10.
+
+### The threshold is derivable, not tuned
+
+A graph-only chunk at graph rank `g` displaces a vector-only chunk at vector rank `v`
+when `w/(c+g) > 1/(c+v)`, that is `v > (c+g)/w − c`. With `c = 60` and graph rank 1:
+
+| weight | displaces vector ranks deeper than | relative to the 20-candidate window |
+| ---: | ---: | --- |
+| 1.00 | 1.0 | inside — displaces almost everything |
+| 0.75 | 21.3 | beyond — displaces nothing |
+| 0.50 | 62.0 | beyond — displaces nothing |
+
+The useful range is not a tuning curve with an optimum; it is a step. Any `w ≤ (c+1)/(c+n)`
+for a vector window of `n` pushes graph's own picks past every vector candidate. At
+`c = 60, n = 20` that threshold is 0.7625, which is why 0.75 already suffices and 0.25
+is no better.
+
+### What weighting actually buys, and what it does not
+
+Measured across the 40 questions, hybrid's top ten contains:
+
+| | `graph_weight = 1.0` | `graph_weight = 0.5` |
+| --- | ---: | ---: |
+| Chunks vector ranked 11–20, lifted by graph agreement | 25 | 25 |
+| Chunks outside vector's candidate window entirely | 122 | 0 |
+
+This is the substantive finding. Down-weighting does **not** switch graph off: the 25
+agreement lifts survive untouched. What it removes is the 122 chunks graph nominated on
+its own, which were displacing vector's tail. Weighted fusion keeps graph as a **voucher**
+for candidates vector already found and strips its power to **nominate** candidates vector
+did not.
+
+Given that the two methods retrieve nearly disjoint candidates, that is the right division
+of labour on this corpus: graph's independent nominations were the harmful part, and its
+corroboration was the useful part.
+
+It is also an honest limit. Weighting makes graph harmless at K=10; it does not make it
+helpful there. The K=10 column is 0/40/0 — every question a tie. And none of this touches
+the 8 multi-document questions, which remain 0.000 for every method at every setting
+tested. The project's central question is untouched by all of it.
+
+### Limits
+
+Nine configurations in total, one corpus, 40 unreviewed draft questions, one sparse graph
+of 111 assertions, and the decisive band is three questions wide at K=5 and three at
+K=10. The threshold derivation is exact arithmetic and holds generally; the claim that
+crossing it improves retrieval is a seven-question observation on development labels. No
+significance test is implied. `vector_weight` was left at 1.0 throughout and is untested.

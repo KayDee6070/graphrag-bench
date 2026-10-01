@@ -280,3 +280,86 @@ def test_config_file_and_explicit_overrides(tmp_path):
             load_hybrid_retrieval_config(path)
     with pytest.raises(RetrievalError, match="cannot load"):
         load_hybrid_retrieval_config(tmp_path / "missing")
+
+
+def test_default_weights_are_exactly_unweighted_fusion():
+    vector, graph = result("vector", ["a", "b", "c"]), result("graph", ["c", "d"])
+
+    plain = fuse_rrf(vector, graph, rank_constant=60, top_k=4)
+    weighted = fuse_rrf(
+        vector, graph, rank_constant=60, top_k=4, vector_weight=1.0, graph_weight=1.0
+    )
+
+    assert plain.ranking == weighted.ranking
+    assert plain.result.model_dump(exclude={"elapsed_ms"}) == weighted.result.model_dump(
+        exclude={"elapsed_ms"}
+    )
+
+
+def test_weights_scale_each_method_contribution():
+    vector, graph = result("vector", ["a"]), result("graph", ["b"])
+
+    trace = fuse_rrf(vector, graph, rank_constant=60, top_k=2, vector_weight=1.0, graph_weight=0.25)
+
+    scores = {d.chunk_id: d for d in trace.ranking}
+    assert scores["a"].vector_contribution == pytest.approx(1.0 / 61)
+    assert scores["b"].graph_contribution == pytest.approx(0.25 / 61)
+    assert [hit.chunk_id for hit in trace.result.hits] == ["a", "b"]
+
+
+def test_down_weighting_graph_stops_it_displacing_a_deeper_vector_hit():
+    """Unweighted, graph rank 1 outranks vector rank 6; this is what weights fix."""
+    vector = result("vector", [f"v{i}" for i in range(1, 7)])
+    graph = result("graph", ["g1"])
+
+    unweighted = fuse_rrf(vector, graph, rank_constant=60, top_k=6)
+    weighted = fuse_rrf(vector, graph, rank_constant=60, top_k=6, graph_weight=0.5)
+
+    assert "g1" in [hit.chunk_id for hit in unweighted.result.hits]
+    assert "v6" not in [hit.chunk_id for hit in unweighted.result.hits]
+    assert [hit.chunk_id for hit in weighted.result.hits] == [f"v{i}" for i in range(1, 7)]
+
+
+def test_zero_graph_weight_reproduces_the_vector_order():
+    vector, graph = result("vector", ["a", "b", "c"]), result("graph", ["z", "y"])
+
+    trace = fuse_rrf(vector, graph, rank_constant=60, top_k=3, graph_weight=0.0)
+
+    assert [hit.chunk_id for hit in trace.result.hits] == ["a", "b", "c"]
+    assert {d.chunk_id for d in trace.ranking} == {"a", "b", "c"}
+
+
+def test_zero_weight_keeps_a_shared_candidate_through_the_other_method():
+    vector, graph = result("vector", ["a", "shared"]), result("graph", ["shared"])
+
+    trace = fuse_rrf(vector, graph, rank_constant=60, top_k=2, graph_weight=0.0)
+
+    shared = next(d for d in trace.ranking if d.chunk_id == "shared")
+    assert shared.graph_rank == 1
+    assert shared.graph_contribution == 0.0
+    assert shared.score == pytest.approx(1.0 / 62)
+
+
+@pytest.mark.parametrize("weights", [{"vector_weight": -0.1}, {"graph_weight": -1}])
+def test_negative_weights_rejected(weights):
+    vector, graph = result("vector", ["a"]), result("graph", ["b"])
+
+    with pytest.raises(RetrievalError, match="must be a nonnegative number"):
+        fuse_rrf(vector, graph, rank_constant=60, top_k=1, **weights)
+
+
+def test_both_weights_zero_rejected():
+    vector, graph = result("vector", ["a"]), result("graph", ["b"])
+
+    with pytest.raises(RetrievalError, match="at least one fusion weight"):
+        fuse_rrf(vector, graph, rank_constant=60, top_k=1, vector_weight=0, graph_weight=0)
+
+
+def test_config_defaults_and_validation_of_weights():
+    assert HybridRetrievalConfig().vector_weight == 1.0
+    assert HybridRetrievalConfig().graph_weight == 1.0
+    assert HybridRetrievalConfig(graph_weight=0.25).graph_weight == 0.25
+    with pytest.raises(ValidationError):
+        HybridRetrievalConfig(graph_weight=-1)
+    with pytest.raises(ValidationError, match="at least one fusion weight"):
+        HybridRetrievalConfig(vector_weight=0, graph_weight=0)

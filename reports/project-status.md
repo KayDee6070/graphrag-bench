@@ -142,11 +142,15 @@ Independent review should confirm both fixes rather than inherit them. They were
 by an agent of the same model family that authored the original labels, which is precisely
 the correlation the review exists to break.
 
-**Smaller open items.** The fusion sign flip is explained and its ablation is done: six
-configurations all leave the K=10 penalty at exactly −7.5 pp, because vector and graph
-retrieve nearly disjoint candidates and every decisive comparison therefore contains no
-agreement for RRF to reward. Removing the penalty needs a per-method weight, which the
-fusion rule does not have — a code change and a new experiment, not a parameter sweep. The five draft two-hop questions still need a shortcut check; a
+**The fusion sign flip is resolved.** Six configurations left the K=10 penalty at exactly
+−7.5 pp, because vector and graph retrieve nearly disjoint candidates and the decisive
+comparisons therefore contain no agreement for RRF to reward. Adding per-method weights
+fixes it: **any `graph_weight` below 1.0 removes the K=10 penalty and keeps the K=5 gain
+in full**, making hybrid weakly dominant over vector. The threshold is derivable rather
+than tuned, and weighting works by stripping graph's power to nominate candidates vector
+never found while preserving its 25 agreement lifts. It makes graph harmless at K=10, not
+helpful, and does not touch the multi-document zeros. See
+[m12-fusion-analysis.md](m12-fusion-analysis.md). The five draft two-hop questions still need a shortcut check; a
 heuristic sweep found no unannotated alternative route for any of the 8 multi-document
 questions, which is evidence but not proof. The fusion sign flip is unexplained. Nobody
 has checked whether any hop count is *under*-stated — the cross-check could only report

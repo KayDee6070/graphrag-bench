@@ -60,8 +60,14 @@ def fuse_rrf(
     *,
     rank_constant: int = 60,
     top_k: int = 5,
+    vector_weight: float = 1.0,
+    graph_weight: float = 1.0,
 ) -> FusionTrace:
-    """Sum 1/(c + one-based rank); missing hits add zero; equal scores use chunk IDs.
+    """Sum w/(c + one-based rank); missing hits add zero; equal scores use chunk IDs.
+
+    Weights default to 1.0, which is unweighted reciprocal rank fusion. A zero weight
+    excludes that method's rank from the score while its candidates may still enter the
+    union through the other method.
 
     Hit order defines rank, irrespective of raw scores. This arithmetic function preserves
     paths but does not verify their source records. HybridRetriever supplies that boundary.
@@ -74,6 +80,11 @@ def fuse_rrf(
         raise RetrievalError("fusion requires one vector result and one graph result")
     if type(rank_constant) is not int or rank_constant < 0:
         raise RetrievalError("rank_constant must be a nonnegative integer")
+    for name, weight in (("vector_weight", vector_weight), ("graph_weight", graph_weight)):
+        if not isinstance(weight, int | float) or isinstance(weight, bool) or weight < 0:
+            raise RetrievalError(f"{name} must be a nonnegative number")
+    if vector_weight == 0 and graph_weight == 0:
+        raise RetrievalError("at least one fusion weight must be greater than zero")
     started = perf_counter()
     vector_ranks = {hit.chunk_id: rank for rank, hit in enumerate(vector.hits, start=1)}
     graph_ranks = {hit.chunk_id: rank for rank, hit in enumerate(graph.hits, start=1)}
@@ -83,8 +94,17 @@ def fuse_rrf(
     details = []
     for chunk_id in vector_ranks.keys() | graph_ranks.keys():
         vector_rank, graph_rank = vector_ranks.get(chunk_id), graph_ranks.get(chunk_id)
-        vector_contribution = 0.0 if vector_rank is None else 1.0 / (rank_constant + vector_rank)
-        graph_contribution = 0.0 if graph_rank is None else 1.0 / (rank_constant + graph_rank)
+        vector_contribution = (
+            0.0 if vector_rank is None else vector_weight / (rank_constant + vector_rank)
+        )
+        graph_contribution = (
+            0.0 if graph_rank is None else graph_weight / (rank_constant + graph_rank)
+        )
+        score = vector_contribution + graph_contribution
+        if score == 0:
+            # Only reachable with a zero weight: a candidate found solely by the
+            # excluded method contributes nothing and must not occupy a slot.
+            continue
         details.append(
             FusionRank(
                 chunk_id=chunk_id,
@@ -92,7 +112,7 @@ def fuse_rrf(
                 graph_rank=graph_rank,
                 vector_contribution=vector_contribution,
                 graph_contribution=graph_contribution,
-                score=vector_contribution + graph_contribution,
+                score=score,
             )
         )
     ranking = tuple(sorted(details, key=lambda detail: (-detail.score, detail.chunk_id)))
@@ -163,6 +183,8 @@ class HybridRetriever:
             graph_trace.result,
             rank_constant=self.config.rank_constant,
             top_k=top_k,
+            vector_weight=self.config.vector_weight,
+            graph_weight=self.config.graph_weight,
         )
         for hit in fusion.result.hits:
             self.chunk(hit.chunk_id)
