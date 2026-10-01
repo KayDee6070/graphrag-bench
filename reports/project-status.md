@@ -58,8 +58,13 @@ Three findings, in descending confidence:
    set scores zero. The graph arm reached 1 of 17 facts and produced no seed at all on one
    question — with 111 assertions it cannot connect these entities.
 3. **Fusion changes sign with budget**: hybrid gains 5.0 points over vector at K=5 and
-   loses 7.5 at K=10. Mechanically plausible — reserved slots are cheap insurance in five
-   positions and a net cost in ten — but 3 wins and 3 losses is a direction, not an effect.
+   loses 7.5 at K=10. This is now **explained**: RRF hands graph roughly half the slots
+   (measured 4.20 graph-only chunks in hybrid's top ten), and graph's useful contribution
+   lives in a narrow band — evidence vector ranks 7th to 10th. At K=5 that band is outside
+   the budget, so promoting it is near-free upside; at K=10 the budget already covers it,
+   so the same mechanism evicts correct tail hits instead. See
+   [m12-fusion-analysis.md](m12-fusion-analysis.md). Seven questions moved out of 40, so
+   the mechanism is established and its magnitude is not.
 
 **Reproducibility results worth recording.** Extraction moved from CPU float32 to GPU
 bfloat16, cutting a 79-hour projection to 72 minutes. bfloat16 reproduced the CPU
@@ -137,12 +142,16 @@ Independent review should confirm both fixes rather than inherit them. They were
 by an agent of the same model family that authored the original labels, which is precisely
 the correlation the review exists to break.
 
-**Smaller open items.** The five draft two-hop questions still need a shortcut check; a
+**Smaller open items.** The fusion sign flip is explained; the open follow-up is the
+ablation it suggests, making `graph_candidates` a function of the cutoff rather than a
+constant. The five draft two-hop questions still need a shortcut check; a
 heuristic sweep found no unannotated alternative route for any of the 8 multi-document
 questions, which is evidence but not proof. The fusion sign flip is unexplained. Nobody
 has checked whether any hop count is *under*-stated — the cross-check could only report
 labels as correct or too high, so that direction went unexamined across all 40 questions.
-M12 ablations, M13–M14 polish, charts, and the optional demonstration UI are untouched.
+M12 ablations, M13–M14 polish, charts, and the optional demonstration UI are untouched, though M12's error analysis is now partly done:
+[m12-fusion-analysis.md](m12-fusion-analysis.md) and the multi-hop diagnostic cover its
+first two questions.
 
 **Not claimed anywhere.** No general ranking of retrieval methods, no answer-quality or
 abstention evaluation, no confidence intervals, no significance tests. Forty questions with

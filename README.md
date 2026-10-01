@@ -17,7 +17,8 @@ Complete evidence at K=5 under one 2,000-token budget, verified offline:
 
 The headline is negative. On the 8 questions needing evidence from two documents, 5 of them also labelled two-hop — exactly what
 this project set out to test — **no method completed a single one**, at either cutoff.
-BM25 leads every other row, and fusion flips sign: +5 points at K=5, −7.5 at K=10.
+BM25 leads every other row, and fusion flips sign: +5 points at K=5, −7.5 at K=10 — now
+explained by [the fusion analysis](reports/m12-fusion-analysis.md).
 
 A labelled oracle diagnostic explains why, and the answer is not "graphs don't work":
 
@@ -323,7 +324,7 @@ Read the [M0 design and experiment plan](docs/design.md), [data contracts](docs/
 10. **M9:** Local answer proposals, exact citation references, token-budget receipts, offline replay, and study documentation — complete; semantic correctness and abstention reliability are not established.
 11. **M10:** Real-paper acquisition, PDF provenance, 30-paper expansion, 40 draft development questions, coverage audits, and review tooling — implemented; independent annotation review and 80 held-out questions remain open.
 12. **M11:** Frozen real-paper comparison runner, offline source-metric verification, reviewer packets, host-memory gating, a GPU recipe measured against the CPU reference, a complete real-paper model graph, and the verified four-method comparison — complete. Independent annotation review and 80 held-out questions remain, so all results are development diagnostics.
-13. **M12:** Ablations and error analysis — not started; the completed comparison sets its agenda (universal zero on multi-document questions, missing edges versus traversal failure, and the K=5/K=10 fusion sign flip).
+13. **M12:** Ablations and error analysis — error analysis started, ablations not. The multi-hop diagnostic explains the multi-document zeros as recall depth, and [the fusion analysis](reports/m12-fusion-analysis.md) explains the K=5/K=10 sign flip. The ablations it suggests, chiefly making fusion weight a function of the cutoff, remain open.
 14. **M13–M14:** CLI polish, documentation, charts, and release preparation; optional demonstration UI.
 
 Work proceeds one milestone at a time. Code and original fictional fixtures are MIT licensed. Third-party paper content and annotations have [separate licenses and attribution](datasets/papers/research/README.md#licensing-and-changes).
