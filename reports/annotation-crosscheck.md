@@ -218,3 +218,42 @@ claim rests on the agents' own reports of what they opened.
 
 That reorders the work from 40 sequential reads into 13 focused judgements plus a
 spot-check, which is the entire point of running this.
+
+## A second external model produced an unusable review (2026-10-02)
+
+The 35 questions not already decided by the project owner were exported as a single
+prompt (`scripts/export_review_prompt.py`) and submitted to Gemini, chosen because it is
+a different model family from both Claude and Codex and therefore cannot be agreeing with
+its own family's output. The reply is saved verbatim at
+`experiments/runs/m11-gemini-attempt-01.jsonl`.
+
+**It returned 35 rows containing one distinct answer pattern:** `proves: ok`,
+`answerable: yes`, `hops: ok`, `confidence: high`, `concern: ""`, for every question. No
+`weak`, no `medium`, not a single concern. A genuine review of 35 heterogeneous items
+essentially never produces perfect uniformity across four independent fields.
+
+Two canaries had been named **before** the output was seen, chosen because the defect is
+visible in the pasted text alone and needs no corpus access:
+
+| Question | Visible in the text | Gemini |
+| --- | --- | --- |
+| `paper-d04` | quote's subject is implicit; the clause naming INSTRUCTOR sits outside it | `ok` / `high` |
+| `paper-d12` | question says "judge prediction errors"; the quote says only "prediction errors" | `ok` / `high` |
+| `paper-l03` | reference answer says "global keys", a term the cited passage never defines | `ok` / `high` |
+
+It missed all three at high confidence. It did correctly pass `paper-b01` and
+`paper-l01`, but those had already been fixed, so the output is not wrong everywhere — it
+is uninformative everywhere.
+
+**Recorded as a failed attempt, not as a review.** No row of it entered the decision
+file. It is kept because it is a methodological result in its own right: an external
+model of a different family, given a well-specified task with a fixed convention and an
+explicit invitation to answer "low confidence", rubber-stamped the entire set. That is
+evidence about delegating this task, not about the annotations.
+
+A correction to the earlier instruction in this report: `paper-d13`'s self-contradiction
+was suggested as a test of whether the external model read carefully. That was a mistake.
+The exported prompt contains only the annotated quotes, so finding that contradiction
+requires searching the FlashRAG paper, which the model could not do. Only defects visible
+within a quoted span are fair tests of a pasted-prompt review, which is why the three
+canaries above were used instead.

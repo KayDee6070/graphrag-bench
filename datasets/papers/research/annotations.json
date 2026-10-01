@@ -251,7 +251,7 @@
       "reasoning_hops": 1,
       "difficulty": "easy",
       "group_id": "rag-pilot-connected-methods",
-      "rationale": "Direct statement in the method's own paper. One direct relation, not a hidden bridge. Selected supporting evidence is not an exhaustive relevance judgment."
+      "rationale": "Direct statement in the method's own paper. One direct relation, not a hidden bridge. Selected supporting evidence is not an exhaustive relevance judgment. Reviewed 2026-10-02: approved. 'global keys' appears verbatim in the quote; that the source paper never defines the term is a limitation of the paper, not of this annotation."
     },
     {
       "question_id": "paper-c01",
@@ -478,7 +478,7 @@
       "reasoning_hops": 2,
       "difficulty": "medium",
       "group_id": "contriever-family",
-      "rationale": "Candidate hidden-bridge chain: identify the unnamed intermediate method from the first source, then find its requested property in the second source. Two annotated documents and two successive relations. Corpus-wide term screening is a same-agent check, not proof that no shortcut or alternative sufficient evidence exists; independent review must confirm or lower the hop/document labels. This asks about the original retriever family, not a claim that the MS MARCO checkpoint has never used supervised data."
+      "rationale": "Candidate hidden-bridge chain: identify the unnamed intermediate method from the first source, then find its requested property in the second source. Two annotated documents and two successive relations. Corpus-wide term screening is a same-agent check, not proof that no shortcut or alternative sufficient evidence exists; independent review must confirm or lower the hop/document labels. This asks about the original retriever family, not a claim that the MS MARCO checkpoint has never used supervised data. Reviewed 2026-10-02: approved. Contriever-MS MARCO is a fine-tuned Contriever, and the question asks about the retriever family rather than the exact checkpoint."
     },
     {
       "question_id": "paper-b04",
@@ -636,7 +636,7 @@
         [
           {
             "fact_id": "instructor-input",
-            "statement": "INSTRUCTOR embeds each text together with instructions describing the use case.",
+            "statement": "The embedding method in the pinned instructor paper embeds each text together with instructions describing the use case.",
             "spans": [
               {
                 "paper_id": "instructor",
@@ -650,7 +650,7 @@
       "reasoning_hops": 1,
       "difficulty": "easy",
       "group_id": "paper-family-instructor",
-      "rationale": "Direct statement in the pinned primary paper; one-hop development control. The answer describes that paper, not a result measured by GraphRAG Bench. Source-authored by the same agent; alternatives and semantic support await independent review."
+      "rationale": "Direct statement in the pinned primary paper; one-hop development control. The answer describes that paper, not a result measured by GraphRAG Bench. Source-authored by the same agent; alternatives and semantic support await independent review. Reviewed 2026-10-02: the quote's subject is implicit, so the statement now names the pinned paper rather than asserting the model name the quote never prints. Same treatment as paper-b05."
     },
     {
       "question_id": "paper-d05",
@@ -850,18 +850,18 @@
       "reasoning_hops": 1,
       "difficulty": "easy",
       "group_id": "paper-family-ares",
-      "rationale": "Direct statement in the pinned primary paper; one-hop development control. The answer describes that paper, not a result measured by GraphRAG Bench. Source-authored by the same agent; alternatives and semantic support await independent review."
+      "rationale": "Direct statement in the pinned primary paper; one-hop development control. The answer describes that paper, not a result measured by GraphRAG Bench. Source-authored by the same agent; alternatives and semantic support await independent review. Reviewed 2026-10-02: approved. The quote names ARES and states the fact exactly; only the question's wording added 'judge', which the fact statement does not claim."
     },
     {
       "question_id": "paper-d13",
       "question": "How many implemented RAG methods and organized benchmark datasets does the pinned FlashRAG paper report?",
       "question_type": "factual",
-      "expected_answer": "16 methods and 38 benchmark datasets.",
+      "expected_answer": "16 methods and 38 benchmark datasets, which is the abstract's figure; section 3.3.1 of the same paper says 32, and the paper does not reconcile the two.",
       "sufficient_evidence_sets": [
         [
           {
             "fact_id": "flashrag-inventory",
-            "statement": "The pinned FlashRAG paper reports 16 implemented RAG methods and 38 organized benchmark datasets.",
+            "statement": "The pinned FlashRAG paper's abstract reports 16 implemented RAG methods and 38 organized benchmark datasets.",
             "spans": [
               {
                 "paper_id": "flashrag",
@@ -875,7 +875,7 @@
       "reasoning_hops": 1,
       "difficulty": "easy",
       "group_id": "paper-family-flashrag",
-      "rationale": "Direct statement in the pinned primary paper; one-hop development control. The answer describes that paper, not a result measured by GraphRAG Bench. Source-authored by the same agent; alternatives and semantic support await independent review."
+      "rationale": "Direct statement in the pinned primary paper; one-hop development control. The answer describes that paper, not a result measured by GraphRAG Bench. Source-authored by the same agent; alternatives and semantic support await independent review. Reviewed 2026-10-02: the paper contradicts itself, 38 datasets in the abstract against 32 in section 3.3.1. The quote genuinely supports 38, so the evidence stands and the expected answer now records the conflict instead of hiding it."
     },
     {
       "question_id": "paper-d14",
@@ -1079,9 +1079,9 @@
     },
     {
       "question_id": "paper-d22",
-      "question": "What is Self-RAG's default retriever and its maximum number of retrieved documents per input in the reported settings?",
+      "question": "Which retriever does Self-RAG use by default, and how many documents does it retrieve per input in that retriever setup?",
       "question_type": "factual",
-      "expected_answer": "Contriever-MS MARCO; up to ten documents.",
+      "expected_answer": "Contriever-MS MARCO; up to ten documents in the retriever setup. The paper separately reports a top-five default for inference, which this question does not ask about.",
       "sufficient_evidence_sets": [
         [
           {
@@ -1100,7 +1100,7 @@
       "reasoning_hops": 1,
       "difficulty": "easy",
       "group_id": "contriever-family",
-      "rationale": "Direct statement in the pinned primary paper; one-hop development control. The answer describes that paper, not a result measured by GraphRAG Bench. Source-authored by the same agent; alternatives and semantic support await independent review."
+      "rationale": "Direct statement in the pinned primary paper; one-hop development control. The answer describes that paper, not a result measured by GraphRAG Bench. Source-authored by the same agent; alternatives and semantic support await independent review. Reviewed 2026-10-02: 'in the reported settings' was ambiguous because the paper reports more than one. The question now names the retriever setup the quote describes, and the separate top-five inference default is recorded here."
     },
     {
       "question_id": "paper-d23",
@@ -1125,7 +1125,7 @@
       "reasoning_hops": 1,
       "difficulty": "easy",
       "group_id": "mistral-family",
-      "rationale": "Direct statement in the pinned primary paper; one-hop development control. The answer describes that paper, not a result measured by GraphRAG Bench. Source-authored by the same agent; alternatives and semantic support await independent review."
+      "rationale": "Direct statement in the pinned primary paper; one-hop development control. The answer describes that paper, not a result measured by GraphRAG Bench. Source-authored by the same agent; alternatives and semantic support await independent review. Reviewed 2026-10-02: approved. The span crosses a chunk boundary so it needs two adjacent chunks, which scoring permits. Shortening the quote would remove the mod-W mechanism that supports 'overwrites past positions'."
     }
   ]
 }
