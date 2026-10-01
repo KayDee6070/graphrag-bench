@@ -37,21 +37,23 @@ model weights.
 
 ## What was measured
 
-**The comparison** (`experiments/runs/m11-research-comparison-01`, 40 questions × 4
-methods × 3 repeats = 480 records, verified offline). Complete evidence after the budget:
+**The comparison** (`experiments/runs/m11-research-comparison-03`, bundle
+`m10-expanded-05`, 40 questions × 4 methods × 3 repeats = 480 records, fingerprint
+`0d337e5d…`, verified offline). Complete evidence after the budget:
 
 | Method | K=5 | K=10 |
 | --- | ---: | ---: |
-| BM25 | 22/40 | 25/40 |
-| Hybrid | 14/40 | 16/40 |
-| Vector | 12/40 | 19/40 |
+| BM25 | 23/40 | 26/40 |
+| Hybrid | 15/40 | 17/40 |
+| Vector | 13/40 | 20/40 |
 | Graph | 7/40 | 8/40 |
 
 Three findings, in descending confidence:
 
 1. **Lexical retrieval beat dense retrieval** on these questions, at both cutoffs, under
    an identical budget. It leads every non-zero subgroup.
-2. **No method completed any of the 8 multi-document questions, 5 of which are also labelled two-hop.** A labelled
+2. **No method completed any of the 8 multi-document questions, 7 of which are labelled
+   two-hop and 1 three-hop.** A labelled
    oracle diagnostic explains why: the annotations are sound (0 of 17 facts uncoverable),
    but **19 of 26 reachable fact/method pairs sit deeper than rank 10**. These questions
    need two facts; typically one lands at rank 1–5 and its partner at 26–363, and half a
@@ -80,8 +82,15 @@ Detail: [M11 development report](m11-development.md). Reproduction commands:
 **Two blockers, neither of which is code.** Until both are resolved, every number above is
 a development diagnostic and none supports a research claim:
 
-1. **Independent annotation review.** All 40 questions were authored by an AI agent from
-   paper text and checked by nobody else. The tooling is ready: `export-paper-review`
+1. **Independent annotation review.** 11 of 40 questions now carry a recorded decision,
+   made by the project owner and applied to the labels; the other 29 are pending. That
+   review is recorded as `project-owner-review-not-blind-to-results`, and every note
+   carries a provenance string saying so: quote-to-page verification was machine-performed
+   rather than re-checked by hand, an agent recorded the entries, and the reviewer had
+   already seen the aggregate results. **It is not independent human review**, which would
+   require someone who did not author the labels and had not seen the numbers. An external
+   model review was attempted and rejected as unusable — 35 identical high-confidence
+   verdicts, missing all three pre-named canaries. The tooling is ready: `export-paper-review`
    writes 40 pending rows, `scripts/blind_review_sheet.py` strips the author's reasoning
    from the worksheet, and `verify-paper-review` validates the filled result. What is
    missing is a reviewer who did not author the labels. Procedure and its limits:
@@ -110,37 +119,31 @@ documents; see [annotation-crosscheck.md](annotation-crosscheck.md). Both are no
   metrics credit only annotated spans, a retriever that found it scored zero. That
   sentence is now a **second sufficient evidence set**, so either route scores.
 
-**The comparison has been re-run on the fixed annotations** as
-`experiments/runs/m11-research-comparison-02`, bundle `m10-expanded-04`, fingerprint
-`b5d8b8d3…`, offline verification passed. Before re-running, the effect was derived from
-the saved records of the earlier run; **all eight predictions matched the measured result
-exactly**, which is a useful check on both the derivation and the metric implementation.
+**The comparison has been re-run on reviewed labels** as
+`experiments/runs/m11-research-comparison-03`, bundle `m10-expanded-05`, fingerprint
+`0d337e5d…`, offline verification passed. Eleven of the forty questions now carry a
+recorded decision; see "What is open" below for what that review is and is not.
 
-BM25, vector, and hybrid had each retrieved the `paper-l01` page-2 sentence into their top
-five, within budget, in every repeat, and each was scored as failing the question because
-that sentence was unannotated. With it annotated, each gains exactly one question:
+**Every aggregate is byte-for-byte unchanged from the pre-review run.** BM25 23/40,
+hybrid 15/40, vector 13/40, graph 7/40 at K=5; 26, 17, 20, 8 at K=10. The fusion sign
+flip is unchanged at +5.0 pp (3/36/1) and −7.5 pp (0/37/3). No question is unreachable,
+every repeat is stable.
 
-| Method | K=5 | K=10 |
-| --- | --- | --- |
-| BM25 | 22 → **23** | 25 → **26** |
-| Hybrid | 14 → **15** | 16 → **17** |
-| Vector | 12 → **13** | 19 → **20** |
-| Graph | 7 → 7 | 8 → 8 |
+That stability is itself worth recording. Eleven annotations were revised or confirmed,
+three hop labels were changed, and one question was reworded — and not one aggregate
+moved. The labelling work mattered for the honesty of the record, not for the numbers.
 
-Graph does not move; it never retrieved the chunk. The `paper-b01` fix changes nothing
-measured and in fact makes that fact harder to retrieve — satisfying chunks drop from two
-to one — which is correct, since the old quote did not prove its statement.
+The one visible change is structural: relabelling `paper-c01` and `paper-c02` to 2 hops
+moved them into the `hops:2` subgroup, which grew from 5 questions to 7, and
+`paper-c03` at 3 hops created a `hops:3` group of one. All three subgroups score
+**0.000 for every method at both cutoffs**, so the central finding now rests on a wider
+and more consistently labelled set than before.
 
-**Nothing in the analysis reverses.** Relative ordering is unchanged, BM25 still leads
-every non-zero row, the fusion sign flip is unchanged at +5.0 pp (3/36/1) and −7.5 pp
-(0/37/3), and the multi-document subgroups are still **0.000 for every method at both
-cutoffs**. The tables in "What was measured" above report the pre-fix run; add one
-question to BM25, hybrid, and vector for the current figures. Derivation and defect
-details in [annotation-crosscheck.md](annotation-crosscheck.md).
-
-Independent review should confirm both fixes rather than inherit them. They were proposed
-by an agent of the same model family that authored the original labels, which is precisely
-the correlation the review exists to break.
+Derivation of the earlier label fixes and the defects behind them is in
+[annotation-crosscheck.md](annotation-crosscheck.md). `paper-b01` and `paper-l01` remain
+**pending** in the review file on purpose: those two fixes were proposed by an agent of
+the same model family that authored the original labels, so a reviewer should confirm them
+rather than inherit them.
 
 **The fusion sign flip is resolved.** Six configurations left the K=10 penalty at exactly
 −7.5 pp, because vector and graph retrieve nearly disjoint candidates and the decisive

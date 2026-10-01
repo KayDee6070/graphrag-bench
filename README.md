@@ -15,8 +15,10 @@ yielding a sparse real graph: 330 entities and 111 assertions from 6,996 chunks.
 Complete evidence at K=5 under one 2,000-token budget, verified offline:
 **BM25 23/40, hybrid 15/40, vector 13/40, graph 7/40**.
 
-The headline is negative. On the 8 questions needing evidence from two documents, 5 of them also labelled two-hop — exactly what
-this project set out to test — **no method completed a single one**, at either cutoff.
+The headline is negative. On the 8 questions needing evidence from two documents — exactly
+what this project set out to test — **no method completed a single one**, at either cutoff.
+That survived a label review: 11 annotations were revised or confirmed, three hop labels
+changed, one question reworded, and **not one aggregate moved**.
 BM25 leads every other row, and fusion flips sign: +5 points at K=5, −7.5 at K=10 — now
 explained by [the fusion analysis](reports/m12-fusion-analysis.md).
 
