@@ -142,9 +142,11 @@ Independent review should confirm both fixes rather than inherit them. They were
 by an agent of the same model family that authored the original labels, which is precisely
 the correlation the review exists to break.
 
-**Smaller open items.** The fusion sign flip is explained; the open follow-up is the
-ablation it suggests, making `graph_candidates` a function of the cutoff rather than a
-constant. The five draft two-hop questions still need a shortcut check; a
+**Smaller open items.** The fusion sign flip is explained and its ablation is done: six
+configurations all leave the K=10 penalty at exactly −7.5 pp, because vector and graph
+retrieve nearly disjoint candidates and every decisive comparison therefore contains no
+agreement for RRF to reward. Removing the penalty needs a per-method weight, which the
+fusion rule does not have — a code change and a new experiment, not a parameter sweep. The five draft two-hop questions still need a shortcut check; a
 heuristic sweep found no unannotated alternative route for any of the 8 multi-document
 questions, which is evidence but not proof. The fusion sign flip is unexplained. Nobody
 has checked whether any hop count is *under*-stated — the cross-check could only report

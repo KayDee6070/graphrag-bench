@@ -102,3 +102,67 @@ All 40 labels remain unreviewed draft development annotations with zero held-out
 and the graph under analysis holds 111 assertions from an extractor that recovers 2 of 6
 sampled draft facts. A denser or reviewed graph could shift every number above. What is
 established is the mechanism, not its magnitude.
+
+## Ablation: the sign flip is not tunable with the available parameters
+
+The analysis above suggested an obvious fix — give graph fewer slots at larger cutoffs.
+Four additional verified runs on bundle `m10-expanded-04` tested that and a second idea.
+**Both predictions failed**, and the failures are more informative than a success would
+have been.
+
+| Variant | K=5 delta | K=5 W/T/L | K=10 delta | K=10 W/T/L |
+| --- | ---: | ---: | ---: | ---: |
+| `graph_candidates = 5` | +2.5 pp | 2/37/1 | **−7.5 pp** | 0/37/3 |
+| `graph_candidates = 10` | +5.0 pp | 3/36/1 | **−7.5 pp** | 0/37/3 |
+| `graph_candidates = 20` (default) | +5.0 pp | 3/36/1 | **−7.5 pp** | 0/37/3 |
+| `rank_constant = 6` | +5.0 pp | 3/36/1 | **−7.5 pp** | 0/37/3 |
+| `rank_constant = 60` (default) | +5.0 pp | 3/36/1 | **−7.5 pp** | 0/37/3 |
+| `rank_constant = 600` | +5.0 pp | 3/36/1 | **−7.5 pp** | 0/37/3 |
+
+Runs: `m12-fusion-graphcand-5`, `m12-fusion-graphcand-10`, `m12-fusion-rankc-6`,
+`m12-fusion-rankc-600`, each 240 records with offline verification passed.
+
+### Why the candidate window cannot help
+
+`score = 1 / (c + rank)`. For a graph-only chunk at graph rank `g` against a vector-only
+chunk at vector rank `v`, `1/(c+g) > 1/(c+v)` exactly when `g < v`. The displacement is
+performed by graph's **top** candidates, which survive any window of five or more.
+Shrinking the window only trims graph's tail, which never reached the fused top ten.
+Shrinking it to five does not fix K=10 and costs half the K=5 gain, because it starts
+discarding the useful promotions too.
+
+### Why rank_constant cannot help either
+
+In that same inequality, `c` cancels. It only matters for chunks found by **both**
+methods, whose score is `1/(c+g) + 1/(c+v)`: as `c` grows, each term approaches `1/c`, so
+a two-method chunk approaches `2/c` against a one-method chunk's `1/c` and agreement comes
+to dominate rank position. That reasoning is correct and irrelevant here, because the
+decisive comparisons contain no agreement. Measured on all three K=10 losses:
+
+- the needed chunk was **vector-only** in every case — graph never found it;
+- of the 13 displacing chunks across the three questions, **0 were in vector's top 20**.
+
+Vector and graph retrieve largely disjoint candidates: across the 35 questions where graph
+produced anything, they share **69 candidates in total**, and 12 questions share none.
+RRF's central mechanism is rewarding agreement between methods, and here there is almost
+no agreement to reward, so it degenerates into interleaving two unrelated lists.
+
+### What this actually implies
+
+The sign flip cannot be removed by configuration. Every knob in `[benchmark.hybrid]`
+leaves it at exactly −7.5 pp. Fixing it needs a capability the fusion rule does not have:
+a **per-method weight**, so graph's contribution can be scaled down relative to vector
+rather than merely truncated. That is a code change and a new experiment, not an ablation,
+and it is deliberately not attempted here.
+
+It also sharpens the earlier conclusion. Graph is not a weak version of vector; it is
+retrieving a nearly disjoint part of the corpus. On this corpus that disjoint part is
+mostly unhelpful, but the disjointness is why unweighted fusion is the wrong tool — it
+spends half the budget on the other list regardless of how good that list is.
+
+### Limits specific to the ablation
+
+Six configurations, one corpus, 40 unreviewed draft questions, one sparse graph of 111
+assertions. The invariance of the K=10 result across every parameter is a strong signal
+about this fusion rule's structure, and says nothing about fusion rules in general. No
+significance test is implied by any number above.
