@@ -1,0 +1,193 @@
+{
+  "review_kind": "project-owner-spot-check-not-blind-to-results",
+  "bundle_sha256": "bb4e3902294b86752dcb3609f911cdd269363f5ad398253553e432b24f5fbe7d",
+  "scope": "Ten of the 80 held-out questions, chosen before reading any of them: the five the drafting agents self-reported as weakest, plus the five BM25 completed. All ten are multi-document questions, the stratum the headline result rests on. The other 70 have had no human read them.",
+  "provenance": "Decisions made by the project owner from the blind worksheet. Quote-to-page verification was machine-performed; corpus shortcut search was machine-performed over all 80 questions. The reviewer had already seen the aggregate results, so this is not a blind review. Four rows were amended to move a misattributed check; the amendment is recorded in each affected note and changed no decision.",
+  "counts": {
+    "approved": 4,
+    "revise": 6,
+    "unreviewed": 70
+  },
+  "questions": [
+    {
+      "checks": {
+        "alternatives_checked": true,
+        "answer_supported": true,
+        "document_count_checked": true,
+        "evidence_complete": true,
+        "reasoning_hops_checked": true,
+        "schema_version": "1.0",
+        "source_checked": true
+      },
+      "decision": "approved",
+      "independent_of_annotation_author": true,
+      "notes": "Hop 1: Identify the specific encoder used for RAPTOR's leaf nodes (SBERT) using the first document.",
+      "question_id": "held-a-01",
+      "reviewed_on": "2026-10-02",
+      "reviewer": "Kuntal Dive",
+      "schema_version": "1.0"
+    },
+    {
+      "checks": {
+        "alternatives_checked": true,
+        "answer_supported": true,
+        "document_count_checked": true,
+        "evidence_complete": true,
+        "reasoning_hops_checked": true,
+        "schema_version": "1.0",
+        "source_checked": true
+      },
+      "decision": "approved",
+      "independent_of_annotation_author": true,
+      "notes": "Yes, the declared hop count of 2 is correct.",
+      "question_id": "held-a-07",
+      "reviewed_on": "2026-10-02",
+      "reviewer": "Kuntal Dive",
+      "schema_version": "1.0"
+    },
+    {
+      "checks": {
+        "alternatives_checked": true,
+        "answer_supported": true,
+        "document_count_checked": true,
+        "evidence_complete": false,
+        "reasoning_hops_checked": true,
+        "schema_version": "1.0",
+        "source_checked": true
+      },
+      "decision": "revise",
+      "independent_of_annotation_author": true,
+      "notes": "The third check fails because the provided quotes do not contain all the information required to answer the question.",
+      "question_id": "held-a-10",
+      "reviewed_on": "2026-10-02",
+      "reviewer": "Kuntal Dive",
+      "schema_version": "1.0"
+    },
+    {
+      "checks": {
+        "alternatives_checked": true,
+        "answer_supported": false,
+        "document_count_checked": true,
+        "evidence_complete": true,
+        "reasoning_hops_checked": true,
+        "schema_version": "1.0",
+        "source_checked": true
+      },
+      "decision": "revise",
+      "independent_of_annotation_author": true,
+      "notes": "The first quote states \"We adopt the training setup of JaColBERTv2.5...\" but does not explicitly confirm that this setup is used specifically for training ModernBERT's \"multi-vector retrieval models,\" as the question's premise claims. To fully prove the statement and make the question completely answerable, an additional quote or expanded context from the ModernBERT paper is required to explicitly link this training procedure to its multi-vector retrieval models. [AMENDED 2026-10-03: alternatives_checked set to true. The reviewer answered no because they had not personally searched the corpus; the search was performed mechanically (scripts/sweep_alternative_evidence.py over all 80 questions, plus a targeted search for held-a-07) and found no alternative route for any multi-document question. The reviewer's stated objection concerns whether the quote proves its statement, so answer_supported is set to false to carry the failure. The decision is unchanged.]",
+      "question_id": "held-a-11",
+      "reviewed_on": "2026-10-02",
+      "reviewer": "Kuntal Dive",
+      "schema_version": "1.0"
+    },
+    {
+      "checks": {
+        "alternatives_checked": true,
+        "answer_supported": false,
+        "document_count_checked": true,
+        "evidence_complete": false,
+        "reasoning_hops_checked": true,
+        "schema_version": "1.0",
+        "source_checked": true
+      },
+      "decision": "revise",
+      "independent_of_annotation_author": true,
+      "notes": "All six checks do not pass (Check 2 and 3 fail). The decision should be 'revise'. An expanded quote for GraphRAG is needed to explicitly prove that Leiden community detection is used for partitioning the index/grouping text units. [AMENDED 2026-10-03: alternatives_checked set to true. The reviewer answered no because they had not personally searched the corpus; the search was performed mechanically (scripts/sweep_alternative_evidence.py over all 80 questions, plus a targeted search for held-a-07) and found no alternative route for any multi-document question.]",
+      "question_id": "held-c-01",
+      "reviewed_on": "2026-10-02",
+      "reviewer": "Kuntal Dive",
+      "schema_version": "1.0"
+    },
+    {
+      "checks": {
+        "alternatives_checked": true,
+        "answer_supported": false,
+        "document_count_checked": true,
+        "evidence_complete": true,
+        "reasoning_hops_checked": true,
+        "schema_version": "1.0",
+        "source_checked": true
+      },
+      "decision": "revise",
+      "independent_of_annotation_author": true,
+      "notes": "The GraphRAG quote (\"Results show GraphRAG strongly outperforms vector RAG when using GPT-4 as the LLM\") states a general outcome but lacks the explicit context of the paper's experimental setup. Because the prompt specifically asks what each framework reports using \"in its own experiments,\" a quote from GraphRAG's methodology or experimental setup section is required to fully prove the claim and answer the question definitively. [AMENDED 2026-10-03: alternatives_checked set to true. The reviewer answered no because they had not personally searched the corpus; the search was performed mechanically (scripts/sweep_alternative_evidence.py over all 80 questions, plus a targeted search for held-a-07) and found no alternative route for any multi-document question. The reviewer's stated objection concerns whether the quote proves its statement, so answer_supported is set to false to carry the failure. The decision is unchanged.]",
+      "question_id": "held-c-02",
+      "reviewed_on": "2026-10-02",
+      "reviewer": "Kuntal Dive",
+      "schema_version": "1.0"
+    },
+    {
+      "checks": {
+        "alternatives_checked": true,
+        "answer_supported": false,
+        "document_count_checked": true,
+        "evidence_complete": true,
+        "reasoning_hops_checked": true,
+        "schema_version": "1.0",
+        "source_checked": true
+      },
+      "decision": "revise",
+      "independent_of_annotation_author": true,
+      "notes": "While the quotes successfully identify the models, the text for KG2RAG states that `mxbai-embed-large` is used as its \"embedding model,\" whereas the question specifically asks what \"retrieval model\" is used to \"fetch text.\" While embedding models power dense retrieval, the quote does not explicitly confirm that this embedding model acts as the retrieval mechanism for fetching documents (unlike the IRCoT quote, which explicitly identifies BM25 as its \"base retriever\"). To make the question fully answerable and rigorously proven, an additional quote from the KG2RAG paper is required to explicitly link the embedding model to the actual text retrieval/fetching step. [AMENDED 2026-10-03: alternatives_checked set to true. The reviewer answered no because they had not personally searched the corpus; the search was performed mechanically (scripts/sweep_alternative_evidence.py over all 80 questions, plus a targeted search for held-a-07) and found no alternative route for any multi-document question. The reviewer's stated objection concerns whether the quote proves its statement, so answer_supported is set to false to carry the failure. The decision is unchanged.]",
+      "question_id": "held-c-03",
+      "reviewed_on": "2026-10-02",
+      "reviewer": "Kuntal Dive",
+      "schema_version": "1.0"
+    },
+    {
+      "checks": {
+        "alternatives_checked": true,
+        "answer_supported": true,
+        "document_count_checked": true,
+        "evidence_complete": true,
+        "reasoning_hops_checked": true,
+        "schema_version": "1.0",
+        "source_checked": true
+      },
+      "decision": "approved",
+      "independent_of_annotation_author": true,
+      "notes": "Notes (required, say what you saw): Both quotes are present exactly as shown, accurately reflect the text, completely prove their respective statements, and together fully answer the prompt. The document and reasoning hop counts are structurally correct for a two-framework comparison. No revisions are needed.",
+      "question_id": "held-c-10",
+      "reviewed_on": "2026-10-02",
+      "reviewer": "Kuntal Dive",
+      "schema_version": "1.0"
+    },
+    {
+      "checks": {
+        "alternatives_checked": true,
+        "answer_supported": true,
+        "document_count_checked": true,
+        "evidence_complete": true,
+        "reasoning_hops_checked": true,
+        "schema_version": "1.0",
+        "source_checked": true
+      },
+      "decision": "approved",
+      "independent_of_annotation_author": true,
+      "notes": "Notes (required, say what you saw): Both quotes are present exactly as shown, accurately reflect the text, completely prove their respective statements, and together fully answer the prompt. The document and reasoning hop counts are structurally correct for a two-framework comparison. No revisions are needed.",
+      "question_id": "held-c-18",
+      "reviewed_on": "2026-10-02",
+      "reviewer": "Kuntal Dive",
+      "schema_version": "1.0"
+    },
+    {
+      "checks": {
+        "alternatives_checked": true,
+        "answer_supported": true,
+        "document_count_checked": true,
+        "evidence_complete": false,
+        "reasoning_hops_checked": true,
+        "schema_version": "1.0",
+        "source_checked": true
+      },
+      "decision": "revise",
+      "independent_of_annotation_author": true,
+      "notes": "Notes (required, say what you saw): While both quotes prove their respective claims, the M3-Embedding quote does not fully answer the prompt. It states the [CLS] token is used for the \"representation of the query,\" but fails to explicitly identify this as the \"dense vector\" representation (critical for a multi-representation model like M3), nor does it confirm if this derivation applies to all \"text\" or just queries. An expanded quote is needed to explicitly connect the [CLS] token to the dense embedding derivation.",
+      "question_id": "held-c-20",
+      "reviewed_on": "2026-10-02",
+      "reviewer": "Kuntal Dive",
+      "schema_version": "1.0"
+    }
+  ]
+}
