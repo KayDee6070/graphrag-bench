@@ -37,8 +37,15 @@ it underperforms it everywhere, and both lose to BM25.
 the development set; held-out it loses by 6.2. The development report had called that "a
 direction, not a measured effect", and that caution was warranted.
 
-This is one corpus of 30 related papers, one embedding model, one budget, and a graph built
-by an extractor that recovers 2 of 6 sampled facts — so nothing here bounds what graph
+A spot-check of ten multi-document questions after the run found **six needing revision**,
+three of them defects every automated check had passed. They are deliberately left unfixed:
+two are questions BM25 completed, and correcting them after seeing the scores would edit a
+test set whose results are known. The three zero columns cannot be raised by stricter
+questions, so the central finding is unaffected; BM25's multi-document figures should be
+read as an upper bound. Seventy of the eighty questions have had no human read them.
+
+This is also one corpus of 30 related papers, one embedding model, one budget, and a graph
+built by an extractor that recovers 2 of 6 sampled facts — so nothing here bounds what graph
 retrieval could do with better extraction. The questions are agent-authored and
 results-blinded rather than independently human-authored. Full numbers, strata, and limits:
 [held-out result](reports/held-out-result.md). Development-phase analysis:

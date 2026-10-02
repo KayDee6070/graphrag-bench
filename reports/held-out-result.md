@@ -87,6 +87,43 @@ holds, and on this evidence unweighted fusion is simply not worth running.
   questions are mostly solvable by every method except graph; two-document questions are
   solvable by almost none.
 
+## A spot-check of ten questions, performed after the run
+
+Ten of the 80 were reviewed by the project owner after this run was reported: the five the
+drafting agents self-reported as weakest, plus the five BM25 completed. All ten are
+multi-document questions, the stratum the headline rests on. **Four were approved and six
+need revision.** Record: `datasets/papers/research/held-out-spot-check.json`.
+
+Three are defects that four drafting agents and two mechanical verifiers all passed, each
+the same shape — a quote that is true but does not prove the specific claim the question
+asks about:
+
+- `held-c-01` — the GraphRAG quote stops at "in a hierarchical manner", cutting off the
+  clause that says what Leiden partitions; the statement's "partition its graph index" is
+  unproven.
+- `held-c-20` — the M3 quote sits under a "Dense retrieval" heading and is followed by the
+  passage-embedding clause, but the sliced span excludes both, so as quoted it covers only
+  queries and never says "dense".
+- `held-a-10` — the evidence proves MEDI and 330 datasets but not the task-instruction
+  input the question also asks for.
+
+**These defects are deliberately not fixed, and the numbers above are unchanged.** Every
+correction would make its question *stricter*, and `held-a-11` and `held-c-01` are two of
+the five questions BM25 completed. Repairing them after seeing the results could lower the
+only non-zero figure in the headline. Editing a test set once its scores are known is the
+contamination the protocol exists to prevent, so the sealed run stands as reported and the
+defects stand as a known limitation of it.
+
+What this costs the result is bounded and worth stating precisely. Six of ten questions in
+the hardest stratum carry a labelling defect, and **70 of the 80 have had no human read
+them at all**. The three zero columns cannot be raised by stricter questions, so the
+central negative finding is unaffected. BM25's 3/40 and 5/40 are the figures at risk: both
+would fall if the corrected questions were used, so treat them as an upper bound rather
+than a measurement.
+
+A corrected question set would need a fresh evaluation to mean anything, and this project
+does not run one.
+
 ## What this does and does not establish
 
 **Does.** On this corpus, under this budget, with these methods: graph-based retrieval does
