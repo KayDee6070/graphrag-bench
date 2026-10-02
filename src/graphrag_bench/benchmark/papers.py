@@ -238,7 +238,11 @@ def _report(summary: BenchmarkSummary, config: BenchmarkConfig, graph_status: st
     )
     return (
         f"# Frozen real-paper {heading} comparison\n\n"
-        f"Annotations: pending independent review. Split: {summary.split}.\n"
+        # The held-out count is parameterised rather than dropped: removing it would
+        # change the text of every run saved before test splits existed and break their
+        # offline verification.
+        f"Annotations: pending independent review. Split: {summary.split}. "
+        f"Held-out questions: {summary.question_count if held_out else 0}.\n"
         f"Strategies: {', '.join(config.strategies)}. Graph assertions, if used, are unreviewed.\n"
         f"Graph source: {GRAPH_DESCRIPTION[graph_status]}. A deterministic rule graph reports\n"
         "line-grammar extraction on prose papers; it is a floor, not a graph-method ceiling.\n"

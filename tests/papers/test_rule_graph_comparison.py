@@ -142,3 +142,16 @@ def test_rule_graph_artifacts_are_copied_verbatim(frozen_inputs, tmp_path, rule_
         assert (output / "graph" / name).read_bytes() == original
         manifest = json.loads((output / "manifest.json").read_text())
         assert manifest["artifact_hashes"][f"graph/{name}"] == sha256(original).hexdigest()
+
+
+def test_a_dev_report_still_states_zero_held_out_questions(frozen_inputs, tmp_path, rule_graph):
+    """Regression: dropping this line silently invalidated every previously saved run."""
+    bundle, index, _, config, provider = frozen_inputs
+    output = tmp_path / "run"
+    run_paper_benchmark(bundle, index, output, config, provider, graph_directory=rule_graph)
+
+    report = (output / "report.md").read_text()
+
+    assert "Split: dev. Held-out questions: 0." in report
+    assert "# Frozen real-paper development comparison" in report
+    assert "This is a development diagnostic" in report
