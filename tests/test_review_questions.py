@@ -94,3 +94,34 @@ def test_save_writes_readable_json(tmp_path):
     review.save(path, {"questions": [{"question_id": "paper-a01", "decision": "pending"}]})
 
     assert "paper-a01" in path.read_text(encoding="utf-8")
+
+
+def test_sections_are_found_for_any_question_id_prefix():
+    """Regression: the splitter hardcoded "paper-" and silently found no held-out section."""
+    sheet = WORKSHEET.replace("paper-a01", "held-c-07").replace("paper-a02", "hx-9")
+
+    parts = review.sections(Path("/dev/null")) if False else None
+    import tempfile
+
+    with tempfile.NamedTemporaryFile("w", suffix=".md", delete=False) as handle:
+        handle.write(sheet)
+        path = Path(handle.name)
+
+    parts = review.sections(path)
+    path.unlink()
+
+    assert set(parts) == {"held-c-07", "hx-9"}
+
+
+def test_both_shipped_worksheets_parse_completely():
+    expected = {
+        "experiments/runs/heldout-review-blind.md": 80,
+        "experiments/runs/m11-question-review-blind-04.md": 40,
+    }
+    for name, count in expected.items():
+        path = ROOT / name
+        if not path.exists():
+            pytest.skip(f"{name} not generated in this checkout")
+        parts = review.sections(path)
+        assert len(parts) == count, name
+        assert all("```text" in body for body in parts.values()), name

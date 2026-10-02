@@ -30,7 +30,8 @@ PROMPT = "[y]es / [n]o / [s]kip this question / [q]uit and save: "
 def sections(worksheet: Path) -> dict[str, str]:
     """Split the worksheet into per-question text keyed by question ID."""
     text = worksheet.read_text(encoding="utf-8")
-    parts = re.split(r"\n## (paper-[\w-]+): ", text)
+    # Any question-id prefix, not just the development set's "paper-".
+    parts = re.split(r"\n## ([\w-]+): ", text)
     return {parts[i]: f"## {parts[i]}: {parts[i + 1]}" for i in range(1, len(parts) - 1, 2)}
 
 
