@@ -99,23 +99,25 @@ a development diagnostic and none supports a research claim:
    every quote is verbatim text on its claimed page: [annotation-crosscheck.md](annotation-crosscheck.md).
    That is triage, not review — the agents share a model family with the annotation
    author, so their agreement carries little weight and only their disagreement does.
-2. **Held-out questions.** **40 of the planned 80 now exist and are verified**, in
-   `datasets/papers/research/held-out-drafts.json`: 20 two-paper bridge questions and 20
-   single-paper lookups, drafted by two agents with no access to any measured result and
-   passing every mechanical check. **Nothing has been run against them.** They are not yet
-   promoted to a `test` split, because `prepare-papers` deliberately rejects that label to
-   stop dev-era labels masquerading as held-out, and choosing how to lift that guard is an
-   owner decision. Protocol, limits and both promotion options:
-   [held-out-questions.md](../docs/held-out-questions.md). The remaining 40 can be drafted
-   by the same reproducible protocol.
+2. **Held-out questions.** **All 80 now exist and are verified**, in
+   `datasets/papers/research/held-out-drafts.json`, written by four agents with no access
+   to any measured result: 20 two-paper bridges, 20 two-paper comparisons, and 40
+   single-paper lookups, half of those drawn from body text rather than abstracts. Each
+   batch was verified by this session independently rather than on the drafting agent's
+   word, and all 80 together carry no identifier collision. **Nothing has been run against
+   them.** They are not promoted to a `test` split, because `prepare-papers` deliberately
+   rejects that label to stop dev-era labels masquerading as held-out, and lifting that
+   guard is an owner decision. Protocol, both promotion options, the measured grounding
+   comparison against the dev set, and the agents' self-reported weak points:
+   [held-out-questions.md](../docs/held-out-questions.md).
 
 **Known limitations of the graph arm.** The extractor recovers 2 of 6 sampled draft facts
 and produced 111 assertions from 6,996 chunks. The graph column therefore measures this
 extractor at least as much as it measures graph retrieval. No assertion has been reviewed.
 
-**Two label fixes applied to source, not yet reflected in any measured result.** An
-automated cross-check found both defects and each was verified against the source
-documents; see [annotation-crosscheck.md](annotation-crosscheck.md). Both are now in
+**Two label fixes, now reflected in the current run.** An automated cross-check found both
+defects and each was verified against the source documents; see
+[annotation-crosscheck.md](annotation-crosscheck.md). Both are in
 `datasets/papers/research/annotations.json`, on the authorisation of the project owner:
 
 - `paper-b01` — the `raptor-encoder` quote stopped one sentence short of the line tying
@@ -124,6 +126,11 @@ documents; see [annotation-crosscheck.md](annotation-crosscheck.md). Both are no
 - `paper-l01` — a single page-2 sentence covers both annotated page-4 facts. Because the
   metrics credit only annotated spans, a retriever that found it scored zero. That
   sentence is now a **second sufficient evidence set**, so either route scores.
+- A third defect surfaced later, found by `scripts/verify_questions.py` on its first run:
+  the `paper-b01` fix changed a statement while `paper-r01` reused the same
+  `raptor-encoder` fact_id with the old one. The two questions need different evidence —
+  `r01` asks only which encoder — so `b01`'s variant is now `raptor-leaf-encoder` and
+  `r01` keeps its shorter quote. That class of defect is now caught mechanically.
 
 **The comparison has been re-run on reviewed labels** as
 `experiments/runs/m11-research-comparison-03`, bundle `m10-expanded-05`, fingerprint
