@@ -29,6 +29,8 @@ Complete evidence after a shared 2,000-token budget:
 
 ## The result the project was built to find
 
+![Complete evidence at K=5 by method and question type. Single-document: BM25 80%, Vector 65%, Hybrid 52.5%, Graph 15%. Multi-document: BM25 7.5%, Vector 0, Hybrid 0, Graph 0.](held-out-result.svg)
+
 Splitting by whether a question needs one document or two, 40 questions each:
 
 | Stratum | n | BM25 | Vector | Hybrid | Graph |

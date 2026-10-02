@@ -154,7 +154,7 @@ A correction means editing the tracked source annotations, preparing a new bundl
 
 ## What remains before research claims
 
-The original plan is approximately 30 papers and 120 reviewed questions: 40 development and 80 held out. We now have the papers and the 40 **draft** dev questions. Independent review, corrections, and the 80 genuinely held-out questions remain. Related chains/templates must stay together; the current 23 grouping labels are organizational aids, not proof of statistical independence or a certified split plan. Five bridge candidates do not meet the planned 40 held-out two-hop cases.
+The original plan is approximately 30 papers and 120 reviewed questions: 40 development and 80 held out. Both sets now exist: the 40 **draft** dev questions here, and [80 results-blinded held-out questions](held-out-questions.md) that have been run once. Independent human review of either set largely remains; 11 dev questions and 10 held-out questions carry a recorded owner decision. Related chains/templates must stay together; the current 23 grouping labels are organizational aids, not proof of statistical independence or a certified split plan. Five bridge candidates do not meet the planned 40 held-out two-hop cases.
 
 M11 still needs to connect model-extracted graphs to the comparative runner and measure retrieval/answer failures under frozen settings. The existing benchmark runner uses the deterministic rule extractor internally; pointing it at these papers is not the intended LLM-graph study. No comparative M11 run or full-corpus model extraction occurred in this expansion.
 

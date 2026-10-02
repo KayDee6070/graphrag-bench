@@ -161,7 +161,7 @@ That warning measurably worked. Applying the same term-overlap check to both set
 | Set | Statements whose distinctive terms are absent from their own quote |
 | --- | ---: |
 | 40 development questions | 35 of 51 facts (69%) |
-| 60 held-out questions | 38 of 80 facts (48%) |
+| 80 held-out questions | 57 of 120 facts (48%) |
 
 Excluding each fact's own `paper_id` — because a statement worded "the method in the
 pinned `jina2` paper" legitimately contains a token the quote will never carry — leaves 25

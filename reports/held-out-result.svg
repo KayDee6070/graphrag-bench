@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="450" viewBox="0 0 760 450" font-family="ui-sans-serif,-apple-system,Segoe UI,Helvetica,Arial,sans-serif" role="img" aria-label="Complete evidence at K=5 by method and question type, held-out set, 40 questions per group. Single-document: BM25 80 percent, Vector 65, Hybrid 52.5, Graph 15. Multi-document: BM25 7.5 percent, Vector 0, Hybrid 0, Graph 0.">
+<rect width="760" height="450" fill="#fcfcfb"/>
+<text x="64" y="32" font-size="15.5" font-weight="600" fill="#0b0b0b">Multi-document questions defeat every method except BM25</text>
+<text x="64" y="53" font-size="12.5" fill="#52514e">Complete evidence at K=5, held-out set, 40 questions per group</text>
+<rect x="64" y="72" width="10" height="10" rx="2" fill="#2a78d6"/>
+<text x="79" y="81" font-size="12" fill="#52514e">Single-document</text>
+<rect x="224" y="72" width="10" height="10" rx="2" fill="#eb6834"/>
+<text x="239" y="81" font-size="12" fill="#52514e">Multi-document</text>
+<line x1="64" y1="366.0" x2="736" y2="366.0" stroke="#e6e5e1" stroke-width="1"/>
+<text x="54" y="370.0" font-size="11.5" fill="#8a8880" text-anchor="end">0%</text>
+<line x1="64" y1="300.5" x2="736" y2="300.5" stroke="#e6e5e1" stroke-width="1"/>
+<text x="54" y="304.5" font-size="11.5" fill="#8a8880" text-anchor="end">25%</text>
+<line x1="64" y1="235.0" x2="736" y2="235.0" stroke="#e6e5e1" stroke-width="1"/>
+<text x="54" y="239.0" font-size="11.5" fill="#8a8880" text-anchor="end">50%</text>
+<line x1="64" y1="169.5" x2="736" y2="169.5" stroke="#e6e5e1" stroke-width="1"/>
+<text x="54" y="173.5" font-size="11.5" fill="#8a8880" text-anchor="end">75%</text>
+<line x1="64" y1="104.0" x2="736" y2="104.0" stroke="#e6e5e1" stroke-width="1"/>
+<text x="54" y="108.0" font-size="11.5" fill="#8a8880" text-anchor="end">100%</text>
+<path d="M95.0 366 V160.4 a4 4 0 0 1 4 -4 h44 a4 4 0 0 1 4 4 V366 Z" fill="#2a78d6"/>
+<text x="121.0" y="149.4" font-size="11.5" font-weight="600" fill="#52514e" text-anchor="middle">80%</text>
+<path d="M149.0 366 V350.4 a4 4 0 0 1 4 -4 h44 a4 4 0 0 1 4 4 V366 Z" fill="#eb6834"/>
+<text x="175.0" y="339.4" font-size="11.5" font-weight="600" fill="#52514e" text-anchor="middle">7.5%</text>
+<text x="148.0" y="388" font-size="13" font-weight="600" fill="#0b0b0b" text-anchor="middle">BM25</text>
+<path d="M263.0 366 V199.7 a4 4 0 0 1 4 -4 h44 a4 4 0 0 1 4 4 V366 Z" fill="#2a78d6"/>
+<text x="289.0" y="188.7" font-size="11.5" font-weight="600" fill="#52514e" text-anchor="middle">65%</text>
+<line x1="317.0" y1="366" x2="369.0" y2="366" stroke="#eb6834" stroke-width="2.5"/>
+<text x="343.0" y="357" font-size="11.5" font-weight="600" fill="#eb6834" text-anchor="middle">0</text>
+<text x="316.0" y="388" font-size="13" font-weight="600" fill="#0b0b0b" text-anchor="middle">Vector</text>
+<path d="M431.0 366 V232.4 a4 4 0 0 1 4 -4 h44 a4 4 0 0 1 4 4 V366 Z" fill="#2a78d6"/>
+<text x="457.0" y="221.4" font-size="11.5" font-weight="600" fill="#52514e" text-anchor="middle">52.5%</text>
+<line x1="485.0" y1="366" x2="537.0" y2="366" stroke="#eb6834" stroke-width="2.5"/>
+<text x="511.0" y="357" font-size="11.5" font-weight="600" fill="#eb6834" text-anchor="middle">0</text>
+<text x="484.0" y="388" font-size="13" font-weight="600" fill="#0b0b0b" text-anchor="middle">Hybrid</text>
+<path d="M599.0 366 V330.7 a4 4 0 0 1 4 -4 h44 a4 4 0 0 1 4 4 V366 Z" fill="#2a78d6"/>
+<text x="625.0" y="319.7" font-size="11.5" font-weight="600" fill="#52514e" text-anchor="middle">15%</text>
+<line x1="653.0" y1="366" x2="705.0" y2="366" stroke="#eb6834" stroke-width="2.5"/>
+<text x="679.0" y="357" font-size="11.5" font-weight="600" fill="#eb6834" text-anchor="middle">0</text>
+<text x="652.0" y="388" font-size="13" font-weight="600" fill="#0b0b0b" text-anchor="middle">Graph</text>
+<line x1="64" y1="366" x2="736" y2="366" stroke="#52514e" stroke-width="1.25"/>
+<text x="64" y="404" font-size="11.5" fill="#8a8880">A zero is drawn as a baseline rule and labelled: three methods complete none of the 40</text>
+<text x="64" y="420" font-size="11.5" fill="#8a8880">multi-document questions. Run m13-heldout-comparison-01, fingerprint 8eb8b328. Questions are</text>
+<text x="64" y="436" font-size="11.5" fill="#8a8880">agent-authored and results-blinded; limits in reports/held-out-result.md.</text>
+</svg>

@@ -176,7 +176,7 @@ On CPU float32 the same extraction projects to about 79 hours, so add
 before choosing; the GPU recipe has a different fingerprint and was verified against the
 CPU reference on eight cases only.
 
-The completed run produced 22/40 for BM25, 14/40 hybrid, 12/40 vector, and 7/40 graph at
+The completed run produced 23/40 for BM25, 15/40 hybrid, 13/40 vector, and 7/40 graph at
 K=5, and **0/40 for every method** on the two-hop and cross-document questions. Read
 §4 again before quoting any of those numbers: the labels are unreviewed drafts, nothing
 is held out, and the graph holds 111 assertions from 6,996 chunks.
@@ -358,7 +358,8 @@ correct relationships.
 The complete real-paper model graph, full four-method comparison, independent
 annotation review, and genuinely held-out evaluation remain required. Development
 scores can guide engineering, but looking at them makes them unsuitable as unseen
-test results. The planned 80 held-out questions need a separate review and split
+test results. The 80 held-out questions now exist and have been run once; see
+[the held-out result](../reports/held-out-result.md). They still need a separate review and split
 process; relabeling these 40 known questions would not make them held out.
 
 The next decision concerns extraction feasibility and quality. After completing

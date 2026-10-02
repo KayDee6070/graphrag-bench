@@ -27,6 +27,8 @@ budget, verified offline:
 | Hybrid | 21/80 | 29/80 |
 | Graph | 6/80 | 6/80 |
 
+![Complete evidence at K=5 by method and question type on the held-out set. Single-document: BM25 80%, Vector 65%, Hybrid 52.5%, Graph 15%. Multi-document: BM25 7.5%, Vector 0, Hybrid 0, Graph 0.](reports/held-out-result.svg)
+
 **The research question has a negative answer.** On the 40 questions needing evidence from
 two documents, dense retrieval, graph traversal and rank fusion each complete **zero**, at
 both cutoffs. BM25 completes 3 at K=5 and 5 at K=10 — the only method that completes any,
@@ -236,7 +238,7 @@ The [M9 walkthrough](docs/answer-generation.md) explains all four strategies, ex
 
 ## Prepare the expanded research corpus
 
-For the **30-paper corpus and 40 draft dev questions**, use the [expanded-corpus commands and review instructions](docs/m10-expansion.md#prepare-and-inspect-the-expanded-corpus). Its catalog is `datasets/papers/research/catalog.json`, annotations are in the same directory, and its chunking configuration is `configs/papers-research.toml`. The original three-paper example above remains reproducible. The expansion downloads 43.3 MB in total and has [separate source licenses](datasets/papers/research/README.md#licensing-and-changes).
+For the **30-paper corpus and its 40 draft dev questions**, use the [expanded-corpus commands and review instructions](docs/m10-expansion.md#prepare-and-inspect-the-expanded-corpus). The separate [80-question held-out set](docs/held-out-questions.md) uses the same corpus and its own annotation file. Its catalog is `datasets/papers/research/catalog.json`, annotations are in the same directory, and its chunking configuration is `configs/papers-research.toml`. The original three-paper example above remains reproducible. The expansion downloads 43.3 MB in total and has [separate source licenses](datasets/papers/research/README.md#licensing-and-changes).
 
 ```bash
 .venv/bin/python scripts/study_m10_expansion.py
@@ -289,7 +291,7 @@ GitHub Actions defines these checks for Python 3.11, 3.12, and 3.13. Fixture fil
 - `scripts/verify_questions.py` and `scripts/verify_draft_questions.py`: mechanical checks on prepared and draft questions; quote existence and uniqueness, page correctness, chunk coverage, hop and document consistency, identifier collisions.
 - `scripts/review_questions.py`, `scripts/export_review_prompt.py`, `scripts/apply_owner_review.py`: guided review, external-model prompt batches, and recording decisions with their provenance.
 - `datasets/papers/pilot/`: three-paper acquisition catalog, source-authored draft annotations, and source licensing notice.
-- `datasets/papers/research/`: 30-paper catalog, candidate screening record, 40 draft dev questions, and complete attribution.
+- `datasets/papers/research/`: 30-paper catalog, candidate screening record, 40 draft dev questions, 80 results-blinded held-out questions, recorded review decisions, and complete attribution.
 - `datasets/fixtures/tiny/corpus/`: eight fictional technical documents.
 - `datasets/fixtures/tiny/gold/`: manually specified reference chunks, entities, assertions, and 20 questions.
 - `tests/`: contract validation, provenance failures, fixture integration, and CLI tests.
@@ -341,7 +343,7 @@ Read the [M0 design and experiment plan](docs/design.md), [data contracts](docs/
 8. **M7:** Source-evidence benchmark, shared context budget, repeated retrieval evaluation, saved reports, and study documentation — complete.
 9. **M8:** Local LLM-assisted extraction, source checks, inference receipts, graph replay, and study documentation — complete; the small controlled pilot is not a real-paper quality benchmark.
 10. **M9:** Local answer proposals, exact citation references, token-budget receipts, offline replay, and study documentation — complete; semantic correctness and abstention reliability are not established.
-11. **M10:** Real-paper acquisition, PDF provenance, 30-paper expansion, 40 draft development questions, coverage audits, and review tooling — implemented. 80 results-blinded held-out questions now exist and are verified but unpromoted; independent annotation review remains open.
+11. **M10:** Real-paper acquisition, PDF provenance, 30-paper expansion, 40 draft development questions, coverage audits, and review tooling — complete.
 12. **M11:** Frozen real-paper comparison runner, offline source-metric verification, reviewer packets, host-memory gating, a GPU recipe measured against the CPU reference, a complete real-paper model graph, and the verified four-method comparison — complete.
 13. **M12:** Ablations and error analysis — done for the questions the comparison raised. The multi-hop diagnostic explains the multi-document zeros as recall depth, and [the fusion analysis](reports/m12-fusion-analysis.md) explains the K=5/K=10 sign flip, shows across six configurations that it is not tunable, and resolves it with per-method fusion weights: any `graph_weight` below 1.0 removes the K=10 penalty and keeps the K=5 gain. Nine verified configurations in total.
 14. **M13:** Held-out evaluation — complete. 80 results-blinded questions authored, mechanically verified, sealed behind an explicit opt-in, and [run once](reports/held-out-result.md). Independent human annotation review remains the one open requirement.

@@ -156,7 +156,7 @@ The M9 addition is:
 
 The M10 corpus addition is:
 
-> I added version-pinned PDF acquisition, page-preserving text extraction, source attribution, and a separate compiler for development questions. I expanded the corpus to 30 papers and 40 draft development questions, then added source-coverage audits and review records that become stale when the bundle changes. I preserve exact source coordinates while keeping labels out of the searchable corpus. Independent review and 80 genuinely held-out questions remain necessary before the full comparative study.
+> I added version-pinned PDF acquisition, page-preserving text extraction, source attribution, and a separate compiler for development questions. I expanded the corpus to 30 papers and 40 draft development questions, then added source-coverage audits and review records that become stale when the bundle changes. I preserve exact source coordinates while keeping labels out of the searchable corpus. I then wrote 80 held-out questions with agents blinded to every measured result, verified them mechanically, and ran them once. Independent human review of the annotations remains the open requirement.
 
 The M11 engineering addition is:
 
