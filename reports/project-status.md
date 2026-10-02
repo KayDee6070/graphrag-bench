@@ -99,9 +99,15 @@ a development diagnostic and none supports a research claim:
    every quote is verbatim text on its claimed page: [annotation-crosscheck.md](annotation-crosscheck.md).
    That is triage, not review — the agents share a model family with the annotation
    author, so their agreement carries little weight and only their disagreement does.
-2. **Held-out questions.** There are zero. All 40 were visible throughout. The plan calls
-   for 80 sealed questions, and they should be written after review, not before, or they
-   inherit whatever review finds.
+2. **Held-out questions.** **40 of the planned 80 now exist and are verified**, in
+   `datasets/papers/research/held-out-drafts.json`: 20 two-paper bridge questions and 20
+   single-paper lookups, drafted by two agents with no access to any measured result and
+   passing every mechanical check. **Nothing has been run against them.** They are not yet
+   promoted to a `test` split, because `prepare-papers` deliberately rejects that label to
+   stop dev-era labels masquerading as held-out, and choosing how to lift that guard is an
+   owner decision. Protocol, limits and both promotion options:
+   [held-out-questions.md](../docs/held-out-questions.md). The remaining 40 can be drafted
+   by the same reproducible protocol.
 
 **Known limitations of the graph arm.** The extractor recovers 2 of 6 sampled draft facts
 and produced 111 assertions from 6,996 chunks. The graph column therefore measures this

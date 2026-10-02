@@ -271,12 +271,14 @@ GitHub Actions defines these checks for Python 3.11, 3.12, and 3.13. Fixture fil
 - `scripts/sweep_alternative_evidence.py`: heuristic sweep for unannotated passages that may answer a question and earn no credit; mostly false positives, use as a reading list.
 - `scripts/blind_review_sheet.py`: removes the annotation author's reasoning from a review worksheet, keeping every question, label, quote, and page link.
 - `scripts/diagnose_multihop.py`: a labelled oracle diagnostic that reports annotation coverability, retrieval rank depth, and graph seeding for multi-document questions.
+- `scripts/verify_questions.py` and `scripts/verify_draft_questions.py`: mechanical checks on prepared and draft questions; quote existence and uniqueness, page correctness, chunk coverage, hop and document consistency, identifier collisions.
+- `scripts/review_questions.py`, `scripts/export_review_prompt.py`, `scripts/apply_owner_review.py`: guided review, external-model prompt batches, and recording decisions with their provenance.
 - `datasets/papers/pilot/`: three-paper acquisition catalog, source-authored draft annotations, and source licensing notice.
 - `datasets/papers/research/`: 30-paper catalog, candidate screening record, 40 draft dev questions, and complete attribution.
 - `datasets/fixtures/tiny/corpus/`: eight fictional technical documents.
 - `datasets/fixtures/tiny/gold/`: manually specified reference chunks, entities, assertions, and 20 questions.
 - `tests/`: contract validation, provenance failures, fixture integration, and CLI tests.
-- `docs/`: architecture, experiment plan, and data semantics.
+- `docs/`: architecture, experiment plan, data semantics, the annotation review procedure, and the held-out question protocol.
 
 The fixture has 25 chunks, 15 entities, and 23 relation assertions. It includes shared entities, an ambiguous alias, a query alias, repeated assertions from different sources, comparisons, and one- and two-hop evidence requirements. Gold benchmark evidence refers to document offsets rather than a particular chunking scheme.
 
