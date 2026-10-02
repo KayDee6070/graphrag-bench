@@ -95,3 +95,25 @@ that. Report it once.
 If a result on this set disagrees with the development result, the held-out number is the
 one to believe, and the disagreement itself is worth reporting as the more interesting
 finding.
+
+## A corpus observation, checked and dismissed
+
+A drafting agent reported that `documents.jsonl` "appears to have been assembled from
+overlapping chunks", because many sentences occur twice and so fail the quote-uniqueness
+rule. Its practical handling was correct — it selected only sentences occurring exactly
+once — but the inference about the pipeline was wrong, and it is worth recording so the
+observation does not resurface as a suspected bug.
+
+Checked across all 30 papers: **every one of the 6,996 chunks has text identical to the
+document slice at its own offsets**, and each document's length matches its last chunk's
+end. Documents are authoritative; chunks are overlapping views of them, which is the
+intended design.
+
+The repeated sentences are genuine repetition inside the papers: appendices restating
+examples, figure captions reprinted near their figure. Corpus-wide, 99 of 11,641 sentences
+longer than 60 characters are redundant repeats, 0.9%. That is a property of academic PDFs,
+not of the ingestion.
+
+It does constrain question authoring, which is why the drafting prompts warn about it: a
+quote must occur exactly once for `prepare-papers` to resolve it, so roughly one sentence
+in a hundred is unusable as evidence no matter how good it reads.
