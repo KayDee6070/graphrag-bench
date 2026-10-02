@@ -117,3 +117,38 @@ not of the ingestion.
 It does constrain question authoring, which is why the drafting prompts warn about it: a
 quote must occur exactly once for `prepare-papers` to resolve it, so roughly one sentence
 in a hundred is unusable as evidence no matter how good it reads.
+
+## Measured grounding, and a third failure of the same heuristic
+
+The drafting prompts warned explicitly about the one defect class that needed human
+judgement on the development set: a statement naming an entity its quote never mentions.
+That warning measurably worked. Applying the same term-overlap check to both sets:
+
+| Set | Statements whose distinctive terms are absent from their own quote |
+| --- | ---: |
+| 40 development questions | 35 of 51 facts (69%) |
+| 60 held-out questions | 38 of 80 facts (48%) |
+
+Excluding each fact's own `paper_id` — because a statement worded "the method in the
+pinned `jina2` paper" legitimately contains a token the quote will never carry — leaves 25
+of 80 flagged.
+
+Reading those 25 shows they are **not defects**. They are PDF extraction artifacts:
+
+- `held-b-08` statement says `E5-small`, the extracted quote says `E5 small, E5base` because
+  the PDF lost subscript formatting
+- `held-b-09` statement says `INSTRUCTOR-Base`, the quote says `INSTRUCT OR-Base` because the
+  extractor split a small-caps word
+- `held-a-18` statement says `text-embedding-ada-002`, the quote says `text-embeddi ng-ada-002`
+  with an injected space
+
+In each case the quote plainly proves its statement to a human reader. This is the third
+distinct way this heuristic fails — after "papers call their own method *the model*" and
+"questions name a model the paper refers to obliquely" — and it closes the question of
+whether grounding can be checked mechanically. It cannot. `scripts/verify_questions.py`
+records the first two failures; this is the third.
+
+**The practical consequence for a spot-check:** ignore hyphenation, spacing and case
+mismatches between a statement and its quote. Every one examined so far has been extraction
+damage rather than a labelling error. Spend the attention on whether the quote's *claim*
+matches the statement's claim.
