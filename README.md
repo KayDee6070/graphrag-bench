@@ -1,59 +1,54 @@
 # GraphRAG Bench
 
-When does graph-based retrieval outperform vector retrieval for questions requiring evidence across documents?
+**Does graph-based retrieval beat vector retrieval when a question needs evidence from two
+different documents?** This measures it: 30 research papers, four retrieval methods, one
+shared token budget so no method wins by reading more. It scores retrieval alone — did the
+method put the required evidence in front of the model — rather than conflating that with
+answer quality.
 
-GraphRAG Bench is a small research-engineering project for comparing vector, graph, and hybrid retrieval under the same evidence budget. Retrieval quality will be measured independently of answer generation.
-
-**Start here: [the held-out result](reports/held-out-result.md)** — the answer and its
-limits. Then [project status](reports/project-status.md) for everything else, in one page.
-[CONTRIBUTIONS.md](CONTRIBUTIONS.md) records who decided what, including where AI assistance
-was used and why the held-out questions were deliberately not written by a human.
-
-**Current state: the held-out evaluation is done.** The corpus holds 30 papers, 558 pages
-and 6,996 chunks, with 40 development questions and 80 results-blinded held-out questions.
-All four retrieval methods have been compared under one evidence budget on both splits, and
-every run reproduces offline from saved artifacts. What remains open is **independent human
-review of the annotations**: the labels are agent-authored, 11 of the 40 development
-questions carry a recorded owner decision, and the held-out 80 have had no human read them.
-Results are therefore reproducible and verified, but not independently annotated.
-
-**The held-out comparison is complete.** 80 questions authored by agents with no access to
-any measured result, mechanically verified, sealed, and run once as
-`experiments/runs/m13-heldout-comparison-01`. Complete evidence under one 2,000-token
-budget, verified offline:
-
-| Method | K=5 | K=10 |
-| --- | ---: | ---: |
-| BM25 | **35/80** | **39/80** |
-| Vector | 26/80 | 30/80 |
-| Hybrid | 21/80 | 29/80 |
-| Graph | 6/80 | 6/80 |
+**The answer, on an 80-question held-out set run once: no.**
 
 ![Complete evidence at K=5 by method and question type on the held-out set. Single-document: BM25 80%, Vector 65%, Hybrid 52.5%, Graph 15%. Multi-document: BM25 7.5%, Vector 0, Hybrid 0, Graph 0.](reports/held-out-result.svg)
 
-**The research question has a negative answer.** On the 40 questions needing evidence from
-two documents, dense retrieval, graph traversal and rank fusion each complete **zero**, at
-both cutoffs. BM25 completes 3 at K=5 and 5 at K=10 — the only method that completes any,
-and the simplest one in the set. Graph retrieval does not outperform vector retrieval here;
-it underperforms it everywhere, and both lose to BM25.
+On the 40 questions needing two documents, dense retrieval, graph traversal and rank fusion
+each complete **zero**. BM25 completes 3 of 40 and is the only method that completes any.
+Graph retrieval underperforms vector retrieval everywhere, and both lose to keyword search.
 
-**One development finding did not replicate.** Hybrid beat vector by +5.0 points at K=5 on
-the development set; held-out it loses by 6.2. The development report had called that "a
-direction, not a measured effect", and that caution was warranted.
+Across all 80 questions at K=5: **BM25 35, vector 26, hybrid 21, graph 6**. At K=10: 39, 30,
+29, 6.
 
-A spot-check of ten multi-document questions after the run found **six needing revision**,
-three of them defects every automated check had passed. They are deliberately left unfixed:
-two are questions BM25 completed, and correcting them after seeing the scores would edit a
-test set whose results are known. The three zero columns cannot be raised by stricter
-questions, so the central finding is unaffected; BM25's multi-document figures should be
-read as an upper bound. Seventy of the eighty questions have had no human read them.
+### Why the number is worth trusting
 
-This is also one corpus of 30 related papers, one embedding model, one budget, and a graph
-built by an extractor that recovers 2 of 6 sampled facts — so nothing here bounds what graph
-retrieval could do with better extraction. The questions are agent-authored and
-results-blinded rather than independently human-authored. Full numbers, strata, and limits:
-[held-out result](reports/held-out-result.md). Development-phase analysis:
-[project status](reports/project-status.md).
+- **Held-out questions were written by authors blind to every result.** The code refuses to
+  build a `test` bundle without an explicit opt-in, so the label cannot be acquired by
+  editing a field. The set was sealed and run **once**.
+- **A spot-check afterwards found six defective questions — and they were left unfixed.**
+  Two were questions BM25 completed; repairing them after seeing the scores would have
+  edited the headline's only non-zero figure. They are published as a limitation instead.
+- **A development finding failed to replicate** and is reported as such: fusion beat vector
+  by 5.0 points at K=5 on the development split and lost by 6.2 held-out.
+- **Everything recomputes offline.** `verify-paper-benchmark` rebuilds the metrics, context
+  selection and report from saved records with no model; every comparison here passes.
+
+### What it does not show
+
+The graph held 111 assertions from 6,996 chunks, built by an extractor recovering 2 of 6
+sampled facts — so the graph arm measures that extractor as much as the idea. BM25 beating
+dense retrieval is also a known result, demonstrated by BEIR, which is one of the 30 papers
+in this corpus. One corpus, one encoder, one budget. Seventy of the 80 held-out questions
+have had no human read them.
+
+### Start here
+
+| | |
+| --- | --- |
+| [The held-out result](reports/held-out-result.md) | the answer, the strata, and the limits |
+| [Project status](reports/project-status.md) | what exists and what is open, in one page |
+| `python scripts/study_m13.py` | a runnable walkthrough of the four ideas it rests on |
+| [CONTRIBUTIONS.md](CONTRIBUTIONS.md) | who decided what, including where AI assistance was used |
+
+Clone, install, and `python -m pytest` runs 764 tests in about 12 seconds with no network,
+API key or model download.
 
 ## Quick start
 
