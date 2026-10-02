@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GraphRAG Bench — does graph retrieval beat vector retrieval across documents?</title>
+<meta name="description" content="A retrieval benchmark over 30 research papers. Four methods, one evidence budget, an 80-question held-out set run once. The answer is negative, and here is every question it was measured on.">
+<style>
+  :root{
+    color-scheme: light;
+    --surface-1:#fcfcfb; --surface-2:#f4f3f0; --line:#e6e5e1;
+    --ink:#0b0b0b; --ink-2:#52514e; --ink-3:#8a8880;
+    --s1:#2a78d6; --s2:#eb6834; --good:#1baf7a; --bad:#e34948;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ color-scheme: dark;
+      --surface-1:#1a1a19; --surface-2:#232321; --line:#36352f;
+      --ink:#fff; --ink-2:#c3c2b7; --ink-3:#8d8c83;
+      --s1:#3987e5; --s2:#d95926; --good:#199e70; --bad:#e66767; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--surface-1);color:var(--ink);
+    font:15px/1.6 ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif}
+  .wrap{max-width:940px;margin:0 auto;padding:40px 22px 80px}
+  h1{font-size:28px;line-height:1.25;margin:0 0 14px}
+  h2{font-size:19px;margin:44px 0 12px}
+  p{margin:0 0 14px;color:var(--ink-2)}
+  .lede{font-size:17px;color:var(--ink)}
+  .verdict{font-size:19px;font-weight:600;color:var(--ink);margin:18px 0}
+  a{color:var(--s1)}
+  .chart{width:100%;height:auto;margin:18px 0;border:1px solid var(--line);border-radius:8px}
+  .grid{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));margin:18px 0}
+  .card{background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:13px 15px}
+  .card b{display:block;font-size:12.5px;color:var(--ink-3);font-weight:600;
+    text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px}
+  .card span{font-size:13.5px;color:var(--ink-2)}
+  table{border-collapse:collapse;width:100%;font-size:14px;margin:10px 0 18px}
+  th,td{text-align:right;padding:7px 10px;border-bottom:1px solid var(--line)}
+  th:first-child,td:first-child{text-align:left}
+  th{color:var(--ink-3);font-weight:600;font-size:12.5px}
+  .zero{color:var(--bad);font-weight:600}
+  .controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:14px 0}
+  select,button{font:inherit;padding:7px 11px;border:1px solid var(--line);border-radius:7px;
+    background:var(--surface-2);color:var(--ink)}
+  button{cursor:pointer}
+  .q{border:1px solid var(--line);border-radius:9px;padding:16px 18px;margin:14px 0;
+    background:var(--surface-2)}
+  .qhead{font-weight:600;color:var(--ink);margin-bottom:6px}
+  .tags{font-size:12.5px;color:var(--ink-3);margin-bottom:12px}
+  .fact{border-left:3px solid var(--s1);padding:6px 0 6px 11px;margin:8px 0;font-size:13.5px}
+  .fact em{color:var(--ink-3);font-style:normal;display:block;font-size:12.5px;margin-top:3px}
+  .m{margin:14px 0 0;border-top:1px solid var(--line);padding-top:12px}
+  .mh{display:flex;gap:9px;align-items:center;font-size:13.5px;font-weight:600;margin-bottom:7px}
+  .pill{font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:99px;
+    border:1px solid var(--line);color:var(--ink-2)}
+  .pill.ok{color:var(--good);border-color:var(--good)}
+  .pill.no{color:var(--bad);border-color:var(--bad)}
+  .hit{font-size:12.5px;color:var(--ink-2);padding:6px 0 6px 11px;border-left:2px solid var(--line)}
+  .hit.need{border-left-color:var(--good)}
+  .hit b{color:var(--ink);font-weight:600}
+  .muted{color:var(--ink-3);font-size:13px}
+  code{background:var(--surface-2);padding:1px 5px;border-radius:4px;font-size:12.5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Does graph-based retrieval beat vector retrieval when a question needs evidence from two different documents?</h1>
+
+<p class="lede">GraphRAG Bench measures it over 30 research papers. Four retrieval methods compete
+under one shared token budget, so no method wins by reading more, and only retrieval is
+scored — did the method put the required evidence in front of the model.</p>
+
+<p class="verdict">The answer, on an 80-question held-out set run once: no.</p>
+
+<img class="chart" src="held-out-result.svg" alt="Complete evidence at K=5 by method and question type. Single-document: BM25 80%, Vector 65%, Hybrid 52.5%, Graph 15%. Multi-document: BM25 7.5%, Vector 0, Hybrid 0, Graph 0.">
+
+<p>On the 40 questions needing two documents, dense retrieval, graph traversal and rank fusion
+each complete <strong>zero</strong>. BM25 completes 3 and is the only method that completes any.
+Graph retrieval underperforms vector retrieval everywhere, and both lose to keyword search.</p>
+
+<table id="agg"><thead><tr><th>Method</th><th>K=5</th><th>K=10</th>
+<th>Single-doc K=5</th><th>Multi-doc K=5</th></tr></thead><tbody></tbody></table>
+
+<h2>Why the number is worth trusting</h2>
+<div class="grid">
+  <div class="card"><b>Authored blind</b><span>The 80 held-out questions were written by authors with no access to any result. The code refuses to build a <code>test</code> bundle without an explicit opt-in.</span></div>
+  <div class="card"><b>Run once</b><span>Sealed before evaluation and reported a single time. Reusing it to pick a setting would end its held-out status.</span></div>
+  <div class="card"><b>Defects left unfixed</b><span>A later spot-check found six bad questions. Two were ones BM25 completed, so repairing them after seeing scores would edit the headline. Published as a limitation instead.</span></div>
+  <div class="card"><b>Reproducible offline</b><span>Metrics, context selection and report recompute from saved records with no model. Every comparison passes.</span></div>
+</div>
+
+<h2>Every question, and what each method actually retrieved</h2>
+<p>This is the real run, not a demo. Pick a question to see the evidence it required and the
+passages each method returned. Green means the passage was one the question needed.</p>
+
+<div class="controls">
+  <select id="filter">
+    <option value="all">All 80 questions</option>
+    <option value="multi">Needs two documents (40)</option>
+    <option value="single">Needs one document (40)</option>
+    <option value="disagree">Where methods disagree</option>
+  </select>
+  <select id="pick"></select>
+  <button id="rand">Random</button>
+</div>
+<div id="out"></div>
+
+<h2>What it does not show</h2>
+<p>The graph held 111 assertions extracted from 6,996 chunks by an extractor recovering 2 of 6
+sampled facts, so the graph arm measures that extractor as much as the idea. BM25 beating dense
+retrieval is a known result, demonstrated by BEIR — one of the 30 papers in this corpus. One
+corpus, one encoder, one budget. Seventy of the 80 questions have had no human read them.</p>
+
+<p class="muted">Run <span id="runid"></span>, split <span id="split"></span>, fingerprint
+<code id="fp"></code>. Source and full reports:
+<a href="https://github.com/KayDee6070/graphrag-bench">github.com/KayDee6070/graphrag-bench</a></p>
+
+</div>
+<script>
+const LABEL={bm25:"BM25",vector:"Vector",hybrid:"Hybrid",graph:"Graph"};
+let DATA=null;
+fetch("data.json").then(r=>r.json()).then(d=>{DATA=d;init()});
+
+function pct(v,n){return v===undefined?"—":Math.round(v*n)+"/"+n+" ("+(v*100).toFixed(1)+"%)"}
+function init(){
+  runid.textContent=DATA.run; split.textContent=DATA.split; fp.textContent=DATA.fingerprint.slice(0,16);
+  const tb=document.querySelector("#agg tbody");
+  for(const m of ["bm25","vector","hybrid","graph"]){
+    const a=DATA.aggregates, tr=document.createElement("tr");
+    const multi=a[m+"@5@documents:2"];
+    const N=DATA.question_count;
+    tr.innerHTML=`<td>${LABEL[m]}</td><td>${pct(a[m+"@5@all"],N)}</td><td>${pct(a[m+"@10@all"],N)}</td>`+
+      `<td>${pct(a[m+"@5@documents:1"],N/2)}</td>`+
+      `<td class="${multi===0?"zero":""}">${pct(multi,N/2)}</td>`;
+    tb.appendChild(tr);
+  }
+  filter.onchange=fill; pick.onchange=render; rand.onclick=()=>{
+    const o=pick.options; pick.selectedIndex=Math.floor(Math.random()*o.length); render();};
+  fill();
+}
+function visible(){
+  const f=filter.value;
+  return DATA.questions.filter(q=>{
+    if(f==="multi")return q.documents>1;
+    if(f==="single")return q.documents===1;
+    if(f==="disagree"){const v=Object.values(q.methods).map(m=>m.complete);
+      return v.some(Boolean)&&v.some(x=>!x)}
+    return true});
+}
+function fill(){
+  pick.innerHTML="";
+  for(const q of visible()){
+    const o=document.createElement("option");
+    o.value=q.id; o.textContent=q.id+" — "+q.question.slice(0,72)+(q.question.length>72?"…":"");
+    pick.appendChild(o);
+  }
+  render();
+}
+function esc(s){return s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]))}
+function render(){
+  const q=DATA.questions.find(x=>x.id===pick.value); if(!q){out.innerHTML="";return}
+  let h=`<div class="q"><div class="qhead">${esc(q.question)}</div>`+
+    `<div class="tags">${q.id} · ${q.type} · ${q.hops} hop${q.hops>1?"s":""} · `+
+    `${q.documents} document${q.documents>1?"s":""}</div>`+
+    `<p class="muted"><b>Expected answer.</b> ${esc(q.answer)}</p>`+
+    `<p class="muted" style="margin-bottom:4px"><b>Evidence it requires</b></p>`;
+  for(const f of q.facts)
+    h+=`<div class="fact">${esc(f.statement)}<em>${esc(f.paper)} — “${esc(f.quote.replace(/\n/g," ").slice(0,190))}”</em></div>`;
+  for(const m of ["bm25","vector","hybrid","graph"]){
+    const r=q.methods[m];
+    h+=`<div class="m"><div class="mh">${LABEL[m]}`+
+      `<span class="pill ${r.complete?"ok":"no"}">${r.complete?"complete":"incomplete"}</span>`+
+      `<span class="pill">coverage ${(r.coverage*100).toFixed(0)}%</span></div>`;
+    h+=r.hits.length?r.hits.map(x=>`<div class="hit${x.needed?" need":""}">`+
+      `<b>${esc(x.paper)}</b>${x.page?" p"+x.page:""} — ${esc(x.text)}</div>`).join("")
+      :`<div class="hit muted">returned nothing</div>`;
+    h+=`</div>`;
+  }
+  out.innerHTML=h+`</div>`;
+}
+</script>
+</body>
+</html>
