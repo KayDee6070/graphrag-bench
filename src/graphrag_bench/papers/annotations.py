@@ -45,9 +45,20 @@ class QuestionAnnotation(Record):
 
 
 class AnnotationBook(Record):
+    """Annotations for one catalog.
+
+    `split` defaults to `dev`, and a `test` book carries an obligation no schema can
+    enforce: it must be authored without access to any measured result, and nothing may
+    be run against it until the result is reported once. `prepare_papers` therefore
+    refuses a `test` book unless a caller opts in explicitly, so the label cannot be
+    acquired by editing one field. See docs/held-out-questions.md.
+    """
+
     catalog_id: Identifier
-    split: Literal["dev"] = "dev"
-    authorship: Literal["agent-source-authored"] = "agent-source-authored"
+    split: Literal["dev", "test"] = "dev"
+    authorship: Literal["agent-source-authored", "agent-authored-results-blinded"] = (
+        "agent-source-authored"
+    )
     review_status: Literal["pending-independent-review"] = "pending-independent-review"
     questions: tuple[QuestionAnnotation, ...] = Field(min_length=1)
 

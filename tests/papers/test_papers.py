@@ -365,3 +365,38 @@ def test_cli_prepares_verifies_and_reports_pending_review(paper_inputs, tmp_path
         == 1
     )
     assert "already exists" in capsys.readouterr().err
+
+
+def test_a_test_split_needs_an_explicit_opt_in(paper_inputs, tmp_path):
+    """The default refusal is the guard: held-out status must not come from editing a field."""
+    mutate(paper_inputs[1], lambda data: data.update(split="test"))
+
+    with pytest.raises(PaperError, match="requires an explicit opt-in"):
+        prepare(paper_inputs, tmp_path / "refused")
+
+
+def test_an_opted_in_test_split_is_prepared_and_recorded_everywhere(paper_inputs, tmp_path):
+    mutate(
+        paper_inputs[1],
+        lambda data: data.update(split="test", authorship="agent-authored-results-blinded"),
+    )
+    output = tmp_path / "held-out"
+
+    manifest = prepare_papers(
+        *paper_inputs[:3],
+        output,
+        ChunkingConfig(max_chars=512, max_units=5, overlap_units=1),
+        allow_test_split=True,
+    )
+
+    assert manifest.split == "test"
+    assert json.loads((output / "manifest.json").read_text())["split"] == "test"
+    questions = [json.loads(line) for line in (output / "questions.jsonl").open()]
+    assert {q["split"] for q in questions} == {"test"}
+    assert verify_papers(output).split == "test"
+
+
+def test_a_dev_book_still_prepares_without_the_flag(paper_inputs, tmp_path):
+    manifest = prepare(paper_inputs, tmp_path / "dev")
+
+    assert manifest.split == "dev"

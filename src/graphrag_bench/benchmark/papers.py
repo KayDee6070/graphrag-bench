@@ -67,7 +67,7 @@ class PaperExperimentManifest(Record):
     created_at: datetime
     comparison: BenchmarkConfig
     embedding: EmbeddingSpec
-    split: Literal["dev"] = "dev"
+    split: Literal["dev", "test"] = "dev"
     annotation_status: Literal["pending-independent-review"] = "pending-independent-review"
     graph_status: GraphStatus
     metrics_version: Literal["complete-facts-source-coverage-v1"] = METRICS_VERSION
@@ -89,6 +89,7 @@ class PaperInputs:
     artifacts: dict[str, bytes]
     source_hashes: dict[str, str]
     graph_status: str = "not-used"
+    split: str = "dev"
 
 
 def _needs_graph(config: BenchmarkConfig) -> bool:
@@ -138,7 +139,7 @@ def load_paper_inputs(
     """Verify artifacts before loading weights; all input labels remain development data."""
     if _needs_graph(config) != (graph_directory is not None):
         raise BenchmarkError("--graph is required exactly when graph or hybrid is selected")
-    verify_papers(bundle)
+    bundle_manifest = verify_papers(bundle)
     source = bundle / "ingestion"
     batch, _ = load_ingestion(source)
     if config.chunking != batch.config:
@@ -158,7 +159,9 @@ def load_paper_inputs(
         prefix: sha256(artifacts[f"{prefix}/manifest.json"]).hexdigest()
         for prefix, _, _ in directories
     }
-    dataset = load_benchmark(source / "documents.jsonl", bundle / "questions.jsonl", split="dev")
+    dataset = load_benchmark(
+        source / "documents.jsonl", bundle / "questions.jsonl", split=bundle_manifest.split
+    )
     return PaperInputs(
         dataset,
         CorpusIndex(batch.documents, batch.chunks),
@@ -168,6 +171,7 @@ def load_paper_inputs(
         artifacts,
         hashes,
         graph_status,
+        bundle_manifest.split,
     )
 
 
@@ -224,15 +228,23 @@ def _summary(inputs: PaperInputs, records: tuple[QuestionRun, ...]) -> Benchmark
 
 
 def _report(summary: BenchmarkSummary, config: BenchmarkConfig, graph_status: str) -> str:
+    held_out = summary.split == "test"
+    heading = "held-out" if held_out else "development"
+    standing = (
+        "These questions were authored without access to any measured result. Report this\n"
+        "run once: reusing it to choose a configuration makes the split no longer held out.\n"
+        if held_out
+        else "This is a development diagnostic; no general retrieval advantage is established.\n"
+    )
     return (
-        "# Frozen real-paper development comparison\n\n"
-        "Annotations: pending independent review. Split: dev. Held-out questions: 0.\n"
+        f"# Frozen real-paper {heading} comparison\n\n"
+        f"Annotations: pending independent review. Split: {summary.split}.\n"
         f"Strategies: {', '.join(config.strategies)}. Graph assertions, if used, are unreviewed.\n"
         f"Graph source: {GRAPH_DESCRIPTION[graph_status]}. A deterministic rule graph reports\n"
         "line-grammar extraction on prose papers; it is a floor, not a graph-method ceiling.\n"
         "Existing PDF chunks, vector rows, and graph are reused without rebuilding.\n"
-        "This is a development diagnostic; no general retrieval advantage is established.\n"
-        "Loading and artifact validation are excluded from warm retrieval timings.\n\n"
+        + standing
+        + "Loading and artifact validation are excluded from warm retrieval timings.\n\n"
         + render_report(summary)
     )
 
@@ -266,6 +278,7 @@ def run_paper_benchmark(
         created_at=datetime.now(UTC),
         comparison=config,
         embedding=provider.spec,
+        split=inputs.split,
         graph_status=inputs.graph_status,
         source_hashes=inputs.source_hashes,
         extraction_issue_count=inputs.issue_count,
@@ -387,6 +400,7 @@ def verify_paper_benchmark(directory: Path) -> BenchmarkSummary:
             or manifest.source_hashes != inputs.source_hashes
             or manifest.extraction_issue_count != inputs.issue_count
             or manifest.graph_status != inputs.graph_status
+            or manifest.split != inputs.split
         ):
             raise BenchmarkError("paper experiment input provenance mismatch")
         records = tuple(

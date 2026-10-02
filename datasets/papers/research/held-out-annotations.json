@@ -1,0 +1,2508 @@
+{
+  "catalog_id": "rag-research-corpus-v1",
+  "split": "test",
+  "authorship": "agent-authored-results-blinded",
+  "review_status": "pending-independent-review",
+  "questions": [
+    {
+      "question_id": "held-a-01",
+      "question": "RAPTOR embeds the text chunks that become the leaf nodes of its tree with one specific off-the-shelf sentence encoder. In the paper that introduced that encoder, how long does clustering 10,000 sentences with hierarchical clustering take with the original BERT, and what does the newly introduced model reduce that effort to?",
+      "question_type": "relationship",
+      "expected_answer": "RAPTOR's leaf chunks are embedded with SBERT (multi-qa-mpnet-base-cos-v1, Reimers & Gurevych 2019). The Sentence-BERT paper states that clustering 10,000 sentences with hierarchical clustering requires about 65 hours with BERT, because around 50 million sentence combinations must be computed, and that with SBERT the effort was reduced to about 5 seconds.",
+      "reasoning_hops": 2,
+      "difficulty": "medium",
+      "group_id": "held-a-raptor-sbert",
+      "rationale": "Paper A (raptor) is the only place that says which encoder produces the leaf-node embeddings (SBERT); paper B (sbert) is the only place that quantifies the 65 hours -> 5 seconds speed-up. The bridging entity SBERT is never named in the question.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "ha-raptor-leaf-encoder",
+            "statement": "RAPTOR embeds its text chunks with SBERT, a BERT-based encoder (multi-qa-mpnet-base-cos-v1, Reimers & Gurevych 2019), and those chunks plus their SBERT embeddings form the leaf nodes of its tree.",
+            "spans": [
+              {
+                "paper_id": "raptor",
+                "page": 3,
+                "quote": "These texts\nare then embedded using SBERT, a BERT-based encoder ( multi-qa-mpnet-base-cos-v1)\n(Reimers & Gurevych, 2019). The chunks and their corresponding SBERT embeddings form the\nleaf nodes of our tree structure."
+              }
+            ]
+          },
+          {
+            "fact_id": "ha-sbert-65h-5s",
+            "statement": "The Sentence-BERT paper reports that clustering 10,000 sentences with hierarchical clustering takes about 65 hours with BERT (around 50 million sentence combinations) and that SBERT reduces the effort to about 5 seconds.",
+            "spans": [
+              {
+                "paper_id": "sbert",
+                "page": 8,
+                "quote": "For exam-\nple, clustering of 10,000 sentences with hierarchi-\ncal clustering requires with BERT about 65 hours,\nas around 50 Million sentence combinations must\nbe computed. With SBERT, we were able to re-\nduce the effort to about 5 seconds."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-a-02",
+      "question": "REPLUG plugs in an existing dense retrieval model as its retriever and initializes REPLUG LSR from that same model. According to that retriever's own paper, how are the positive pairs of its unsupervised contrastive training built, and where do its negatives come from?",
+      "question_type": "relationship",
+      "expected_answer": "REPLUG uses Contriever (Izacard et al., 2022a) and initializes REPLUG LSR with it. The Contriever paper says the model uses MoCo with random cropping: positive pairs are sampled by random cropping, with tokens of each element of the pair deleted with probability 10%, and the negatives consist of elements from previous batches stored in a queue, which allows scaling to a large number of negatives; training data comes from Wikipedia and CCNet.",
+      "reasoning_hops": 2,
+      "difficulty": "medium",
+      "group_id": "held-a-replug-contriever",
+      "rationale": "Paper A (replug) identifies the retriever that REPLUG uses; the construction of its positives and negatives only exists in paper B (contriever). Neither Contriever nor MoCo is named in the question.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "ha-replug-retriever-choice",
+            "statement": "REPLUG uses the Contriever model as its retrieval model and initializes the REPLUG LSR retriever with the Contriever model.",
+            "spans": [
+              {
+                "paper_id": "replug",
+                "page": 4,
+                "quote": "Following prior\nwork (Izacard et al., 2022b), we use the Contriever (Izacard\net al., 2022a) as the retrieval model for REPLUG, as it has\ndemonstrated strong performance."
+              },
+              {
+                "paper_id": "replug",
+                "page": 4,
+                "quote": "For REPLUG LSR , we initialize the retriever with the\nContriever model (Izacard et al., 2022a)."
+              }
+            ]
+          },
+          {
+            "fact_id": "ha-contriever-crop-moco",
+            "statement": "The Contriever paper states that Contriever uses MoCo with random cropping: positive pairs are sampled using random cropping with 10% token deletion, negatives are elements from previous batches stored in a queue, and training data comes from Wikipedia and CCNet.",
+            "spans": [
+              {
+                "paper_id": "contriever",
+                "page": 6,
+                "quote": "we empirically evaluate our best retriever trained with contrastive learning, calledContriever\n(contrastive retriever), which uses MoCo with random cropping. We use a contrastive learning procedure that\ndiﬀers from ICT (Lee et al., 2019) mainly in three aspects. First, positive pairs are sampled using random\ncropping and tokens from each element of the pair are deleted with a probability of 10%."
+              },
+              {
+                "paper_id": "contriever",
+                "page": 6,
+                "quote": "Second we use\nMoCo where negatives consists of elements from previous batches stored in a queue. This allows to scale to a\nlarge number of negatives."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-a-03",
+      "question": "NV-Embed is trained directly on a 7B decoder-only LLM whose causal attention mask it removes. In that LLM's own paper, what sliding-window size and what context length are listed in its architecture table?",
+      "question_type": "relationship",
+      "expected_answer": "NV-Embed is trained from scratch on the Mistral 7B LLM. Mistral 7B's architecture table lists window_size 4096 and context_len 8192 (alongside dim 4096, 32 layers, 32 heads, 8 key/value heads and a 32000-token vocabulary).",
+      "reasoning_hops": 2,
+      "difficulty": "medium",
+      "group_id": "held-a-nvembed-mistral",
+      "rationale": "Paper A (nv-embed) is where the backbone LLM is identified and where the removal of the causal attention mask is described; paper B (mistral7b) is the only source of the window-size / context-length configuration. The question never names Mistral.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "ha-nvembed-mistral-base",
+            "statement": "NV-Embed is trained from scratch directly on the Mistral 7B LLM with publicly available data, using a new architecture that eliminates the causal attention mask and adds a latent attention layer for pooling.",
+            "spans": [
+              {
+                "paper_id": "nv-embed",
+                "page": 3,
+                "quote": "NV-Embed is trained\nfrom scratch on Mistral 7B LLM directly using public available data, and not dependent on other\nembedding model or proprietary synthetic data. Consequently, we introduce a new architecture that\neliminates unnecessary causal attention mask and further improves the sequence pooling mechanism\nwith latent attention layer."
+              }
+            ]
+          },
+          {
+            "fact_id": "ha-mistral-arch-table",
+            "statement": "Mistral 7B's model-architecture table lists window_size 4096 and context_len 8192.",
+            "spans": [
+              {
+                "paper_id": "mistral7b",
+                "page": 2,
+                "quote": "n_kv_heads 8\nwindow_size 4096\ncontext_len 8192\nvocab_size 32000\nTable 1: Model architecture.\nMistral 7B is based on a transformer architecture [ 27]. The main\nparameters of the architecture are summarized in Table 1."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-a-04",
+      "question": "The multilingual E5 technical report says its training procedure adheres to the recipe of an earlier English embedding-model family instead of restating that recipe. In the paper that describes that earlier recipe, what filtering technique is applied to the mined text-pair corpus, and how many pairs survive it for contrastive pre-training?",
+      "question_type": "relationship",
+      "expected_answer": "Multilingual E5 follows the English E5 recipe (Wang et al., 2022). The E5 paper applies a consistency-based filter: a model is first trained on the 1.3B noisy text pairs and then used to rank each pair against a pool of 1 million random passages, keeping a pair only if it falls in the top-k ranked lists (k = 2); after this step about 270M text pairs remain for contrastive pre-training.",
+      "reasoning_hops": 2,
+      "difficulty": "medium",
+      "group_id": "held-a-me5-e5",
+      "rationale": "Paper A (multilingual-e5) points to the English E5 recipe without describing it; the consistency-based filter and the 1.3B -> ~270M reduction are only in paper B (e5). The question names neither E5 nor CCPairs.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "ha-me5-follows-e5-recipe",
+            "statement": "The multilingual E5 report states that its training procedure adheres to the English E5 model recipe: contrastive pre-training on 1 billion multilingual text pairs followed by fine-tuning on a combination of labeled datasets.",
+            "spans": [
+              {
+                "paper_id": "multilingual-e5",
+                "page": 1,
+                "quote": "The\ntraining procedure adheres to the English E5\nmodel recipe, involving contrastive pre-training\non 1 billion multilingual text pairs, followed\nby fine-tuning on a combination of labeled\ndatasets."
+              }
+            ]
+          },
+          {
+            "fact_id": "ha-e5-consistency-filter",
+            "statement": "The E5 paper proposes a consistency-based data filter: a model trained on the 1.3B noisy pairs ranks each pair against 1 million random passages and keeps it only if it is in the top-k (k = 2) list, leaving about 270M text pairs for contrastive pre-training.",
+            "spans": [
+              {
+                "paper_id": "e5",
+                "page": 3,
+                "quote": "Consistency-based filter To further improve data quality and make training costs manageable, we\npropose a consistency-based data filtering technique: a model is first trained on the 1.3B noisy text\npairs, and then used to rank each pair against a pool of 1 million random passages. A text pair is kept\nonly if it falls in the top-k ranked lists."
+              },
+              {
+                "paper_id": "e5",
+                "page": 3,
+                "quote": "Here we set k = 2 based on manual inspection of data quality. After this\nstep, we end up with∼ 270M text pairs for contrastive pre-training."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-a-05",
+      "question": "The E5 paper claims that, in the zero-shot setting, it is the first model to outperform the strong BM25 baseline on a heterogeneous retrieval benchmark without using any labeled data. According to the paper that introduced that benchmark, how many retrieval datasets does it comprise and how many different retrieval tasks do they cover?",
+      "question_type": "relationship",
+      "expected_answer": "The benchmark is BEIR. The BEIR paper says it comprises 18 retrieval datasets and covers nine different retrieval tasks: fact checking, citation prediction, duplicate question retrieval, argument retrieval, news retrieval, question answering, tweet retrieval, bio-medical IR, and entity retrieval.",
+      "reasoning_hops": 2,
+      "difficulty": "medium",
+      "group_id": "held-a-e5-beir",
+      "rationale": "Paper A (e5) is needed to learn which benchmark the zero-shot BM25 claim refers to; paper B (beir) supplies the dataset and task counts. The question does not name BEIR.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "ha-e5-beir-bm25-claim",
+            "statement": "E5's abstract claims that in zero-shot settings E5 is the first model that outperforms the strong BM25 baseline on the BEIR retrieval benchmark without using any labeled data.",
+            "spans": [
+              {
+                "paper_id": "e5",
+                "page": 1,
+                "quote": "For zero-shot settings, E5 is the first model that outperforms\nthe strong BM25 baseline on the BEIR retrieval benchmark without using any\nlabeled data."
+              }
+            ]
+          },
+          {
+            "fact_id": "ha-beir-18-datasets-9-tasks",
+            "statement": "The BEIR paper states that BEIR comprises 18 retrieval datasets and includes nine different retrieval tasks (fact checking, citation prediction, duplicate question retrieval, argument retrieval, news retrieval, question answering, tweet retrieval, bio-medical IR and entity retrieval).",
+            "spans": [
+              {
+                "paper_id": "beir",
+                "page": 2,
+                "quote": "In this work, we present a novel robust and heterogeneous benchmark called BEIR (Benchmarking\nIR), comprising of 18 retrieval datasets for comparison and evaluation of model generalization."
+              },
+              {
+                "paper_id": "beir",
+                "page": 2,
+                "quote": "include nine different retrieval tasks: Fact checking, citation prediction, duplicate question retrieval,\nargument retrieval, news retrieval, question answering, tweet retrieval, bio-medical IR, and entity\nretrieval."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-a-06",
+      "question": "One of the two branching pipelines in FlashRAG processes each retrieved passage in parallel and combines the generation probabilities of all of them. In the paper that originally proposed that method, how is its dense retriever further trained, and which component supplies the supervision?",
+      "question_type": "relationship",
+      "expected_answer": "The pipeline is REPLUG. The REPLUG paper proposes REPLUG LSR (REPLUG with LM-Supervised Retrieval), which adapts the retriever by using the language model itself to provide supervision about which documents should be retrieved: the dense retriever is trained by minimizing the KL divergence between the retrieval likelihood and the LM likelihood, while the LM parameters stay fixed.",
+      "reasoning_hops": 2,
+      "difficulty": "medium",
+      "group_id": "held-a-flashrag-replug",
+      "rationale": "Paper A (flashrag) describes the pipeline only by its mechanics and category; the training scheme of the retriever (LM-supervised retrieval, KL objective) is only in paper B (replug). The question avoids naming REPLUG.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "ha-flashrag-branching-replug",
+            "statement": "FlashRAG supports two advanced branching methods, the REPLUG pipeline and the SuRe pipeline, and its REPLUG pipeline processes each retrieved passage in parallel and combines the generation probabilities.",
+            "spans": [
+              {
+                "paper_id": "flashrag",
+                "page": 4,
+                "quote": "Currently, FlashRAG supports\ntwo advanced branching methods: REPLUG pipeline [97] and SuRe pipeline [98]. The REPLUG\npipeline processes each retrieved passage in parallel and combines the generation probabilities from"
+              }
+            ]
+          },
+          {
+            "fact_id": "ha-replug-lsr-training",
+            "statement": "The REPLUG paper proposes REPLUG LSR, which adapts REPLUG's retriever by using the LM itself to supply supervision about which documents should be retrieved, training the dense retriever by minimizing the KL divergence between the retrieval likelihood and the language-model likelihood.",
+            "spans": [
+              {
+                "paper_id": "replug",
+                "page": 4,
+                "quote": "4. REPLUG LSR: Training the Dense\nRetriever\nInstead of relying only on existing neural dense retrieval\nmodels (Karpukhin et al., 2020a; Izacard et al., 2022a; Su\net al., 2022), we further propose REPLUG LSR (REPLUG\nwith LM-Supervised Retrieval), which adapts the retriever\nin REPLUG by using the LM itself to provide supervision\nabout which documents should be retrieved."
+              },
+              {
+                "paper_id": "replug",
+                "page": 4,
+                "quote": "Given the input context x and the corresponding ground\ntruth continuation y, we compute the retrieval likelihood\nand the language model likelihood. The dense retriever is\ntrained by minimizing the KL divergence between these two\ndistributions:"
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-a-07",
+      "question": "With GPT3, IRCoT's interleaved retrieval improves its recall metric over one-step retrieval by 22.6 points, the largest gain among the four multi-step QA datasets it evaluates on. In the paper that introduced that particular dataset, what does the extra 'evidence' annotation attached to each sample consist of, and which four question types does the dataset contain?",
+      "question_type": "relationship",
+      "expected_answer": "The dataset is 2WikiMultihopQA. Its paper says the evidence information in each sample is a set of triples, each triple being structured data of the form (subject entity, property, object entity) obtained from Wikidata, and that the dataset has four question types: comparison, inference, compositional, and bridge comparison.",
+      "reasoning_hops": 2,
+      "difficulty": "medium",
+      "group_id": "held-a-ircot-2wiki",
+      "rationale": "Paper A (ircot) gives the per-dataset gains in order, which is what identifies the 22.6-point dataset as 2WikiMultihopQA; paper B (2wikimultihop) is the only source for the evidence-triple annotation and the four question types. The question names neither.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "ha-ircot-gpt3-recall-gains",
+            "statement": "IRCoT reports recall gains over one-step retrieval on HotpotQA, 2WikiMultihopQA, MuSiQue and IIRC of 7.9, 14.3, 3.5 and 10.2 points with Flan-T5-XXL and of 11.3, 22.6, 12.5 and 21.2 points respectively with GPT3, so the 22.6-point gain corresponds to 2WikiMultihopQA.",
+            "spans": [
+              {
+                "paper_id": "ircot",
+                "page": 6,
+                "quote": "For Flan-T5-XXL, IRCoT im-\nproves our recall metric relative to one-step re-\ntrieval, on HotpotQA by 7.9, on 2WikiMultihopQA\nby 14.3, on MuSiQue by 3.5, and on IIRC by 10.2\npoints. For GPT3, this improvement is by 11.3, 22.6,\n12.5, and 21.2 points, respectively."
+              }
+            ]
+          },
+          {
+            "fact_id": "ha-2wiki-evidence-and-types",
+            "statement": "The paper pinned as 2wikimultihop states that the evidence information in each sample of its dataset is a set of triples of the form (subject entity, property, object entity) obtained from Wikidata, and that the dataset has four question types: comparison, inference, compositional and bridge comparison.",
+            "spans": [
+              {
+                "paper_id": "2wikimultihop",
+                "page": 2,
+                "quote": "Evidence information in our dataset is a set of triples, where each triple is a structured\ndata (subject entity, property, object entity)obtained from the Wikidata (see Figure 1 for an example)."
+              },
+              {
+                "paper_id": "2wikimultihop",
+                "page": 2,
+                "quote": "Our dataset has four types of questions: comparison, inference, compositional, and bridge comparison."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-a-08",
+      "question": "LightRAG compares against a graph-enhanced RAG baseline that aggregates nodes into communities and produces a community report to capture global information. In that baseline's own paper, which community-detection algorithm builds those communities, and how is the hierarchy obtained?",
+      "question_type": "relationship",
+      "expected_answer": "The baseline is GraphRAG. Its paper says the pipeline uses Leiden community detection (Traag et al., 2019) in a hierarchical manner, recursively detecting sub-communities inside each detected community until reaching leaf communities that can no longer be partitioned.",
+      "reasoning_hops": 2,
+      "difficulty": "medium",
+      "group_id": "held-a-lightrag-graphrag",
+      "rationale": "Paper A (lightrag) describes the baseline by its behaviour (communities plus community reports) and that is what identifies GraphRAG; the Leiden algorithm and the recursive hierarchy are only stated in paper B (graphrag). Neither Leiden nor GraphRAG is named in the question.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "ha-lightrag-graphrag-baseline",
+            "statement": "LightRAG's baseline GraphRAG (Edge et al., 2024) is described as a graph-enhanced RAG system that uses an LLM to extract entities and relationships as nodes and edges, aggregates nodes into communities and produces a community report to capture global information.",
+            "spans": [
+              {
+                "paper_id": "lightrag",
+                "page": 6,
+                "quote": "• GraphRAG (Edge et al., 2024): This is a graph-enhanced RAG system that utilizes an LLM to\nextract entities and relationships from the text, representing them as nodes and edges. It generates\ncorresponding descriptions for these elements, aggregates nodes into communities, and produces a\ncommunity report to capture global information."
+              }
+            ]
+          },
+          {
+            "fact_id": "ha-graphrag-leiden-hierarchy",
+            "statement": "The pipeline in the paper pinned as graphrag uses Leiden community detection (Traag et al., 2019) hierarchically, recursively detecting sub-communities within each detected community until reaching leaf communities that can no longer be partitioned.",
+            "spans": [
+              {
+                "paper_id": "graphrag",
+                "page": 5,
+                "quote": "In our pipeline, we use Leiden community\ndetection (Traag et al., 2019) in a hierarchical manner, recursively detecting sub-communities within\neach detected community until reaching leaf communities that can no longer be partitioned."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-a-09",
+      "question": "GraphRAG's second evaluation corpus is a benchmark dataset of news articles published between September 2013 and December 2023 that it takes from another paper. In that benchmark's own paper, which four query types are defined, and what is the fourth one for?",
+      "question_type": "relationship",
+      "expected_answer": "The corpus comes from MultiHop-RAG. That paper categorizes multi-hop queries into four types: inference query, comparison query, temporal query and null query; the null query is one whose answer cannot be derived from the knowledge base, and it is included to assess whether an LLM hallucinates an answer when the retrieved text lacks relevance.",
+      "reasoning_hops": 2,
+      "difficulty": "medium",
+      "group_id": "held-a-graphrag-multihoprag",
+      "rationale": "Paper A (graphrag) is the only place that says its news-article corpus is taken from Tang and Yang (2024); the four query types and the purpose of the null query are only in paper B (multihop-rag). The question identifies the dataset by its date range, not its name.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "ha-graphrag-news-corpus-source",
+            "statement": "GraphRAG's news-article evaluation corpus consists of news articles published from September 2013 to December 2023 taken from Tang and Yang (2024) and divided into 3197 600-token chunks with 100-token overlaps.",
+            "spans": [
+              {
+                "paper_id": "graphrag",
+                "page": 8,
+                "quote": "News articles. A benchmark dataset comprised of news articles published from September 2013\nto December 2023 in a range of categories, including entertainment, business, sports, technology,\nhealth, and science (Tang and Yang, 2024). The corpus is divided into 3197 × 600-token text\nchunks, with 100-token overlaps between chunks"
+              }
+            ]
+          },
+          {
+            "fact_id": "ha-multihoprag-four-query-types",
+            "statement": "The MultiHop-RAG paper categorizes multi-hop queries into four types - inference, comparison, temporal and null - and includes the null query, whose answer cannot be derived from the knowledge base, to assess whether an LLM hallucinates when the retrieved text lacks relevance.",
+            "spans": [
+              {
+                "paper_id": "multihop-rag",
+                "page": 2,
+                "quote": "we introduce MultiHop-RAG. To our knowledge,\nMultiHop-RAG is one of the first RAG datasets\nfocusing specifically on multi-hop queries."
+              },
+              {
+                "paper_id": "multihop-rag",
+                "page": 2,
+                "quote": "we first categorize\nmulti-hop queries into four types: Inference query,\nComparison query , Temporal query , and Null\nquery."
+              },
+              {
+                "paper_id": "multihop-rag",
+                "page": 2,
+                "quote": "The Null query represents a scenario where the\nquery cannot be derived from the knowledge base.\nThis category is crucial for assessing whether an\nLLM might hallucinate an answer to a multi-hop\nquery when the retrieved text lacks relevance."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-a-10",
+      "question": "MultiHop-RAG's first experiment compares several embedding models for retrieving evidence; one of them is cited to Su et al. (2023). According to that model's own paper, which collection of datasets is it trained on, how many datasets does that collection hold, and what extra input makes its embeddings task-aware?",
+      "question_type": "relationship",
+      "expected_answer": "The model is instructor-large, i.e. INSTRUCTOR. Its paper says INSTRUCTOR is trained on MEDI, a new collection of 330 text embedding datasets newly annotated with human-written task instructions, using a contrastive loss, and that every input is embedded together with its task instruction so that one embedder produces task- and domain-aware embeddings without further training.",
+      "reasoning_hops": 2,
+      "difficulty": "medium",
+      "group_id": "held-a-multihoprag-instructor",
+      "rationale": "Paper A (multihop-rag) is where the reader learns that the Su et al. (2023) entry in the embedding comparison is instructor-large; the MEDI collection, the 330 datasets and the instruction conditioning are only in paper B (instructor).",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "ha-multihoprag-embedding-list",
+            "statement": "MultiHop-RAG's embedding-model comparison tests ada-embeddings, voyage-02, llm-embedder, bge-large-en-v1.5, jina-embeddings-v2-base-en, e5-base-v2 and instructor-large (Su et al., 2023).",
+            "spans": [
+              {
+                "paper_id": "multihop-rag",
+                "page": 6,
+                "quote": "In this experiment, we test a variety set of em-\nbedding models, including the ada-embeddings by\nOpenAI (text-embedding-ada-002, text-search-ada-\nquery-001), voyage-02 3, llm-embedder (Zhang\net al., 2023), bge-large-en-v1.5 (Xiao et al., 2023),\njina-embeddings-v2-base-en (Günther et al., 2023),\ne5-base-v2 (Wang et al., 2022), and instructor-large\n(Su et al., 2023)."
+              }
+            ]
+          },
+          {
+            "fact_id": "ha-instructor-medi-330",
+            "statement": "The INSTRUCTOR paper states that INSTRUCTOR is trained on MEDI, a new collection of 330 text embedding datasets newly annotated with human-written task instructions, with a contrastive loss over all datasets.",
+            "spans": [
+              {
+                "paper_id": "instructor",
+                "page": 2,
+                "quote": "INSTRUCT OR is trained on MEDI,\nour new collection of 330 text embedding datasets\nnewly annotated with human-written task instruc-\ntions (§2.3). We train INSTRUCT OR with a con-\ntrastive loss over all datasets that maximizes the\nsimilarity between semantically related text pairs\nwhile minimizing unrelated pairs."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-a-11",
+      "question": "ModernBERT trains its multi-vector retrieval models with a setup it describes as an update on an earlier retriever's training procedure (Santhanam et al., 2022). In that earlier retriever's own paper, what mechanism shrinks the space footprint of late interaction, and by what factor?",
+      "question_type": "relationship",
+      "expected_answer": "The earlier retriever is ColBERTv2. Its paper says it uses an aggressive residual compression mechanism that reduces the space footprint of late interaction by 6-10x while preserving quality, giving a footprint competitive with typical single-vector models.",
+      "reasoning_hops": 2,
+      "difficulty": "medium",
+      "group_id": "held-a-modernbert-colbertv2",
+      "rationale": "Paper A (modernbert) is where the cited training procedure is tied to ColBERTv2; the residual-compression mechanism and the 6-10x figure are only in paper B (colbert2). The question does not name ColBERTv2.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "ha-modernbert-colbertv2-setup",
+            "statement": "ModernBERT adopts the training setup of JaColBERTv2.5, an update on the ColBERTv2 (Santhanam et al., 2022) training procedure, with batch size 16 and 5% learning-rate warmup.",
+            "spans": [
+              {
+                "paper_id": "modernbert",
+                "page": 5,
+                "quote": "We adopt the training setup of JaCol-\nBERTv2.5 (Clavié, 2024), an update on the\nColBERTv2 (Santhanam et al., 2022) training\nprocedure, with a batch size of 16 and a 5%\nlearning rate warmup."
+              }
+            ]
+          },
+          {
+            "fact_id": "ha-colbertv2-residual-6-10x",
+            "statement": "The ColBERTv2 paper states that it uses a residual compression mechanism to reduce the space footprint of late interaction by 6-10x while preserving quality, so ColBERTv2 reaches state-of-the-art quality with a footprint competitive with single-vector models.",
+            "spans": [
+              {
+                "paper_id": "colbert2",
+                "page": 2,
+                "quote": "then uses a residual compression mechanism (§3.3)\nto reduce the space footprint of late interaction by\n6–10× while preserving quality. As a result, Col-\nBERTv2 establishes state-of-the-art retrieval qual-\nity both within and outside its training domain with\na competitive space footprint with typical single-\nvector models."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-a-12",
+      "question": "ModernBERT trains its multi-vector retrievers by distilling the scores of a teacher embedding model cited to Chen et al. (2024). In that teacher model's own paper, which retrieval functionalities are assigned to which parts of its output, and what training framework lets them reinforce one another?",
+      "question_type": "relationship",
+      "expected_answer": "The teacher is BGE-M3 / M3-Embedding. Its paper proposes a self-knowledge distillation framework in which the multiple retrieval functionalities are jointly learned and mutually reinforced: the [CLS] embedding is used for dense retrieval while embeddings from the other tokens are used for sparse retrieval and multi-vector retrieval, and the relevance scores from the different retrieval functions are integrated into a teacher signal used for knowledge distillation.",
+      "reasoning_hops": 2,
+      "difficulty": "medium",
+      "group_id": "held-a-modernbert-bgem3",
+      "rationale": "Paper A (modernbert) is where the teacher model used for distillation is identified; its three retrieval functionalities and the self-knowledge-distillation framework are only described in paper B (bge-m3).",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "ha-modernbert-bgem3-teacher",
+            "statement": "ModernBERT's multi-vector models are trained on 810k MS-Marco samples with teacher scores from BGE-M3 (Chen et al., 2024) using the PyLate library.",
+            "spans": [
+              {
+                "paper_id": "modernbert",
+                "page": 5,
+                "quote": "Models are trained\non 810k samples from MS-Marco (Bajaj et al.,\n2016) and teacher scores from BGE-M3 (Chen\net al., 2024), using the PyLate library (Chaffin and\nSourty, 2024)."
+              }
+            ]
+          },
+          {
+            "fact_id": "ha-bgem3-self-distillation",
+            "statement": "The M3-Embedding (BGE-M3) paper proposes a self-knowledge-distillation framework in which the [CLS] embedding is used for dense retrieval while other token embeddings are used for sparse and multi-vector retrieval, and the relevance scores of the different retrieval functions are integrated as the teacher signal.",
+            "spans": [
+              {
+                "paper_id": "bge-m3",
+                "page": 2,
+                "quote": "Firstly, we propose a novelself knowl-\nedge distillationframework, where the multiple\nretrieval functionalities can be jointly learned and\nmutually reinforced. In M3-Embedding, the [CLS]\nembedding is used for dense retrieval, while embed-\ndings from other tokens are used for sparse retrieval\nand multi-vector retrieval."
+              },
+              {
+                "paper_id": "bge-m3",
+                "page": 2,
+                "quote": "Thus, we integrate the relevance scores\nfrom different retrieval functions as the teacher\nsignal, which is used to enhance the learning pro-\ncess via knowledge distillation."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-a-13",
+      "question": "ColBERTv2's related work describes a family of sparse retrieval models that produce a sparse vocabulary-level vector with one dimension per token and that it treats as a central point of comparison. In the paper that introduced the first model of that family, which two ingredients produce the highly sparse representations, and how many training stages does the approach need?",
+      "question_type": "relationship",
+      "expected_answer": "The family is SPLADE. The SPLADE paper presents a first-stage ranker based on explicit sparsity regularization and a log-saturation effect on term weights (a logarithmic activation plus sparse regularization), which yields highly sparse representations, and states that the approach is simple and trained end-to-end in a single stage; the sparsity regularization can also be tuned to trade FLOPs against effectiveness.",
+      "reasoning_hops": 2,
+      "difficulty": "medium",
+      "group_id": "held-a-colbertv2-splade",
+      "rationale": "Paper A (colbert2) identifies the sparse family it compares against; the sparsity regularization, log-saturation and single-stage end-to-end training are only in paper B (splade). The question never names SPLADE.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "ha-colbertv2-splade-family",
+            "statement": "ColBERTv2's related work says SPLADE and SPLADEv2 produce a sparse vocabulary-level vector that keeps the term-level decomposition of late interaction with one dimension per token, and that SPLADEv2 is a central point of comparison in its experiments.",
+            "spans": [
+              {
+                "paper_id": "colbert2",
+                "page": 2,
+                "quote": "To\nproduce scalar weights, SPLADE (Formal et al.,\n2021b) and SPLADEv2 (Formal et al., 2021a) pro-\nduce a sparse vocabulary-level vector that retains\nthe term-level decomposition of late interaction\nwhile simplifying the storage into one dimension\nper token."
+              },
+              {
+                "paper_id": "colbert2",
+                "page": 2,
+                "quote": "SPLADEv2 has been shown\nto be highly effective, within and across domains,\nand it is a central point of comparison in the exper-\niments we report on in this paper."
+              }
+            ]
+          },
+          {
+            "fact_id": "ha-splade-sparsity-single-stage",
+            "statement": "The SPLADE paper presents a first-stage ranker based on explicit sparsity regularization and a log-saturation effect on term weights, trained end-to-end in a single stage, and names the model SPLADE (based on a logarithmic activation and sparse regularization).",
+            "spans": [
+              {
+                "paper_id": "splade",
+                "page": 1,
+                "quote": "In this work, we present\na new first-stage ranker based on explicit sparsity regularization\nand a log-saturation effect on term weights, leading to highly sparse\nrepresentations and competitive results with respect to state-of-\nthe-art dense and sparse methods. Our approach is simple, trained\nend-to-end in a single stage."
+              },
+              {
+                "paper_id": "splade",
+                "page": 1,
+                "quote": "we propose the SParse Lexical AnD Ex-\npansion (SPLADE) model, based on a logarithmic activation and\nsparse regularization."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-a-14",
+      "question": "ARES criticizes an earlier open-source model-based RAG evaluation framework for relying on a fixed set of heuristically hand-written prompts. In that framework's own paper, which dataset did its authors build in order to check their metrics against human judgments, and how was it constructed?",
+      "question_type": "relationship",
+      "expected_answer": "The framework is Ragas. Because no suitable public dataset existed, its authors created WikiEval: they first selected 50 Wikipedia pages covering events that have happened since the start of 2022, prioritising pages with recent edits, and then used ChatGPT to suggest a question answerable from each page, producing question-context-answer triples with human judgments.",
+      "reasoning_hops": 2,
+      "difficulty": "medium",
+      "group_id": "held-a-ares-ragas",
+      "rationale": "Paper A (ares) identifies the criticized framework; the WikiEval dataset and its 50 recent Wikipedia pages are only described in paper B (ragas). The question does not name Ragas or WikiEval.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "ha-ares-critique-of-ragas",
+            "statement": "ARES describes the open-source RAGAS framework (James and Es, 2023) as prompting an LM to evaluate relevance of retrieved information and faithfulness and accuracy of generated responses, and criticizes such strategies for relying on a fixed set of heuristically hand-written prompts.",
+            "spans": [
+              {
+                "paper_id": "ares",
+                "page": 1,
+                "quote": "For instance, the open-source RAGAS\nframework (James and Es, 2023) prompts an LM\nfor evaluating the relevance of retrieved informa-\ntion and the faithfulness and accuracy of generated\nresponses. Unfortunately, such strategies currently\nrely for evaluation on a fixed set of heuristically\nhand-written prompts, offering little adaptability\nto various evaluation contexts and no guarantees\nabout quality."
+              }
+            ]
+          },
+          {
+            "fact_id": "ha-ragas-wikieval",
+            "statement": "The Ragas paper says its authors created a new dataset called WikiEval, built by first selecting 50 Wikipedia pages covering events that have happened since the start of 2022, because they were not aware of any publicly available dataset of human-annotated question-context-answer triples.",
+            "spans": [
+              {
+                "paper_id": "ragas",
+                "page": 4,
+                "quote": "Since we are not\naware of any publicly available datasets that could\nbe used for this purpose, we created a new dataset,\nwhich we refer to as WikiEval4. To construct the\ndataset, we first selected 50 Wikipedia pages cov-\nering events that have happened since the start of\n2022"
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-a-15",
+      "question": "In RAGChecker's meta-evaluation the strongest baseline metric is an 'Answer Similarity' metric that comes from an earlier RAG evaluation framework and is backed by text-embedding-ada-002. In that framework's own paper, how is its faithfulness score computed?",
+      "question_type": "relationship",
+      "expected_answer": "The framework is Ragas. In the Ragas paper, faithfulness is estimated by first using an LLM to extract a set of statements S(as(q)) from the answer (decomposing long sentences into shorter assertions) and then checking each statement against the context; the final faithfulness score is F = |V| / |S|, where |V| is the number of statements supported according to the LLM and |S| is the total number of statements.",
+      "reasoning_hops": 2,
+      "difficulty": "medium",
+      "group_id": "held-a-ragchecker-ragas",
+      "rationale": "Paper A (ragchecker) is the only place that names the best-performing baseline metric and its backbone; the statement-extraction procedure and the F = |V|/|S| formula are only in paper B (ragas). The question avoids naming Ragas.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "ha-ragchecker-best-baseline",
+            "statement": "RAGChecker reports that among baseline metrics the Answer Similarity metric of RAGAS, based on the stronger backbone model text-embedding-ada-002, shows the best performance.",
+            "spans": [
+              {
+                "paper_id": "ragchecker",
+                "page": 7,
+                "quote": "Among other baseline metrics, Answer Similarity of RAGAS, which\nis based on the stronger backbone model text-embedding-ada-002 [28], shows the best performance."
+              }
+            ]
+          },
+          {
+            "fact_id": "ha-ragas-faithfulness-formula",
+            "statement": "The Ragas paper computes faithfulness by using an LLM to extract a set of statements from the answer and then scoring F = |V|/|S|, where |V| is the number of statements supported according to the LLM and |S| is the total number of statements.",
+            "spans": [
+              {
+                "paper_id": "ragas",
+                "page": 3,
+                "quote": "To estimate faithfulness, we first use an LLM\nto extract a set of statements, S(as(q)). The aim\nof this step is to decompose longer sentences into\nshorter and more focused assertions."
+              },
+              {
+                "paper_id": "ragas",
+                "page": 3,
+                "quote": "The final faithfulness score, F , is then computed\nas F = |V|\n|S| , where |V | is the number of statements\nthat were supported according to the LLM and |S|\nis the total number of statements."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-a-16",
+      "question": "Self-RAG uses one off-the-shelf dense retriever by default for its retriever model R. In that retriever's own paper, how does its fully unsupervised version compare with BM25 on the BEIR benchmark?",
+      "question_type": "relationship",
+      "expected_answer": "Self-RAG's default retriever is Contriever-MS MARCO. The Contriever paper reports that on the BEIR benchmark its unsupervised model outperforms BM25 on 11 out of 15 datasets for Recall@100.",
+      "reasoning_hops": 2,
+      "difficulty": "medium",
+      "group_id": "held-a-selfrag-contriever",
+      "rationale": "Paper A (self-rag) names the off-the-shelf retriever it uses; the BEIR comparison against BM25 (11 of 15 datasets at Recall@100) is only in paper B (contriever). The question does not name Contriever.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "ha-selfrag-retriever-default",
+            "statement": "Self-RAG uses off-the-shelf Contriever-MS MARCO (Izacard et al., 2022a) as its retriever model R by default and retrieves up to ten documents per input.",
+            "spans": [
+              {
+                "paper_id": "self-rag",
+                "page": 7,
+                "quote": "For the retriever modelR, we\nuse off-the-shelf Contriever-MS MARCO (Izacard et al., 2022a) by default and retrieve up to ten\ndocuments for each input."
+              }
+            ]
+          },
+          {
+            "fact_id": "ha-contriever-beir-bm25",
+            "statement": "The paper pinned as contriever reports that on the BEIR benchmark its unsupervised model outperforms BM25 on 11 out of 15 datasets for Recall@100.",
+            "spans": [
+              {
+                "paper_id": "contriever",
+                "page": 1,
+                "quote": "On the\nBEIR benchmark our unsupervised model outperforms BM25 on 11 out of 15 datasets for\nthe Recall@100."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-a-17",
+      "question": "REPLUG contrasts its black-box setting with a prior retrieval-augmented language model that changes the decoder-only architecture to incorporate retrieved texts and pretrains the language model from scratch. In that prior model's own paper, which module incorporates the retrieved text, and what model performs the retrieval?",
+      "question_type": "relationship",
+      "expected_answer": "The prior model is RETRO. Its paper says RETRO uses a chunked cross-attention module to incorporate the retrieved text, with time complexity linear in the amount of retrieved data, and that retrieval is based on a pre-trained frozen BERT model, which removes the need for training and updating a retriever network.",
+      "reasoning_hops": 2,
+      "difficulty": "medium",
+      "group_id": "held-a-replug-retro",
+      "rationale": "Paper A (replug) describes the prior approach only by its properties (architecture change plus pretraining from scratch), which is what points to RETRO; the chunked cross-attention module and the frozen BERT retriever are only in paper B (retro).",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "ha-replug-vs-retro",
+            "statement": "REPLUG states that RETRO (Borgeaud et al., 2022) changes the decoder-only architecture to incorporate retrieved texts and pretrains the language model from scratch, which requires updating model parameters and cannot be applied to black-box LMs.",
+            "spans": [
+              {
+                "paper_id": "replug",
+                "page": 2,
+                "quote": "while RETRO (Borgeaud et al., 2022) changes the decoder-\nonly architecture to incorporate retrieved texts and pretrains\nthe language model from scratch. Both methods require\nupdating the model parameters through gradient descent,\nwhich cannot be applied to black-box LMs."
+              }
+            ]
+          },
+          {
+            "fact_id": "ha-retro-cca-frozen-bert",
+            "statement": "The RETRO paper states that it uses a chunked cross-attention module to incorporate the retrieved text, with time complexity linear in the amount of retrieved data, and that retrieving with a pre-trained frozen BERT model works at scale, removing the need for training and updating a retriever network.",
+            "spans": [
+              {
+                "paper_id": "retro",
+                "page": 2,
+                "quote": "a retrieval-enhanced autoregressive language model (§2.2). We use a\nchunked cross-attention module to incorporate the retrieved text (§2.4), with time complexity\nlinear in the amount of retrieved data. We show that retrieving based on a pre-trained frozen\nB/e.sc /r.sc/t.scmodel (§2.3) works at scale, removing the need for training and updating a retriever\nnetwork."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-a-18",
+      "question": "Nomic Embed argues that the best open-source long-context embedding model available as of October 2024 fails to surpass OpenAI's text-embedding-ada-002. What does that model's own paper claim about its performance relative to text-embedding-ada-002, and what input length does it support?",
+      "question_type": "relationship",
+      "expected_answer": "The model is jina-embeddings-v2. Its own paper claims that Jina Embeddings v2 is capable of accommodating up to 8192 tokens and that it not only achieves state-of-the-art performance on a range of embedding tasks in the MTEB benchmark but also matches the performance of OpenAI's proprietary text-embedding-ada-002 model - a stronger claim than Nomic Embed's assessment.",
+      "reasoning_hops": 2,
+      "difficulty": "medium",
+      "group_id": "held-a-nomic-jina2",
+      "rationale": "Paper A (nomic) is where the unnamed-in-question model is identified as the leading open-source long-context model and judged not to surpass ada-002; paper B (jina2) is the only place its own matching-ada-002 claim and 8192-token limit appear. The two papers disagree, which is exactly what the bridge exposes.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "ha-nomic-jina-vs-ada",
+            "statement": "Nomic Embed states that as of October 2024 the top-performing open-source long-context embedding models are jina-embedding-v2-base-en and E5-Mistral-7b-instruct, and that jina-embedding-v2-base does not surpass OpenAI's text-embedding-ada-002.",
+            "spans": [
+              {
+                "paper_id": "nomic",
+                "page": 1,
+                "quote": "As of October 2024, the top-performing open-source long con text embedding models are jina-embedding-\nv2-base-en (Günther et al., 2024) and E5-Mistral-7b-instr uct (Wang et al., 2023b). Unfortunately, jina-\nembedding-v2-base does not surpass OpenAI’s text-embeddi ng-ada-002 (Neelakantan et al., 2022) (see Table\n1)."
+              }
+            ]
+          },
+          {
+            "fact_id": "ha-jina2-matches-ada",
+            "statement": "The Jina Embeddings v2 paper claims the model accommodates up to 8192 tokens and matches the performance of OpenAI's proprietary text-embedding-ada-002 model while reaching state-of-the-art performance on MTEB embedding tasks.",
+            "spans": [
+              {
+                "paper_id": "jina2",
+                "page": 1,
+                "quote": "To address these challenges, we intro-\nduce Jina Embeddings v2, an open-source\ntext embedding model 1 capable of ac-\ncommodating up to 8192 tokens. This\nmodel is designed to transcend the conven-\ntional 512-token limit and adeptly process\nlong documents. Jina Embeddings v2 not\nonly achieves state-of-the-art performance\non a range of embedding-related tasks in\nthe MTEB benchmark but also matches\nthe performance of OpenAI’s proprietary\ntext-embedding-ada-002 model."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-a-19",
+      "question": "KG2RAG compares against a baseline that it calls a lightweight version of GraphRAG, one that extracts entities and relations from the source documents and generates a short description of each entity for retrieval. In that baseline's own paper, what retrieval framework does it propose, and what are its two levels?",
+      "question_type": "relationship",
+      "expected_answer": "The baseline is LightRAG. Its own paper proposes a dual-level retrieval framework combined with graph-based text indexing: low-level retrieval, which focuses on precise information about specific entities and their relationships, and high-level retrieval, which covers broader topics and themes.",
+      "reasoning_hops": 2,
+      "difficulty": "medium",
+      "group_id": "held-a-kg2rag-lightrag",
+      "rationale": "Paper A (kg2rag) describes the baseline only as a lightweight GraphRAG variant; the dual-level (low-level / high-level) retrieval design is stated only in paper B (lightrag). The question does not name LightRAG.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "ha-kg2rag-lightrag-baseline",
+            "statement": "KG2RAG lists LightRAG (Guo et al., 2024) as a baseline that acts as a lightweight version of GraphRAG, extracting entities and relations from the source documents and generating a short description of each entity for retrieval.",
+            "spans": [
+              {
+                "paper_id": "kg2rag",
+                "page": 6,
+                "quote": "• LightRAG (Guo et al., 2024), which acts as a\nlightweight version of GraphRAG. LightRAG\nextracts entities and relations from the source\ndocuments and generates a short description\nof each entity for retrieval. The retrieved in-\nformation is unified with the query and fed\ninto the LLM for generation."
+              }
+            ]
+          },
+          {
+            "fact_id": "ha-lightrag-dual-level",
+            "statement": "The LightRAG paper states that LightRAG employs dual-level retrieval strategies: low-level retrieval focused on precise information about specific entities and their relationships, and high-level retrieval covering broader topics and themes.",
+            "spans": [
+              {
+                "paper_id": "lightrag",
+                "page": 2,
+                "quote": "LightRAG employs efficient dual-level retrieval\nstrategies: low-level retrieval, which focuses on precise information about specific entities and their\nrelationships, and high-level retrieval, which encompasses broader topics and themes."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-a-20",
+      "question": "jina-embeddings-v3 argues it is more cost-efficient than an LLM-based embedding model that has 7.1 billion parameters (12x larger) and a 4096-dimensional output yet gives only about a 1% improvement on MTEB English tasks. According to the paper that introduced that larger model, what kind of training data does its method rely on and how many languages does that data span?",
+      "question_type": "relationship",
+      "expected_answer": "The larger model is E5-mistral-7b-instruct. Its paper obtains high-quality embeddings using only synthetic data and fewer than 1k training steps: proprietary LLMs generate diverse synthetic data for hundreds of thousands of text embedding tasks across 93 languages, and open-source decoder-only LLMs are then fine-tuned on that synthetic data with a standard contrastive loss, without manually collected or labeled datasets.",
+      "reasoning_hops": 2,
+      "difficulty": "medium",
+      "group_id": "held-a-jina3-e5mistral",
+      "rationale": "Paper A (jina3) is where the 7.1B-parameter comparison model is identified; the synthetic-data-only recipe and the 93-language coverage are only in paper B (e5-mistral). The question identifies the model by its size and output dimension rather than its name.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "ha-jina3-vs-e5mistral",
+            "statement": "jina-embeddings-v3 compares itself with LLM-based embeddings such as e5-mistral-7b-instruct, which has 7.1 billion parameters (12x larger) and an output dimension of 4096 (4x larger) but offers only a 1% improvement on MTEB English tasks.",
+            "spans": [
+              {
+                "paper_id": "jina3",
+                "page": 1,
+                "quote": "compared to LLM-based embeddings such as\ne5-mistral-7b-instruct, which has a param-\neter size of 7.1 billion (12x larger) and an out-\nput dimension of 4096 (4x larger) but offers\nonly a 1% improvement on MTEB English tasks,\njina-embeddings-v3 is a far more cost-efficient\nsolution"
+              }
+            ]
+          },
+          {
+            "fact_id": "ha-e5mistral-synthetic-93-languages",
+            "statement": "The paper pinned as e5-mistral leverages proprietary LLMs to generate diverse synthetic data for hundreds of thousands of text embedding tasks across 93 languages and then fine-tunes open-source decoder-only LLMs on that synthetic data with a standard contrastive loss.",
+            "spans": [
+              {
+                "paper_id": "e5-mistral",
+                "page": 1,
+                "quote": "We leverage proprietary LLMs to\ngenerate diverse synthetic data for hundreds\nof thousands of text embedding tasks across\n93 languages. We then fine-tune open-source\ndecoder-only LLMs on the synthetic data using\nstandard contrastive loss."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-b-01",
+      "question": "In the Mistral 7B paper, which two attention mechanisms does Mistral 7B leverage?",
+      "question_type": "factual",
+      "expected_answer": "Grouped-query attention (GQA) and sliding window attention (SWA).",
+      "reasoning_hops": 1,
+      "difficulty": "easy",
+      "group_id": "held-b-mistral7b",
+      "rationale": "The paper names both mechanisms in a single sentence of its introduction, so the answer is one direct lookup in one paper.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hb-mistral7b-gqa-swa",
+            "statement": "Mistral 7B leverages grouped-query attention (GQA) and sliding window attention (SWA).",
+            "spans": [
+              {
+                "paper_id": "mistral7b",
+                "page": 1,
+                "quote": "Mistral 7B leverages grouped-query attention (GQA) [1], and sliding window attention (SW A) [6, 3]."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-b-02",
+      "question": "In the RAPTOR paper, what length are the contiguous text segments that the retrieval corpus is split into at the start of RAPTOR tree construction?",
+      "question_type": "factual",
+      "expected_answer": "Short, contiguous texts of length 100 (100-token chunks).",
+      "reasoning_hops": 1,
+      "difficulty": "easy",
+      "group_id": "held-b-raptor",
+      "rationale": "The segmentation length is stated outright in the method section sentence that introduces tree construction; no combination of facts is needed.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hb-raptor-tree-chunk-length-100",
+            "statement": "Construction of the RAPTOR tree begins by segmenting the retrieval corpus into short, contiguous texts of length 100.",
+            "spans": [
+              {
+                "paper_id": "raptor",
+                "page": 3,
+                "quote": "Construction of the RAPTOR tree begins with segmenting the retrieval corpus into short, contiguous\ntexts of length 100, similar to traditional retrieval augmentation techniques."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-b-03",
+      "question": "Which LLM does LightRAG use by default for all of its LLM-based operations in the paper's experiments?",
+      "question_type": "factual",
+      "expected_answer": "GPT-4o-mini.",
+      "reasoning_hops": 1,
+      "difficulty": "easy",
+      "group_id": "held-b-lightrag",
+      "rationale": "A single sentence of the experimental-setup section names the default LLM, making this a straightforward configuration lookup.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hb-lightrag-default-llm-gpt4o-mini",
+            "statement": "For all LLM-based operations in LightRAG, the authors default to using GPT-4o-mini.",
+            "spans": [
+              {
+                "paper_id": "lightrag",
+                "page": 6,
+                "quote": "For all LLM-based operations in LightRAG, we default\nto using GPT-4o-mini."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-b-04",
+      "question": "According to the Sentence-BERT abstract, how long does finding the most similar sentence pair take with SBERT, compared with BERT / RoBERTa?",
+      "question_type": "factual",
+      "expected_answer": "About 5 seconds with SBERT, versus 65 hours with BERT / RoBERTa.",
+      "reasoning_hops": 1,
+      "difficulty": "easy",
+      "group_id": "held-b-sbert",
+      "rationale": "Both numbers and the model they belong to appear in one abstract sentence, so this is a direct single-paper lookup.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hb-sbert-65-hours-to-5-seconds",
+            "statement": "SBERT reduces the effort for finding the most similar pair from 65 hours with BERT / RoBERTa to about 5 seconds.",
+            "spans": [
+              {
+                "paper_id": "sbert",
+                "page": 1,
+                "quote": "This reduces the\neffort for ﬁnding the most similar pair from 65\nhours with BERT / RoBERTa to about 5 sec-\nonds with SBERT, while maintaining the ac-\ncuracy from BERT."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-b-05",
+      "question": "In the SPLADE paper, what does the acronym SPLADE stand for?",
+      "question_type": "factual",
+      "expected_answer": "SParse Lexical AnD Expansion model.",
+      "reasoning_hops": 1,
+      "difficulty": "easy",
+      "group_id": "held-b-splade",
+      "rationale": "The section heading that introduces the method spells out the acronym verbatim; the answer is read off one line of one paper.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hb-splade-acronym-expansion",
+            "statement": "SPLADE stands for 'SParse Lexical AnD Expansion model'.",
+            "spans": [
+              {
+                "paper_id": "splade",
+                "page": 2,
+                "quote": "3.2 SPLADE: SParse Lexical AnD Expansion\nmodel"
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-b-06",
+      "question": "In 'Improving language models by retrieving from trillions of tokens', which tokenizer is used for the dataset and what vocabulary size does it have?",
+      "question_type": "factual",
+      "expected_answer": "SentencePiece, with a vocabulary of 128,000 tokens.",
+      "reasoning_hops": 1,
+      "difficulty": "easy",
+      "group_id": "held-b-retro",
+      "rationale": "The tokenizer and its vocabulary size are given in one sentence of the training-dataset paragraph, requiring no inference.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hb-retro-sentencepiece-128k-vocab",
+            "statement": "The paper pinned as retro tokenizes its dataset using SentencePiece with a vocabulary of 128,000 tokens.",
+            "spans": [
+              {
+                "paper_id": "retro",
+                "page": 3,
+                "quote": "We tokenize the dataset using\nSentencePiece (Kudo and Richardson, 2018) with a vocabulary of 128,000 tokens."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-b-07",
+      "question": "What two sources of documents is Contriever trained on with contrastive learning, and how are the batches split between them?",
+      "question_type": "factual",
+      "expected_answer": "Wikipedia data and CCNet data, with half the batches sampled from each source.",
+      "reasoning_hops": 1,
+      "difficulty": "easy",
+      "group_id": "held-b-contriever",
+      "rationale": "The datasets subsection states the two sources and the batch split in a single sentence that also names Contriever.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hb-contriever-training-data-wikipedia-ccnet",
+            "statement": "Contriever is trained with contrastive learning on documents sampled from a mix of Wikipedia data and CCNet data, with half the batches sampled from each source.",
+            "spans": [
+              {
+                "paper_id": "contriever",
+                "page": 6,
+                "quote": "Contriever is trained with contrastive learning on documents sampled from a mix between Wikipedia data\nand CCNet data (Wenzek et al., 2020), where half the batches are sampled from each source."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-b-08",
+      "question": "In the E5 paper ('Text Embeddings by Weakly-Supervised Contrastive Pre-training'), which checkpoints are E5-small, E5-base and E5-large initialized from?",
+      "question_type": "factual",
+      "expected_answer": "MiniLM, bert-base-uncased, and bert-large-uncased-whole-word-masking, respectively.",
+      "reasoning_hops": 1,
+      "difficulty": "easy",
+      "group_id": "held-b-e5",
+      "rationale": "One sentence of the pre-training configuration lists all three initializations, so a single lookup answers the question.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hb-e5-init-checkpoints",
+            "statement": "E5-small, E5-base and E5-large are initialized from MiniLM, bert-base-uncased, and bert-large-uncased-whole-word-masking respectively.",
+            "spans": [
+              {
+                "paper_id": "e5",
+                "page": 5,
+                "quote": "Pre-training We pre-train on our proposed text pair dataset for three model sizes: E5 small, E5base\nand E5large initialized from MiniLM [ 59], bert-base-uncased, and bert-large-uncased-whole-word-\nmasking respectively."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-b-09",
+      "question": "What backbone encoder do the INSTRUCTOR models use, according to the 'One Embedder, Any Task' paper?",
+      "question_type": "factual",
+      "expected_answer": "GTR models: GTR-Base for INSTRUCTOR-Base, GTR-Large for INSTRUCTOR, and GTR-XL for INSTRUCTOR-XL.",
+      "reasoning_hops": 1,
+      "difficulty": "easy",
+      "group_id": "held-b-instructor",
+      "rationale": "The embedding-architecture subsection names the backbone and the per-size mapping in one sentence.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hb-instructor-gtr-backbone",
+            "statement": "INSTRUCTOR uses GTR models as its backbone encoder, with GTR-Base for INSTRUCTOR-Base, GTR-Large for INSTRUCTOR, and GTR-XL for INSTRUCTOR-XL.",
+            "spans": [
+              {
+                "paper_id": "instructor",
+                "page": 3,
+                "quote": "Following prior work (Ni et al.,\n2021, 2022), we use GTR models as the backbone\nencoder (GTR-Base for INSTRUCT OR-Base, GTR-\nLarge for INSTRUCT OR, GTR-XL for INSTRUC -\nTOR-XL)."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-b-10",
+      "question": "In M3-Embedding, which token embedding is used for dense retrieval, and what are the other token embeddings used for?",
+      "question_type": "factual",
+      "expected_answer": "The [CLS] embedding is used for dense retrieval; embeddings from the other tokens are used for sparse retrieval and multi-vector retrieval.",
+      "reasoning_hops": 1,
+      "difficulty": "easy",
+      "group_id": "held-b-bge-m3",
+      "rationale": "One sentence names the model and assigns each embedding to its retrieval functionality, so no cross-referencing is needed.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hb-bge-m3-cls-dense-retrieval",
+            "statement": "In M3-Embedding the [CLS] embedding is used for dense retrieval, while embeddings from other tokens are used for sparse retrieval and multi-vector retrieval.",
+            "spans": [
+              {
+                "paper_id": "bge-m3",
+                "page": 2,
+                "quote": "In M3-Embedding, the [CLS]\nembedding is used for dense retrieval, while embed-\ndings from other tokens are used for sparse retrieval\nand multi-vector retrieval."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-b-11",
+      "question": "What does the acronym BEIR stand for, and how many retrieval datasets does the benchmark comprise?",
+      "question_type": "factual",
+      "expected_answer": "BEIR stands for 'Benchmarking IR', and the benchmark comprises 18 retrieval datasets.",
+      "reasoning_hops": 1,
+      "difficulty": "easy",
+      "group_id": "held-b-beir",
+      "rationale": "The sentence introducing the benchmark gives both the expansion and the dataset count, making it one direct lookup.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hb-beir-acronym-and-18-datasets",
+            "statement": "BEIR stands for Benchmarking IR and comprises 18 retrieval datasets.",
+            "spans": [
+              {
+                "paper_id": "beir",
+                "page": 2,
+                "quote": "In this work, we present a novel robust and heterogeneous benchmark called BEIR (Benchmarking\nIR), comprising of 18 retrieval datasets for comparison and evaluation of model generalization."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-b-12",
+      "question": "Which software library did the 'From Local to Global: A Graph RAG Approach to Query-Focused Summarization' paper use to implement Leiden community detection?",
+      "question_type": "factual",
+      "expected_answer": "The graspologic library.",
+      "reasoning_hops": 1,
+      "difficulty": "easy",
+      "group_id": "held-b-graphrag",
+      "rationale": "The implementation-detail sentence names the library directly; the answer is a single stated fact in one paper.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hb-graphrag-graspologic-leiden",
+            "statement": "The paper pinned as graphrag implemented Leiden community detection using the graspologic library.",
+            "spans": [
+              {
+                "paper_id": "graphrag",
+                "page": 9,
+                "quote": "We implemented Leiden community detection using the graspologic library (Chung et al., 2019)."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-b-13",
+      "question": "In the Self-RAG paper, what does the name SELF-RAG stand for?",
+      "question_type": "factual",
+      "expected_answer": "Self-Reflective Retrieval-Augmented Generation.",
+      "reasoning_hops": 1,
+      "difficulty": "easy",
+      "group_id": "held-b-self-rag",
+      "rationale": "The sentence that opens the method section spells out the acronym, so this is a direct lookup.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hb-self-rag-acronym-expansion",
+            "statement": "SELF-RAG stands for Self-Reflective Retrieval-Augmented Generation.",
+            "spans": [
+              {
+                "paper_id": "self-rag",
+                "page": 3,
+                "quote": "We introduce Self-Reflective Retrieval-Augmented Generation ( SELF -RAG), shown in Figure 1."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-b-14",
+      "question": "How does REPLUG treat the language model, and what does it augment it with?",
+      "question_type": "factual",
+      "expected_answer": "REPLUG treats the language model as a black box and augments it with a frozen or tunable retriever.",
+      "reasoning_hops": 1,
+      "difficulty": "easy",
+      "group_id": "held-b-replug",
+      "rationale": "The figure caption on the first page states the design in one sentence that names REPLUG.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hb-replug-black-box-lm-frozen-or-tunable-retriever",
+            "statement": "REPLUG treats the language model as a black box and augments it with a frozen or tunable retriever.",
+            "spans": [
+              {
+                "paper_id": "replug",
+                "page": 1,
+                "quote": "Different from previous retrieval-augmented ap-\nproaches (Borgeaud et al., 2022) that enhance a language model\nwith retrieval by updating the LM’s parameters, REPLUG treats\nthe language model as a black box and augments it with a frozen\nor tunable retriever."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-b-15",
+      "question": "In 'Constructing A Multi-hop QA Dataset for Comprehensive Evaluation of Reasoning Steps', what are the four types of questions in the dataset the authors construct?",
+      "question_type": "factual",
+      "expected_answer": "Comparison, inference, compositional, and bridge comparison.",
+      "reasoning_hops": 1,
+      "difficulty": "easy",
+      "group_id": "held-b-2wikimultihop",
+      "rationale": "The 'Question Types' subsection enumerates all four types in one sentence, so the answer requires a single lookup.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hb-2wikimultihop-four-question-types",
+            "statement": "The dataset constructed in the paper pinned as 2wikimultihop contains four question types: comparison, inference, compositional, and bridge comparison.",
+            "spans": [
+              {
+                "paper_id": "2wikimultihop",
+                "page": 3,
+                "quote": "2.2 Question Types\nIn our dataset, we have the following four types of questions: (1) comparison, (2) inference, (3) compo-\nsitional, and (4) bridge comparison."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-b-16",
+      "question": "In the MultiHop-RAG paper, which framework was the RAG system used to demonstrate the benchmark's capabilities implemented with?",
+      "question_type": "factual",
+      "expected_answer": "LlamaIndex.",
+      "reasoning_hops": 1,
+      "difficulty": "easy",
+      "group_id": "held-b-multihop-rag",
+      "rationale": "One sentence names both MultiHop-RAG and the framework used for the RAG system.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hb-multihop-rag-llamaindex-rag-system",
+            "statement": "The benchmarking experiments for MultiHop-RAG use a RAG system implemented with LlamaIndex.",
+            "spans": [
+              {
+                "paper_id": "multihop-rag",
+                "page": 2,
+                "quote": "We demonstrate the benchmarking capabilities\nof MultiHop-RAG using two experiments, utilizing\na RAG system implemented with LlamaIndex (Liu,\n2022)."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-b-17",
+      "question": "According to the IRCoT abstract, on which four datasets is IRCoT with GPT3 evaluated?",
+      "question_type": "factual",
+      "expected_answer": "HotpotQA, 2WikiMultihopQA, MuSiQue, and IIRC.",
+      "reasoning_hops": 1,
+      "difficulty": "easy",
+      "group_id": "held-b-ircot",
+      "rationale": "The abstract lists all four datasets in a single sentence that names IRCoT, so one lookup suffices.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hb-ircot-four-eval-datasets",
+            "statement": "IRCoT with GPT3 is evaluated on four datasets: HotpotQA, 2WikiMultihopQA, MuSiQue, and IIRC.",
+            "spans": [
+              {
+                "paper_id": "ircot",
+                "page": 1,
+                "quote": "Using IRCoT with\nGPT3 substantially improves retrieval (up to\n21 points) as well as downstream QA (up\nto 15 points) on four datasets: HotpotQA,\n2WikiMultihopQA, MuSiQue, and IIRC."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-b-18",
+      "question": "In the KG2RAG paper, which two knowledge-graph-driven processes does KG2RAG apply after semantic-based retrieval has provided seed chunks?",
+      "question_type": "factual",
+      "expected_answer": "A KG-guided chunk expansion process and a KG-based chunk organization process.",
+      "reasoning_hops": 1,
+      "difficulty": "easy",
+      "group_id": "held-b-kg2rag",
+      "rationale": "The abstract states both processes in one sentence that names KG2RAG.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hb-kg2rag-expansion-and-organization",
+            "statement": "After a semantic-based retrieval provides seed chunks, KG2RAG employs a KG-guided chunk expansion process and a KG-based chunk organization process.",
+            "spans": [
+              {
+                "paper_id": "kg2rag",
+                "page": 1,
+                "quote": "Specifically, after perform-\ning a semantic-based retrieval to provide seed\nchunks, KG2RAG employs a KG-guided chunk\nexpansion process and a KG-based chunk orga-\nnization process to deliver relevant and impor-\ntant knowledge in well-organized paragraphs."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-b-19",
+      "question": "What does LoTTE, the new benchmark introduced in the ColBERTv2 paper, stand for, and how many domain-specific search tests does it feature?",
+      "question_type": "factual",
+      "expected_answer": "LoTTE stands for Long-Tail Topic-stratified Evaluation for IR, and it features 12 domain-specific search tests.",
+      "reasoning_hops": 1,
+      "difficulty": "easy",
+      "group_id": "held-b-colbert2",
+      "rationale": "The expansion of the name and the number of search tests appear together in one sentence.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hb-colbert2-lotte-12-tests",
+            "statement": "The paper pinned as colbert2 introduces a new benchmark dubbed LoTTE, for Long-Tail Topic-stratified Evaluation for IR, that features 12 domain-specific search tests.",
+            "spans": [
+              {
+                "paper_id": "colbert2",
+                "page": 2,
+                "quote": "In\naddition, we introduce a new benchmark, dubbed\nLoTTE, for Long-Tail Topic-stratiﬁed Evaluation\nfor IR that features 12 domain-speciﬁc search\ntests, spanning StackExchange communities and\nusing queries from GooAQ (Khashabi et al., 2021)."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-b-20",
+      "question": "In ModernBERT, which layers use global attention and what RoPE theta values are used for global versus local attention?",
+      "question_type": "factual",
+      "expected_answer": "Every third layer uses global attention with a RoPE theta of 160,000; the remaining layers use 128-token local sliding window attention with a RoPE theta of 10,000.",
+      "reasoning_hops": 1,
+      "difficulty": "easy",
+      "group_id": "held-b-modernbert",
+      "rationale": "One sentence of the architecture section names ModernBERT and gives both the layer pattern and both theta values.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hb-modernbert-alternating-attention-rope-theta",
+            "statement": "In ModernBERT every third layer employs global attention with a RoPE theta of 160,000, while the remaining layers use 128-token local sliding window attention with a RoPE theta of 10,000.",
+            "spans": [
+              {
+                "paper_id": "modernbert",
+                "page": 2,
+                "quote": "In\nModernBERT, every third layer employs global\nattention with a RoPE theta of 160,000 and the\nremaining layers use a 128 token, local sliding win-\ndow attention with a RoPE theta of 10,000."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-c-01",
+      "question": "GraphRAG and RAPTOR both group text units before summarizing them. What clustering or community-detection algorithm does each of them use for that grouping?",
+      "question_type": "comparison",
+      "expected_answer": "GraphRAG uses Leiden community detection, applied hierarchically to partition its graph index; RAPTOR's clustering algorithm is based on Gaussian Mixture Models (GMMs).",
+      "reasoning_hops": 2,
+      "difficulty": "medium",
+      "group_id": "held-c-graph-clustering",
+      "rationale": "Both papers are hierarchical summarization-based retrieval indexes whose central design choice is how text units are grouped, so the grouping algorithm is directly comparable. One fact comes from the GraphRAG paper and one from the RAPTOR paper; neither states the other's choice.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hc-graphrag-leiden-clustering",
+            "statement": "The pipeline described in the pinned graphrag paper uses Leiden community detection, applied in a hierarchical manner, to partition its graph index.",
+            "spans": [
+              {
+                "paper_id": "graphrag",
+                "page": 5,
+                "quote": "In our pipeline, we use Leiden community\ndetection (Traag et al., 2019) in a hierarchical manner"
+              }
+            ]
+          },
+          {
+            "fact_id": "hc-raptor-gmm-clustering",
+            "statement": "The clustering algorithm of the method in the pinned raptor paper is based on Gaussian Mixture Models (GMMs).",
+            "spans": [
+              {
+                "paper_id": "raptor",
+                "page": 3,
+                "quote": "Our clustering algorithm is based on Gaussian Mixture Models (GMMs), an approach that offers\nboth flexibility and a probabilistic framework."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-c-02",
+      "question": "Which large language model does each of GraphRAG and LightRAG report using as the LLM in its own experiments?",
+      "question_type": "comparison",
+      "expected_answer": "GraphRAG reports its results with GPT-4 as the LLM; LightRAG defaults to GPT-4o-mini for all of its LLM-based operations.",
+      "reasoning_hops": 2,
+      "difficulty": "medium",
+      "group_id": "held-c-graphrag-llm-choice",
+      "rationale": "Two graph-based RAG systems that each name the LLM driving their own pipeline, so the model choice is a natural like-for-like comparison. Each paper states only its own model.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hc-graphrag-gpt4-llm",
+            "statement": "The pinned graphrag paper reports its GraphRAG results using GPT-4 as the LLM.",
+            "spans": [
+              {
+                "paper_id": "graphrag",
+                "page": 2,
+                "quote": "Results show GraphRAG strongly outperforms vector RAG when using\nGPT-4 as the LLM."
+              }
+            ]
+          },
+          {
+            "fact_id": "hc-lightrag-gpt4o-mini-llm",
+            "statement": "LightRAG defaults to GPT-4o-mini for all of its LLM-based operations.",
+            "spans": [
+              {
+                "paper_id": "lightrag",
+                "page": 6,
+                "quote": "For all LLM-based operations in LightRAG, we default\nto using GPT-4o-mini."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-c-03",
+      "question": "KG2RAG and IRCoT are both retrieval-augmented multi-hop QA pipelines. What retrieval model does each of them use to fetch text for a query?",
+      "question_type": "comparison",
+      "expected_answer": "KG2RAG uses mxbai-embed-large as its embedding model (with LLaMA3-8B as the LLM for KG construction and response generation); IRCoT uses BM25 implemented in Elasticsearch as its base retriever.",
+      "reasoning_hops": 2,
+      "difficulty": "medium",
+      "group_id": "held-c-multihop-retriever-choice",
+      "rationale": "Both systems are multi-hop QA pipelines built on a first-stage retriever, so 'dense embedding model vs lexical BM25' is a natural head-to-head property. Each fact is stated only in its own paper.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hc-kg2rag-mxbai-embedder",
+            "statement": "KG2RAG and its baselines use LLaMA3-8B as the LLM for KG construction and response generation and mxbai-embed-large as the embedding model.",
+            "spans": [
+              {
+                "paper_id": "kg2rag",
+                "page": 6,
+                "quote": "For KG2RAG and all baseline methods, we use\nLLaMA3-8B (Dubey et al., 2024) as the LLM for\nKG construction and response generation, mxbai-\nembed-large (Li and Li, 2024) as the embedding\nmodel"
+              }
+            ]
+          },
+          {
+            "fact_id": "hc-ircot-bm25-elasticsearch",
+            "statement": "The pinned ircot paper uses BM25 implemented in Elasticsearch as its base retriever.",
+            "spans": [
+              {
+                "paper_id": "ircot",
+                "page": 5,
+                "quote": "Retriever . We use BM25 (Robertson et al., 2009)\nimplemented in Elasticsearch6 as our base retriever."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-c-04",
+      "question": "What language models does each of Self-RAG and IRCoT use to produce its generations?",
+      "question_type": "comparison",
+      "expected_answer": "Self-RAG uses Llama2 7B and 13B as the generator base LM and Llama2 7B as the base critic LM; IRCoT experiments with OpenAI GPT3 (code-davinci-002) and Flan-T5 of different sizes as its CoT generator.",
+      "reasoning_hops": 2,
+      "difficulty": "medium",
+      "group_id": "held-c-generator-lm-choice",
+      "rationale": "Both are retrieval-augmented reasoning methods whose behaviour depends on the generator LM, so 'which LM generates' is directly comparable: an open-weight fine-tuned Llama2 versus prompted GPT3/Flan-T5. Each paper states only its own setting.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hc-selfrag-llama2-generator",
+            "statement": "The method in the pinned self-rag paper uses Llama2 7B and 13B as its generator base LM and Llama2 7B as its base critic LM.",
+            "spans": [
+              {
+                "paper_id": "self-rag",
+                "page": 7,
+                "quote": "We use Llama2 7B and 13B (Touvron et al., 2023) as\nour generator base LM, and we use Llama2 7B as our base critic LM."
+              }
+            ]
+          },
+          {
+            "fact_id": "hc-ircot-gpt3-flant5-cot",
+            "statement": "The IRCoT Retriever uses BM25 as its underlying retriever and experiments with OpenAI GPT3 (code-davinci-002) and Flan-T5 of different sizes as its CoT generator.",
+            "spans": [
+              {
+                "paper_id": "ircot",
+                "page": 5,
+                "quote": "(ii) IRCoT Retriever is our method de-\nscribed in §3. We use BM25 as its underly-\ning retriever and experiment with OpenAI GPT3\n(code-davinci-002) (Brown et al., 2020; Ouyang\net al., 2022; Chen et al., 2021) and Flan-T5 (Chung\net al., 2022) of different sizes as its CoT generator."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-c-05",
+      "question": "RETRO and REPLUG both augment a language model with retrieved text. What retrieval model does each of them rely on?",
+      "question_type": "comparison",
+      "expected_answer": "RETRO retrieves with a pre-trained frozen BERT model, which removes the need to train or update a retriever network; REPLUG uses Contriever as its retrieval model.",
+      "reasoning_hops": 2,
+      "difficulty": "medium",
+      "group_id": "held-c-lm-augmentation-retriever",
+      "rationale": "Both papers add a retrieval component to a language model and each explicitly names the encoder it retrieves with, so the retriever identity is a clean two-paper comparison. Neither fact depends on the other paper.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hc-retro-frozen-bert-retriever",
+            "statement": "The method in the pinned retro paper retrieves on the basis of a pre-trained frozen BERT model, removing the need for training and updating a retriever network.",
+            "spans": [
+              {
+                "paper_id": "retro",
+                "page": 2,
+                "quote": "We show that retrieving based on a pre-trained frozen\nB/e.sc /r.sc/t.scmodel (§2.3) works at scale, removing the need for training and updating a retriever\nnetwork."
+              }
+            ]
+          },
+          {
+            "fact_id": "hc-replug-contriever-retriever",
+            "statement": "REPLUG uses Contriever as its retrieval model.",
+            "spans": [
+              {
+                "paper_id": "replug",
+                "page": 4,
+                "quote": "we use the Contriever (Izacard\net al., 2022a) as the retrieval model for REPLUG, as it has\ndemonstrated strong performance."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-c-06",
+      "question": "Jina Embeddings 2 and Nomic Embed both modify BERT for long inputs. What positional-encoding scheme does each of them adopt in place of BERT's absolute position embeddings?",
+      "question_type": "comparison",
+      "expected_answer": "Jina Embeddings 2 adopts Attention with Linear Biases (ALiBi), which forgoes positional embeddings entirely; Nomic Embed substitutes absolute positional embeddings for rotary positional embeddings (RoPE).",
+      "reasoning_hops": 2,
+      "difficulty": "medium",
+      "group_id": "held-c-long-context-position-encoding",
+      "rationale": "Two long-context BERT-style embedding models whose headline architectural change is how position is encoded, making ALiBi vs RoPE a natural comparison. Each paper states only its own choice.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hc-jina2-alibi-positions",
+            "statement": "The model in the pinned jina2 paper adopts the Attention with Linear Biases (ALiBi) approach for self-attention, which forgoes the use of positional embeddings.",
+            "spans": [
+              {
+                "paper_id": "jina2",
+                "page": 3,
+                "quote": "we adopt the Attention with Linear Biases (AL-\niBi) approach [Press et al., 2022]. ALiBi forgoes\nthe use of positional embeddings."
+              }
+            ]
+          },
+          {
+            "fact_id": "hc-nomic-rope-positions",
+            "statement": "The model in the pinned nomic paper changes BERT base by substituting absolute positional embeddings for rotary positional embeddings.",
+            "spans": [
+              {
+                "paper_id": "nomic",
+                "page": 5,
+                "quote": "We make the following\narchitecture changes to BERT base (Devlin et al., 2019):\n• Substituting absolute positional embeddings for rotary p ositional embeddings (Su et al., 2023b)"
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-c-07",
+      "question": "What text corpus does each of Jina Embeddings 2 and Nomic Embed use for the masked-language-modelling pre-training of its backbone encoder?",
+      "question_type": "comparison",
+      "expected_answer": "Jina Embeddings 2 pre-trains on the English 'Colossal, Cleaned, Common Crawl (C4)' dataset (about 365 million web documents, roughly 170 billion tokens); Nomic Embed trains its nomic-bert-2048 backbone on BooksCorpus plus a 2023 Wikipedia dump.",
+      "reasoning_hops": 2,
+      "difficulty": "medium",
+      "group_id": "held-c-backbone-pretraining-corpus",
+      "rationale": "Both papers pre-train their own long-context BERT backbone from scratch and each names the corpus used, so the pre-training data is a natural like-for-like comparison. Each fact is self-contained in its own paper.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hc-jina2-c4-pretraining",
+            "statement": "The pinned jina2 paper pre-trains on the English 'Colossal, Cleaned, Common Crawl (C4)' dataset, about 365 million web documents totalling roughly 170 billion tokens.",
+            "spans": [
+              {
+                "paper_id": "jina2",
+                "page": 3,
+                "quote": "For the pre-training phase, we leverage the English\n“Colossal, Cleaned, Common Crawl (C4)” dataset4,\nencompassing approximately 365 million text docu-\nments harvested from the web, summing to around\n170 billion tokens."
+              }
+            ]
+          },
+          {
+            "fact_id": "hc-nomic-books-wiki-pretraining",
+            "statement": "The pinned nomic paper trains its long-context BERT model, nomic-bert-2048, on BooksCorpus and a 2023 Wikipedia dump.",
+            "spans": [
+              {
+                "paper_id": "nomic",
+                "page": 5,
+                "quote": "we use BooksCorpus (Zhu et al ., 2015) and a Wikipedia dump from 2023 to\ntrain a long context BERT model, hereinafter called nomic-b ert-2048."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-c-08",
+      "question": "What backbone language model does each of Jina Embeddings 2 and jina-embeddings-v3 build on?",
+      "question_type": "comparison",
+      "expected_answer": "Jina Embeddings 2 proposes its own modified BERT model, able to encode up to 8192 tokens and trained from scratch with a masked-language-modelling objective; jina-embeddings-v3 instead adapts the XLM-RoBERTa model as its backbone.",
+      "reasoning_hops": 2,
+      "difficulty": "medium",
+      "group_id": "held-c-jina-backbone-generations",
+      "rationale": "Two successive embedding models from the same line of work; the backbone each starts from (BERT trained from scratch vs an adapted XLM-RoBERTa) is the obvious comparable property, and each paper states its own.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hc-jina2-modified-bert-backbone",
+            "statement": "For its backbone language model the pinned jina2 paper proposes a modified BERT model that encodes documents up to 8192 tokens and is trained from scratch with a masked language modeling objective.",
+            "spans": [
+              {
+                "paper_id": "jina2",
+                "page": 2,
+                "quote": "For the back-\nbone language model, we propose a modi-\nfied BERT model capable of encoding doc-\numents with up to 8192 tokens. This model\nis trained from scratch on a full-text corpus\nusing a masked language modeling objective."
+              }
+            ]
+          },
+          {
+            "fact_id": "hc-jina3-xlmr-backbone",
+            "statement": "jina-embeddings-v3 implements its backbone architecture by adapting the XLM-RoBERTa model.",
+            "spans": [
+              {
+                "paper_id": "jina3",
+                "page": 3,
+                "quote": "To implement the backbone\narchitecture, we adapt the XLM-RoBERTa model\nwith modifications that (1) enable effective encod-\ning of long text sequences, (2) allow task-specific\nencoding of embeddings, and (3) increase model\nefficiency."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-c-09",
+      "question": "E5-Mistral and NV-Embed both turn a decoder-only LLM into an embedding model. How does each of them pool token representations into a single embedding?",
+      "question_type": "comparison",
+      "expected_answer": "E5-Mistral appends an [EOS] token and takes the last-layer [EOS] vector as the embedding; NV-Embed proposes a latent attention layer to obtain pooled embeddings for the token sequence.",
+      "reasoning_hops": 2,
+      "difficulty": "medium",
+      "group_id": "held-c-llm-embedding-pooling",
+      "rationale": "Both papers build general-purpose embeddings on top of an LLM, and the pooling operator is the architectural knob each one describes for itself, so last-token vs latent attention is a natural comparison.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hc-e5mistral-eos-pooling",
+            "statement": "The method in the pinned e5-mistral paper appends an [EOS] token to the query and document and obtains their embeddings by taking the last layer [EOS] vector.",
+            "spans": [
+              {
+                "paper_id": "e5-mistral",
+                "page": 4,
+                "quote": "Given a pretrained LLM, we append an [EOS]\ntoken to the end of the query and document, and\nthen feed them into the LLM to obtain the query\nand document embeddings (hq+\ninst\n, hd+) by taking\nthe last layer [EOS] vector."
+              }
+            ]
+          },
+          {
+            "fact_id": "hc-nvembed-latent-attention-pooling",
+            "statement": "The pinned nv-embed paper proposes a novel latent attention layer to obtain pooled embeddings for a sequence of tokens.",
+            "spans": [
+              {
+                "paper_id": "nv-embed",
+                "page": 2,
+                "quote": "For model architecture, we propose a novel latent attention layer to obtain pooled embeddings for\na sequence of tokens."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-c-10",
+      "question": "From which pre-trained encoders are the small, base and large variants of E5 and of multilingual E5 initialized?",
+      "question_type": "comparison",
+      "expected_answer": "E5-small, E5-base and E5-large are initialized from MiniLM, bert-base-uncased and bert-large-uncased-whole-word-masking; mE5-small, mE5-base and mE5-large are initialized from multilingual MiniLM, xlm-roberta-base and xlm-roberta-large.",
+      "reasoning_hops": 2,
+      "difficulty": "medium",
+      "group_id": "held-c-e5-initialization",
+      "rationale": "The multilingual E5 report follows the English E5 recipe, so the per-size initialization checkpoints are directly comparable; each paper lists only its own three checkpoints.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hc-e5-bert-minilm-init",
+            "statement": "E5 small, base and large are initialized from MiniLM, bert-base-uncased and bert-large-uncased-whole-word-masking respectively.",
+            "spans": [
+              {
+                "paper_id": "e5",
+                "page": 5,
+                "quote": "We pre-train on our proposed text pair dataset for three model sizes: E5 small, E5base\nand E5large initialized from MiniLM [ 59], bert-base-uncased, and bert-large-uncased-whole-word-\nmasking respectively."
+              }
+            ]
+          },
+          {
+            "fact_id": "hc-me5-xlmr-init",
+            "statement": "mE5 small, base and large are initialized from multilingual MiniLM, xlm-roberta-base and xlm-roberta-large respectively.",
+            "spans": [
+              {
+                "paper_id": "multilingual-e5",
+                "page": 5,
+                "quote": "The mE5 small,\nmE5base and mE5large are initialized from the multi-\nlingual MiniLM (Wang et al., 2021), xlm-roberta-\nbase (Conneau et al., 2020), and xlm-roberta-large\nrespectively."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-c-11",
+      "question": "Contriever and E5 are both contrastively trained without relying on large labelled retrieval corpora. How does each of them obtain the positive text pairs it trains on?",
+      "question_type": "comparison",
+      "expected_answer": "Contriever uses MoCo with random cropping to build its positives; E5 instead curates the CCPairs dataset by harvesting heterogeneous semi-structured data sources.",
+      "reasoning_hops": 2,
+      "difficulty": "medium",
+      "group_id": "held-c-contrastive-pair-construction",
+      "rationale": "Both are contrastively pre-trained dense retrievers whose key data decision is where positive pairs come from, so cropping-based self-supervision vs harvested web pairs is a natural comparison. Each fact appears only in its own paper.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hc-contriever-moco-random-cropping",
+            "statement": "The best retriever of the pinned contriever paper, called Contriever, uses MoCo with random cropping.",
+            "spans": [
+              {
+                "paper_id": "contriever",
+                "page": 6,
+                "quote": "we empirically evaluate our best retriever trained with contrastive learning, calledContriever\n(contrastive retriever), which uses MoCo with random cropping."
+              }
+            ]
+          },
+          {
+            "fact_id": "hc-e5-ccpairs-harvesting",
+            "statement": "The pinned e5 paper curates its text pair dataset, CCPairs, by harvesting heterogeneous semi-structured data sources.",
+            "spans": [
+              {
+                "paper_id": "e5",
+                "page": 3,
+                "quote": "Instead, we curate a text pair dataset CCPairs (Colossal Clean text Pairs) by harvesting heterogeneous\nsemi-structured data sources."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-c-12",
+      "question": "How does each of INSTRUCTOR and E5 tell the encoder what role or task a given input text plays?",
+      "question_type": "comparison",
+      "expected_answer": "INSTRUCTOR encodes the concatenation of a task instruction with the input text; E5 uses a shared encoder and breaks the symmetry by adding the two prefix identifiers 'query:' and 'passage:'.",
+      "reasoning_hops": 2,
+      "difficulty": "medium",
+      "group_id": "held-c-task-conditioning-of-inputs",
+      "rationale": "Both are single-encoder embedding models that condition the encoder on the input's role, one via free-form instructions and one via fixed prefixes, so the conditioning mechanism is a natural comparison. Each paper states only its own.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hc-instructor-instruction-concat",
+            "statement": "INSTRUCTOR encodes the concatenation of a task instruction with the input text.",
+            "spans": [
+              {
+                "paper_id": "instructor",
+                "page": 3,
+                "quote": "Given an input text\nx and a task instructionIx, INSTRUCT OR encodes\ntheir concatenation Ix"
+              }
+            ]
+          },
+          {
+            "fact_id": "hc-e5-query-passage-prefix",
+            "statement": "The pinned e5 paper uses a shared encoder for all input texts and breaks the symmetry by adding the two prefix identifiers 'query:' and 'passage:'.",
+            "spans": [
+              {
+                "paper_id": "e5",
+                "page": 4,
+                "quote": "We use a shared encoder for all input texts and\nbreak the symmetry by adding two prefix identifiers “query:” and “passage:” toq andd respectively."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-c-13",
+      "question": "SPLADE and ColBERTv2 each introduce a mechanism to keep the cost of their representations down. What is that mechanism in each case?",
+      "question_type": "comparison",
+      "expected_answer": "SPLADE adds a log-saturation effect to the expansion model, greatly increasing sparsity and cutting FLOPS to levels similar to bag-of-words approaches; ColBERTv2 uses a residual compression approach that significantly reduces index sizes relative to vanilla ColBERT.",
+      "reasoning_hops": 2,
+      "difficulty": "medium",
+      "group_id": "held-c-index-cost-mechanism",
+      "rationale": "Two neural first-stage retrievers that each single out one efficiency mechanism for their own representations, so sparsification versus residual compression is a natural pairing. Each fact is stated independently in its own paper.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hc-splade-log-saturation-sparsity",
+            "statement": "By adding a log-saturation effect to the expansion model, SPLADE greatly increases sparsity and reduces FLOPS to levels similar to bag-of-words approaches.",
+            "spans": [
+              {
+                "paper_id": "splade",
+                "page": 3,
+                "quote": "By adding a log-saturation effect to the expansion model, SPLADE\ngreatly increases sparsity – reducing the FLOPS to similar levels\nthan BOW approaches"
+              }
+            ]
+          },
+          {
+            "fact_id": "hc-colbert2-residual-compression",
+            "statement": "ColBERTv2's residual compression approach significantly reduces index sizes compared to vanilla ColBERT.",
+            "spans": [
+              {
+                "paper_id": "colbert2",
+                "page": 9,
+                "quote": "ColBERTv2’s residual compression approach sig-\nniﬁcantly reduces index sizes compared to vanilla\nColBERT."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-c-14",
+      "question": "Ragas and ARES both score RAG systems automatically. What model performs the judging in each framework?",
+      "question_type": "comparison",
+      "expected_answer": "Ragas prompts an LLM: all of its prompts are evaluated with the gpt-3.5-turbo-16k model via the OpenAI API. ARES instead fine-tunes DeBERTa-v3-Large judges on its own synthetic dataset.",
+      "reasoning_hops": 2,
+      "difficulty": "medium",
+      "group_id": "held-c-rag-eval-judge-model",
+      "rationale": "Both are automated RAG evaluation frameworks, and the judge they use is the core design decision of each, so prompted proprietary LLM vs fine-tuned lightweight classifier is a natural comparison. Each paper states only its own judge.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hc-ragas-gpt35turbo16k-judge",
+            "statement": "In the pinned ragas paper all prompts are evaluated using the gpt-3.5-turbo-16k model, available through the OpenAI API.",
+            "spans": [
+              {
+                "paper_id": "ragas",
+                "page": 3,
+                "quote": "In our implementation and\nexperiments, all prompts are evaluated using the\ngpt-3.5-turbo-16k model, which is available\nthrough the OpenAI API"
+              }
+            ]
+          },
+          {
+            "fact_id": "hc-ares-deberta-v3-large-judges",
+            "statement": "ARES prepares its RAG evaluation judges by fine-tuning DeBERTa-v3-Large judges on its synthetic dataset.",
+            "spans": [
+              {
+                "paper_id": "ares",
+                "page": 3,
+                "quote": "To prepare our RAG evaluation judges, we use\nour synthetic dataset to fine-tune DeBERTa-v3-\nLarge judges"
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-c-15",
+      "question": "Does Ragas or RAGChecker require a reference answer? State what each framework assumes about ground-truth answers.",
+      "question_type": "comparison",
+      "expected_answer": "Ragas is reference-free: it deliberately focuses on metrics that are fully self-contained and need no reference answer. RAGChecker assumes a ground-truth answer, since every benchmark sample is a tuple of query, documents and ground-truth answer.",
+      "reasoning_hops": 2,
+      "difficulty": "medium",
+      "group_id": "held-c-reference-requirement",
+      "rationale": "Both are fine-grained RAG evaluation frameworks, and whether a gold answer is needed is a defining, directly comparable property of each. Each paper states its own assumption without referring to the other.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hc-ragas-reference-free-metrics",
+            "statement": "The pinned ragas paper focuses on metrics that are fully self-contained and reference-free.",
+            "spans": [
+              {
+                "paper_id": "ragas",
+                "page": 3,
+                "quote": "We therefore fo-\ncus on metrics that are fully self-contained and\nreference-free."
+              }
+            ]
+          },
+          {
+            "fact_id": "hc-ragchecker-ground-truth-tuple",
+            "statement": "Each sample in the benchmark dataset of the pinned ragchecker paper is a tuple of query, documents and ground-truth answer.",
+            "spans": [
+              {
+                "paper_id": "ragchecker",
+                "page": 4,
+                "quote": "We prepare each sample in our benchmark dataset in the format of a tuple⟨q, D, gt⟩ representing\nquery, documents, and ground-truth answer, where query"
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-c-16",
+      "question": "What retrieval evaluation metrics does each of BEIR and MultiHop-RAG report for its own benchmark?",
+      "question_type": "comparison",
+      "expected_answer": "BEIR computes nDCG@10 for all of its datasets, using the Python interface of the official TREC evaluation tool. MultiHop-RAG reports Mean Average Precision at K (MAP@K), Mean Reciprocal Rank at K (MRR@K) and Hit Rate at K (Hit@K).",
+      "reasoning_hops": 2,
+      "difficulty": "medium",
+      "group_id": "held-c-benchmark-retrieval-metrics",
+      "rationale": "Two retrieval benchmarks, each of which fixes the metric set used to score systems on it, so the reported metrics are a natural comparison. Each fact is stated only in its own paper.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hc-beir-ndcg10-metric",
+            "statement": "The pinned beir paper computes nDCG@10 for all datasets using the Python interface of the official TREC evaluation tool.",
+            "spans": [
+              {
+                "paper_id": "beir",
+                "page": 5,
+                "quote": "For our experiments, we utilize the Python interface of the\nofﬁcial TREC evaluation tool [63] and compute nDCG@10 for all datasets."
+              }
+            ]
+          },
+          {
+            "fact_id": "hc-mhrag-map-mrr-hit-metrics",
+            "statement": "The pinned multihop-rag paper uses the retrieval evaluation metrics MAP@K, MRR@K and Hit@K.",
+            "spans": [
+              {
+                "paper_id": "multihop-rag",
+                "page": 3,
+                "quote": "we use\nretrieval evaluation metrics including Mean Aver-\nage Precision at K (MAP@K), Mean Reciprocal\nRank at K (MRR@K), and Hit Rate at K (Hit@K)."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-c-17",
+      "question": "What source material does each of the 2WikiMultihopQA dataset and the MultiHop-RAG dataset draw its corpus from?",
+      "question_type": "comparison",
+      "expected_answer": "2WikiMultihopQA is built from both text descriptions in Wikipedia and statements from Wikidata; MultiHop-RAG builds its RAG knowledge base from a collection of news articles.",
+      "reasoning_hops": 2,
+      "difficulty": "medium",
+      "group_id": "held-c-benchmark-source-corpus",
+      "rationale": "Both are multi-hop QA resources, and the underlying corpus is a defining property each paper states about itself, so Wikipedia/Wikidata vs news articles is a natural comparison.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hc-2wiki-wikipedia-wikidata-source",
+            "statement": "The pinned 2wikimultihop paper constructs its dataset from both text descriptions from Wikipedia and a set of statements from Wikidata.",
+            "spans": [
+              {
+                "paper_id": "2wikimultihop",
+                "page": 4,
+                "quote": "In this study, we utilized both text descriptions from Wikipedia4 and a set of statements from Wikidata to\nconstruct our dataset."
+              }
+            ]
+          },
+          {
+            "fact_id": "hc-mhrag-news-article-knowledge-base",
+            "statement": "The pinned multihop-rag paper constructs its RAG knowledge base using a collection of news articles.",
+            "spans": [
+              {
+                "paper_id": "multihop-rag",
+                "page": 2,
+                "quote": "We construct our RAG knowledge base using a\ncollection of news articles."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-c-18",
+      "question": "Both 2WikiMultihopQA and MultiHop-RAG define four question or query types. What are the four types in each case?",
+      "question_type": "comparison",
+      "expected_answer": "2WikiMultihopQA has comparison, inference, compositional and bridge-comparison questions; MultiHop-RAG categorises multi-hop queries into inference query, comparison query, temporal query and null query.",
+      "reasoning_hops": 2,
+      "difficulty": "medium",
+      "group_id": "held-c-benchmark-question-taxonomy",
+      "rationale": "Each dataset paper proposes its own four-way taxonomy of multi-hop questions, which makes the taxonomies directly comparable. Each list is stated only in its own paper.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hc-2wiki-four-question-types",
+            "statement": "The dataset of the pinned 2wikimultihop paper has four types of questions: comparison, inference, compositional and bridge comparison.",
+            "spans": [
+              {
+                "paper_id": "2wikimultihop",
+                "page": 3,
+                "quote": "In our dataset, we have the following four types of questions: (1) comparison, (2) inference, (3) compo-\nsitional, and (4) bridge comparison."
+              }
+            ]
+          },
+          {
+            "fact_id": "hc-mhrag-four-query-types",
+            "statement": "The pinned multihop-rag paper categorises multi-hop queries into four types: inference query, comparison query, temporal query and null query.",
+            "spans": [
+              {
+                "paper_id": "multihop-rag",
+                "page": 2,
+                "quote": "we first categorize\nmulti-hop queries into four types: Inference query,\nComparison query , Temporal query , and Null\nquery."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-c-19",
+      "question": "ModernBERT and Mistral 7B both avoid full quadratic attention over long sequences. What attention scheme does each of them use?",
+      "question_type": "comparison",
+      "expected_answer": "ModernBERT alternates attention layers between global attention, where every token attends to every other token, and local attention, where tokens attend only within a small sliding window; Mistral 7B uses grouped-query attention (GQA) together with sliding window attention (SWA).",
+      "reasoning_hops": 2,
+      "difficulty": "medium",
+      "group_id": "held-c-efficient-attention-scheme",
+      "rationale": "Both are transformer models whose efficiency claim rests on a specific attention scheme that each paper names for itself, so alternating global/local attention vs GQA plus sliding-window attention is a natural comparison.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hc-modernbert-alternating-attention",
+            "statement": "Attention layers in ModernBERT alternate between global attention, where every token attends to every other token, and local attention within a small sliding window.",
+            "spans": [
+              {
+                "paper_id": "modernbert",
+                "page": 2,
+                "quote": "attention layers in ModernBERT alternate between\nglobal attention, where every token within a se-\nquence attends to every other token, and local atten-\ntion, where tokens only attend to each other within\na small sliding window"
+              }
+            ]
+          },
+          {
+            "fact_id": "hc-mistral7b-gqa-swa",
+            "statement": "Mistral 7B leverages grouped-query attention (GQA) and sliding window attention (SWA).",
+            "spans": [
+              {
+                "paper_id": "mistral7b",
+                "page": 1,
+                "quote": "Mistral 7B leverages grouped-query attention (GQA) [1], and sliding window attention (SW A)"
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-c-20",
+      "question": "How does each of Sentence-BERT and M3-Embedding derive a single dense vector for a text from its transformer's token outputs?",
+      "question_type": "comparison",
+      "expected_answer": "Sentence-BERT adds a pooling layer and uses MEAN pooling by default, the mean of all output vectors (it also tried CLS-token output and max-over-time). M3-Embedding takes the normalized hidden state of the special [CLS] token as the dense representation.",
+      "reasoning_hops": 2,
+      "difficulty": "medium",
+      "group_id": "held-c-dense-vector-pooling",
+      "rationale": "Both papers produce a single dense text vector from a transformer encoder and each states its own pooling rule, so mean pooling vs normalized [CLS] is a natural comparison with no bridging fact needed.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hc-sbert-mean-pooling-default",
+            "statement": "The pinned sbert paper experiments with CLS-token, mean and max-over-time pooling strategies and its default configuration is MEAN.",
+            "spans": [
+              {
+                "paper_id": "sbert",
+                "page": 3,
+                "quote": "We experiment with three pool-\ning strategies: Using the output of the CLS-token,\ncomputing the mean of all output vectors ( MEAN-\nstrategy), and computing a max-over-time of the\noutput vectors (MAX-strategy). The default conﬁg-\nuration is MEAN."
+              }
+            ]
+          },
+          {
+            "fact_id": "hc-bgem3-cls-dense-representation",
+            "statement": "The pinned bge-m3 paper uses the normalized hidden state of the special token [CLS] as the representation of the query.",
+            "spans": [
+              {
+                "paper_id": "bge-m3",
+                "page": 4,
+                "quote": "We use the normalized hidden state of the\nspecial token “[CLS]” for the representation of the\nquery"
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-d-01",
+      "question": "In the SPLADE paper's analysis of the role of expansion, on a set of 10k documents, how many terms does SPLADE-ℓFLOPS drop on average per document, and how many expansion terms does it add?",
+      "question_type": "factual",
+      "expected_answer": "It drops about 20 terms per document on average and adds 32 expansion terms.",
+      "reasoning_hops": 1,
+      "difficulty": "medium",
+      "group_id": "held-d-splade",
+      "rationale": "Single lookup of one sentence in the 'role of expansion' discussion late in Section 4; the abstract and title only claim competitive effectiveness and controllable sparsity, never these per-document term counts, and the quote names SPLADE-ℓFLOPS itself.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hd-splade-expansion-term-counts",
+            "statement": "On a set of 10k documents, SPLADE-l_FLOPS drops on average 20 terms per document while adding 32 expansion terms.",
+            "spans": [
+              {
+                "paper_id": "splade",
+                "page": 4,
+                "quote": "On a set of 10k documents, the\nSPLADE-ℓFLOPS from Table 1 drops in average 20 terms per docu-\nment, while adding32 expansion terms."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-d-02",
+      "question": "How many tokens of retrieved context does the RAPTOR paper provide when experimenting with the UnifiedQA model, and why that number?",
+      "question_type": "factual",
+      "expected_answer": "400 tokens of context, because UnifiedQA has a maximum context length of 512 tokens (the same token budget is given to RAPTOR and to the baselines).",
+      "reasoning_hops": 1,
+      "difficulty": "medium",
+      "group_id": "held-d-raptor",
+      "rationale": "One sentence of the querying/evaluation configuration in Section 3, buried next to the collapsed-tree 2000-token setting; the abstract talks only about recursive summarisation and accuracy gains, so this evaluation-protocol number is not in the headline passage.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hd-raptor-unifiedqa-400-token-context",
+            "statement": "For experiments with the UnifiedQA model the pinned raptor paper provides 400 tokens of context, because UnifiedQA has a maximum context length of 512 tokens, and gives the same amount of context to RAPTOR and to the baselines.",
+            "spans": [
+              {
+                "paper_id": "raptor",
+                "page": 6,
+                "quote": "For experiments\nwith the UnifiedQA model, we provide 400 to-\nkens of context, as UnifiedQA has a max con-\ntext length of 512 tokens. We provide the same\namount of tokens of context to RAPTOR and to\nthe baselines."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-d-03",
+      "question": "In LightRAG's implementation and evaluation details, what chunk size is used across all datasets, and what value is the gleaning parameter fixed at?",
+      "question_type": "factual",
+      "expected_answer": "Chunk size 1200 across all datasets, with the gleaning parameter fixed at 1 for both GraphRAG and LightRAG.",
+      "reasoning_hops": 1,
+      "difficulty": "medium",
+      "group_id": "held-d-lightrag",
+      "rationale": "A two-sentence implementation note inside the experimental-settings subsection; the abstract and introduction describe dual-level retrieval and graph indexing and never mention chunk size or the gleaning parameter.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hd-lightrag-chunk-size-gleaning",
+            "statement": "In the implementation and evaluation details of the pinned lightrag paper the chunk size is set to 1200 across all datasets and the gleaning parameter is fixed at 1 for both GraphRAG and LightRAG.",
+            "spans": [
+              {
+                "paper_id": "lightrag",
+                "page": 6,
+                "quote": "To ensure consistency, the chunk size is set to 1200 across all datasets.\nAdditionally, the gleaning parameter is fixed at 1 for both GraphRAG and LightRAG."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-d-04",
+      "question": "In the GraphRAG paper's Experiment 1 configuration, how long did graph indexing with a 600-token window take for the Podcast dataset?",
+      "question_type": "factual",
+      "expected_answer": "281 minutes (on a virtual machine with 16GB RAM and an Intel Xeon Platinum 8171M CPU @ 2.60GHz).",
+      "reasoning_hops": 1,
+      "difficulty": "medium",
+      "group_id": "held-d-graphrag",
+      "rationale": "A single configuration sentence in Section 4.1.3; the paper's headline claim is about global sensemaking win rates, and indexing wall-clock cost appears nowhere in the abstract or results discussion.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hd-graphrag-podcast-index-281-minutes",
+            "statement": "In the pinned graphrag paper, graph indexing with a 600 token window took 281 minutes for the Podcast dataset, running on a virtual machine with 16GB RAM and an Intel Xeon Platinum 8171M CPU @ 2.60GHz.",
+            "spans": [
+              {
+                "paper_id": "graphrag",
+                "page": 9,
+                "quote": "Graph indexing with a 600 token window\n(explained in Section A.2) took 281 minutes for the Podcast dataset, running on a virtual machine\n(16GB RAM, Intel(R) Xeon(R) Platinum 8171M CPU @ 2.60GHz)"
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-d-05",
+      "question": "In the KG2RAG paper, extracting entities and relations with Llama-3 over the 66,581 HotpotQA documents produced how many triplets, entities, and relations?",
+      "question_type": "factual",
+      "expected_answer": "211,356 triplets, consisting of 98,226 entities and 19,813 relations.",
+      "reasoning_hops": 1,
+      "difficulty": "medium",
+      "group_id": "held-d-kg2rag",
+      "rationale": "A single sentence of the experiment-setup subsection describing how the knowledge graph was built; the abstract claims only that KG-guided expansion and organisation improve RAG, so these construction statistics sit well away from the quoted claim.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hd-kg2rag-hotpotqa-kg-extraction-counts",
+            "statement": "For the KG-chunk association, the pinned kg2rag paper prompts Llama-3 to extract entities and relations from the 66,581 HotpotQA documents, yielding 211,356 triplets consisting of 98,226 entities and 19,813 relations.",
+            "spans": [
+              {
+                "paper_id": "kg2rag",
+                "page": 5,
+                "quote": "For the KG-chunk association, we provide a\nmanual prompt to Llama-3 (Dubey et al., 2024)\nfor extracting entities and relations from the 66,581\ndocuments of HotpotQA, resulting in a total of\n211,356 triplets consisting of 98,226 entities and\n19,813 relations."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-d-06",
+      "question": "Which framework does the MultiHop-RAG paper use to fact-check that its GPT-4-generated claims stay consistent with the original evidence?",
+      "question_type": "factual",
+      "expected_answer": "The UniEval framework.",
+      "reasoning_hops": 1,
+      "difficulty": "medium",
+      "group_id": "held-d-multihop-rag",
+      "rationale": "A construction detail in Step 3 of the pipeline section; the abstract describes the benchmark's query types and size, not the verification tool used to validate claim-evidence alignment.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hd-multihoprag-unieval-claim-factcheck",
+            "statement": "During dataset construction the pinned multihop-rag paper performs fact-checking with the UniEval framework to verify the alignment between each piece of evidence and the claim generated from it.",
+            "spans": [
+              {
+                "paper_id": "multihop-rag",
+                "page": 4,
+                "quote": "To ensure\nconsistency between the generated claim and the\nevidence, we further perform fact-checking using\nthe UniEval (Zhong et al., 2022) framework to ver-\nify the alignment between the evidence and claim."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-d-07",
+      "question": "In the construction of the 2WikiMultihopQA dataset, how many distractor paragraphs are selected using the entity type of the gold paragraphs, and how does that number differ for bridge-comparison questions?",
+      "question_type": "factual",
+      "expected_answer": "The top-8 paragraphs are selected, except for bridge-comparison questions, where the top-6 are selected.",
+      "reasoning_hops": 1,
+      "difficulty": "medium",
+      "group_id": "held-d-2wikimultihop",
+      "rationale": "A sentence in the 'Collect Distractor Paragraphs' paragraph of the data-collection section; the abstract and title talk about reasoning-step evaluation and the evidence annotation, never the distractor selection counts.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hd-2wiki-distractor-top8-top6",
+            "statement": "When collecting distractor paragraphs, the pinned 2wikimultihop paper uses the entity type of the two gold paragraphs (four gold paragraphs for bridge-comparison questions) to select the top-8 paragraphs, or the top-6 for bridge-comparison questions.",
+            "spans": [
+              {
+                "paper_id": "2wikimultihop",
+                "page": 5,
+                "quote": "Then, we used the entity type of the two gold paragraphs (four gold paragraphs for bridge-\ncomparison question) to select the top-8 paragraphs (top-6 for bridge-comparison question) and consid-\nered it as a set of distractor paragraphs."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-d-08",
+      "question": "In the IRCoT paper's experimental setup, what context limit is imposed on the Flan-T5 models, and what determined that limit?",
+      "question_type": "factual",
+      "expected_answer": "Flan-T5's context is limited to 6K word pieces, the maximum that fit in the memory of the authors' 80G A100 GPUs.",
+      "reasoning_hops": 1,
+      "difficulty": "medium",
+      "group_id": "held-d-ircot",
+      "rationale": "A hardware-driven configuration detail in the models subsection of the experimental setup; the abstract reports retrieval recall and QA gains, and this 6K word-piece cap (set by 80G A100 memory) appears only in the body, distinct from the 8K limit quoted for GPT3.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hd-ircot-flant5-6k-context-limit",
+            "statement": "The pinned ircot paper limits Flan-T5's context to 6K word pieces, which is the maximum that fit in the memory of its 80G A100 GPUs.",
+            "spans": [
+              {
+                "paper_id": "ircot",
+                "page": 5,
+                "quote": "But we limit Flan-T5’s context to 6K word pieces,\nwhich is the maximum we could fit in the memory\nof our 80G A100 GPUs."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-d-09",
+      "question": "In Self-RAG's default inference settings, what retrieval threshold is used for most tasks, and what value is used for ALCE and why?",
+      "question_type": "factual",
+      "expected_answer": "0.2 for most tasks, and 0 for ALCE because of its citation requirements.",
+      "reasoning_hops": 1,
+      "difficulty": "medium",
+      "group_id": "held-d-self-rag",
+      "rationale": "One sentence of the inference-settings paragraph in the experimental setup; the abstract describes reflection tokens and the adaptive retrieval idea in general terms and gives no threshold values.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hd-selfrag-retrieval-threshold",
+            "statement": "The pinned self-rag paper sets the retrieval threshold to 0.2 for most tasks and to 0 for ALCE, because of ALCE's citation requirements.",
+            "spans": [
+              {
+                "paper_id": "self-rag",
+                "page": 7,
+                "quote": "To encourage frequent retrieval, we set the retrieval threshold\nto 0.2 for most tasks and to 0 for ALCE (Gao et al., 2023) due to citation requirements."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-d-10",
+      "question": "In the REPLUG paper, which model initializes the retriever for REPLUG LSR, and which LM is used as the supervision LM for computing the LM likelihood?",
+      "question_type": "factual",
+      "expected_answer": "The retriever is initialized with Contriever, and GPT-3 Curie is the supervision LM.",
+      "reasoning_hops": 1,
+      "difficulty": "medium",
+      "group_id": "held-d-replug",
+      "rationale": "Two sentences of the training-setup section; the abstract says only that a black-box LM supervises retriever training, without naming Curie or the Contriever initialization, and the quote names REPLUG LSR itself.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hd-replug-lsr-init-and-supervision-lm",
+            "statement": "REPLUG LSR initializes its retriever with the Contriever model and uses GPT-3 Curie as the supervision LM to compute the LM likelihood.",
+            "spans": [
+              {
+                "paper_id": "replug",
+                "page": 4,
+                "quote": "For REPLUG LSR , we initialize the retriever with the\nContriever model (Izacard et al., 2022a). We use GPT-3\nCurie (Brown et al., 2020b) as the supervision LM to com-\npute the LM likelihood."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-d-11",
+      "question": "In the Ragas paper, what inter-annotator agreement is reported for faithfulness and context relevance, and what agreement is reported for answer relevance?",
+      "question_type": "factual",
+      "expected_answer": "Around 95% of cases for faithfulness and context relevance, and around 90% of cases for answer relevance.",
+      "reasoning_hops": 1,
+      "difficulty": "medium",
+      "group_id": "held-d-ragas",
+      "rationale": "An annotation-quality detail inside the dataset section; the abstract presents the three reference-free metrics and the framework, not the agreement rates behind the human judgements.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hd-ragas-annotator-agreement",
+            "statement": "In the pinned ragas paper the two annotators agreed in around 95% of cases for faithfulness and context relevance, and in around 90% of cases for answer relevance.",
+            "spans": [
+              {
+                "paper_id": "ragas",
+                "page": 4,
+                "quote": "For faithfulness\nand context relevance, the two annotators agreed in\naround 95% of cases. For answer relevance, they\nagreed in around 90% of the cases."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-d-12",
+      "question": "In RAGChecker's meta evaluation, how is the human agreement rate defined, and what value is reported?",
+      "question_type": "factual",
+      "expected_answer": "It is the proportion of instances where the two annotators' preference labels differ by at most 1 (abs(h_i - h'_i) <= 1), and the reported value is 90.95%.",
+      "reasoning_hops": 1,
+      "difficulty": "medium",
+      "group_id": "held-d-ragchecker",
+      "rationale": "A sentence in the meta-evaluation process paragraph; the abstract advertises the fine-grained metric suite and correlation with human judgement, so this specific agreement definition and number live only in the body.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hd-ragchecker-human-agreement-rate",
+            "statement": "The pinned ragchecker paper computes a human agreement rate as the proportion of instances satisfying abs(h_i - h'_i) <= 1 and reports a result of 90.95%.",
+            "spans": [
+              {
+                "paper_id": "ragchecker",
+                "page": 7,
+                "quote": "In addition, we further compute human agreement rate as the proportion of\ninstances satisfying abs(hi− h′\ni)≤ 1, and the result is 90.95%."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-d-13",
+      "question": "In FlashRAG's corpus-chunking experiment, which four chunk sizes are tested, and what stride is used for each configuration?",
+      "question_type": "factual",
+      "expected_answer": "Six sentences, eight sentences, ten sentences, and 100 words, each with a stride set to half of the chunk size.",
+      "reasoning_hops": 1,
+      "difficulty": "medium",
+      "group_id": "held-d-flashrag",
+      "rationale": "A sentence from the 'Impact of Corpus Chunking' subsection; the abstract describes the toolkit's components and reproduced methods, not the chunking grid used in this specific analysis.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hd-flashrag-chunk-sizes-and-stride",
+            "statement": "The corpus-chunking experiment in the pinned flashrag paper tests four chunk sizes - six sentences, eight sentences, ten sentences, and 100 words - with each configuration using a stride set to half of the chunk size.",
+            "spans": [
+              {
+                "paper_id": "flashrag",
+                "page": 9,
+                "quote": "We experiment with four different chunk sizes: six sentences, eight sentences, ten\nsentences, and 100 words. Each configuration uses a stride set to half of the chunk size."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-d-14",
+      "question": "In the Sentence-BERT paper, how many training triplets is SBERT trained on with the Triplet Objective, and how many test triplets is it evaluated on?",
+      "question_type": "factual",
+      "expected_answer": "About 1.8 million training triplets, evaluated on 222,957 test triplets.",
+      "reasoning_hops": 1,
+      "difficulty": "medium",
+      "group_id": "held-d-sbert",
+      "rationale": "A dataset-size sentence inside the Wikipedia-sections evaluation subsection; the abstract is about reducing BERT's pairwise comparison cost and STS accuracy, and these triplet counts appear only here, with the quote naming SBERT itself.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hd-sbert-triplet-dataset-sizes",
+            "statement": "Using the Triplet Objective, SBERT is trained for one epoch on about 1.8 million training triplets and evaluated on 222,957 test triplets.",
+            "spans": [
+              {
+                "paper_id": "sbert",
+                "page": 6,
+                "quote": "We use the\nTriplet Objective, train SBERT for one epoch on\nthe about 1.8 Million training triplets and evaluate\nit on the 222,957 test triplets."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-d-15",
+      "question": "In the RETRO paper's analysis of retrieved neighbours, how many links away from a given article do neighbours tend to come from, compared with random articles?",
+      "question_type": "factual",
+      "expected_answer": "Neighbours tend to come from 2-3 links away, while random articles are more than 5 links apart.",
+      "reasoning_hops": 1,
+      "difficulty": "medium",
+      "group_id": "held-d-retro",
+      "rationale": "A one-sentence observation at the end of the nearest-neighbour retrieval subsection pointing at an appendix figure; the abstract is about scaling retrieval to trillions of tokens and perplexity gains, so this link-distance statistic is far from the quoted claim.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hd-retro-neighbour-link-distance",
+            "statement": "The pinned retro paper finds that retrieved neighbours tend to come from 2-3 links away from a given article, whereas random articles are more than 5 links apart.",
+            "spans": [
+              {
+                "paper_id": "retro",
+                "page": 4,
+                "quote": "We ﬁnd that neighbours tend to\ncome from 2-3 links away from a given article whereas random articles are more than 5 links apart."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-d-16",
+      "question": "In the Contriever paper, how are training batches split between the Wikipedia and CCNet data sources?",
+      "question_type": "factual",
+      "expected_answer": "Half the batches are sampled from each source (Wikipedia and CCNet).",
+      "reasoning_hops": 1,
+      "difficulty": "medium",
+      "group_id": "held-d-contriever",
+      "rationale": "The opening sentence of the datasets subsection; the abstract claims unsupervised contrastive retrieval beats BM25 and says nothing about the per-source batch split, and the quote names Contriever itself.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hd-contriever-wikipedia-ccnet-split",
+            "statement": "Contriever is trained with contrastive learning on documents sampled from a mix of Wikipedia and CCNet data, with half the batches sampled from each source.",
+            "spans": [
+              {
+                "paper_id": "contriever",
+                "page": 6,
+                "quote": "Contriever is trained with contrastive learning on documents sampled from a mix between Wikipedia data\nand CCNet data (Wenzek et al., 2020), where half the batches are sampled from each source."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-d-17",
+      "question": "In the E5 paper, what heuristic rules are applied to Reddit comments when harvesting the text-pair data?",
+      "question_type": "factual",
+      "expected_answer": "Reddit comments that are too long (more than 4096 characters) or that receive a score less than 1 are removed (web-page passages with high perplexity are also removed).",
+      "reasoning_hops": 1,
+      "difficulty": "medium",
+      "group_id": "held-d-e5",
+      "rationale": "A parenthetical filtering rule in the data-harvesting subsection; the abstract describes weakly-supervised contrastive pre-training and benchmark results, not the per-source cleaning heuristics.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hd-e5-reddit-filter-rules",
+            "statement": "When harvesting its text-pair data, the pinned e5 paper removes Reddit comments that are either too long (more than 4096 characters) or receive a score less than 1, and removes passages from web pages with high perplexity.",
+            "spans": [
+              {
+                "paper_id": "e5",
+                "page": 3,
+                "quote": "For example, we remove Reddit comments that are either too long (> 4096 characters) or\nreceive score less than 1, and remove passages from web pages with high perplexity [ 60]."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-d-18",
+      "question": "How does the ColBERTv2 paper define the success@5 (S@5) metric it uses for evaluation?",
+      "question_type": "factual",
+      "expected_answer": "A point is awarded for each query where the system finds an accepted or upvoted (score >= 1) answer from the target page among the top-5 hits.",
+      "reasoning_hops": 1,
+      "difficulty": "medium",
+      "group_id": "held-d-colbert2",
+      "rationale": "A metric-definition sentence near the end of the dataset section; the abstract advertises residual compression and out-of-domain quality, and the precise scoring rule (accepted or upvoted, score >= 1) appears only in the body.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hd-colbertv2-success-at-5-definition",
+            "statement": "The pinned colbert2 paper evaluates retrieval quality with the success@5 (S@5) metric, awarding a point for each query where the system finds an accepted or upvoted (score >= 1) answer from the target page in the top-5 hits.",
+            "spans": [
+              {
+                "paper_id": "colbert2",
+                "page": 7,
+                "quote": "we evaluate retrieval quality by comput-\ning the success@5 (S@5) metric. Speciﬁcally, we\naward a point to the system for each query where\nit ﬁnds an accepted or upvoted (score≥ 1) answer\nfrom the target page in the top-5 hits."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-d-19",
+      "question": "In jina-embeddings-v3, what rotary base frequency is set during training, and what value is it adjusted to at inference?",
+      "question_type": "factual",
+      "expected_answer": "10,000 during training, adjusted to 20,000 during inference.",
+      "reasoning_hops": 1,
+      "difficulty": "medium",
+      "group_id": "held-d-jina3",
+      "rationale": "A sentence in the model-architecture section about positional encodings; the abstract focuses on task-specific LoRA adapters and multilingual performance and never mentions rotary base frequencies.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hd-jina3-rotary-base-frequency",
+            "statement": "The pinned jina3 paper found that setting a rotary base frequency of 10,000 during training and adjusting it to 20,000 during inference improves performance on long-text tasks without degrading performance on short-text tasks.",
+            "spans": [
+              {
+                "paper_id": "jina3",
+                "page": 3,
+                "quote": "We found\nthat setting a rotary base frequency of 10,000 dur-\ning training and adjusting it to 20,000 during in-\nference improves performance on long-text tasks\nwithout degrading performance on short-text tasks."
+              }
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "question_id": "held-d-20",
+      "question": "What vocabulary size does the ModernBERT tokenizer use, and what does that number include?",
+      "question_type": "factual",
+      "expected_answer": "50,368 - a multiple of 64 chosen for GPU utilization, which includes 83 unused tokens to support downstream applications.",
+      "reasoning_hops": 1,
+      "difficulty": "medium",
+      "group_id": "held-d-modernbert",
+      "rationale": "A tokenizer detail in the training-data subsection; the abstract highlights speed, long context and downstream quality, so the exact vocabulary size and the 83 unused tokens are body-only facts.",
+      "sufficient_evidence_sets": [
+        [
+          {
+            "fact_id": "hd-modernbert-vocab-size-50368",
+            "statement": "In the pinned modernbert paper the vocabulary is set to 50,368, a multiple of 64, and includes 83 unused tokens to support downstream applications.",
+            "spans": [
+              {
+                "paper_id": "modernbert",
+                "page": 3,
+                "quote": "To ensure optimal GPU utilization (Anthony et al.,\n2024; Karpathy, 2023), the vocabulary is set to\n50,368, a multiple of 64 and includes 83 unused\ntokens to support downstream applications."
+              }
+            ]
+          }
+        ]
+      ]
+    }
+  ]
+}

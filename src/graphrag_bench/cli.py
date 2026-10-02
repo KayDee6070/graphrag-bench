@@ -523,6 +523,11 @@ def main(argv: list[str] | None = None) -> int:
     papers.add_argument("--raw", type=Path, required=True, help="verified local PDF cache")
     papers.add_argument("--output", type=Path, required=True, help="new paper bundle directory")
     papers.add_argument("--config", type=Path, help="TOML chunking settings")
+    papers.add_argument(
+        "--allow-test-split",
+        action="store_true",
+        help="permit a held-out (test) annotation book; refused by default",
+    )
     verify_paper = commands.add_parser("verify-papers", help="verify a saved paper bundle offline")
     verify_paper.add_argument("directory", type=Path)
     verify_paper.add_argument(
@@ -567,6 +572,7 @@ def main(argv: list[str] | None = None) -> int:
                         args.raw,
                         args.output,
                         load_chunking_config(args.config),
+                        allow_test_split=args.allow_test_split,
                     )
                 ),
             }

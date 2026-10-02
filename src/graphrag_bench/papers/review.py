@@ -77,9 +77,12 @@ class ReviewSheet(Record):
 
 
 def _verified_questions(directory: Path) -> tuple[BenchmarkQuestion, ...]:
-    verify_papers(directory)
+    """Read the bundle's own split rather than assuming dev, so a test bundle is reviewable."""
+    manifest = verify_papers(directory)
     return load_benchmark(
-        directory / "ingestion/documents.jsonl", directory / "questions.jsonl", split="dev"
+        directory / "ingestion/documents.jsonl",
+        directory / "questions.jsonl",
+        split=manifest.split,
     ).questions
 
 

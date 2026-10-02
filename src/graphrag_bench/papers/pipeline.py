@@ -49,7 +49,7 @@ class PaperManifest(Record):
     chunk_count: PositiveInt
     question_count: PositiveInt
     review_status: Literal["pending-independent-review"] = "pending-independent-review"
-    split: Literal["dev"] = "dev"
+    split: Literal["dev", "test"] = "dev"
     artifact_hashes: dict[str, Sha256]
 
 
@@ -119,8 +119,16 @@ def prepare_papers(
     raw_directory: Path,
     output: Path,
     config: ChunkingConfig | None = None,
+    *,
+    allow_test_split: bool = False,
 ) -> PaperManifest:
-    """No download or inference. Validate inputs before creating a fresh output bundle."""
+    """No download or inference. Validate inputs before creating a fresh output bundle.
+
+    A `test` annotation book requires `allow_test_split`. The default refuses it, so
+    held-out status cannot be claimed by editing one field in an annotation file; the
+    caller has to state the intent. The flag asserts nothing about how the book was
+    authored, which is what `authorship` records and what a reader should weigh.
+    """
     if output.exists() or output.is_symlink():
         raise PaperError(f"output already exists: {output}")
     if output.resolve().is_relative_to(raw_directory.resolve()):
@@ -128,6 +136,12 @@ def prepare_papers(
     try:
         catalog = load_catalog(catalog_path)
         annotations = load_annotations(annotations_path)
+        if annotations.split != "dev" and not allow_test_split:
+            raise PaperError(
+                f"annotations declare split {annotations.split!r}; preparing anything "
+                "other than dev requires an explicit opt-in, because held-out status "
+                "must not be acquired by editing a field"
+            )
         batch = build_paper_corpus(catalog, raw_directory, config or ChunkingConfig())
         questions = compile_annotations(catalog, annotations, batch)
         artifacts = {
@@ -151,6 +165,7 @@ def prepare_papers(
             chunk_count=len(batch.chunks),
             page_count=sum(len(s.sections) for s in batch.sources),
             question_count=len(questions),
+            split=annotations.split,
             artifact_hashes={
                 name: sha256((output / name).read_bytes()).hexdigest()
                 for name in sorted(BUNDLE_FILES)

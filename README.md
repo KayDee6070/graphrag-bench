@@ -4,37 +4,45 @@ When does graph-based retrieval outperform vector retrieval for questions requir
 
 GraphRAG Bench is a small research-engineering project for comparing vector, graph, and hybrid retrieval under the same evidence budget. Retrieval quality will be measured independently of answer generation.
 
-**Start here: [project status at M11](reports/project-status.md)** — what exists, what was
-measured, and what is open, in one page.
+**Start here: [the held-out result](reports/held-out-result.md)** — the answer and its
+limits. Then [project status](reports/project-status.md) for everything else, in one page.
 
-**Current milestone: M11 — comparison complete; research claims still blocked.** The runner compares verified, frozen paper chunks, vector indexes, and either graph kind under one evidence budget. The corpus contains 30 papers, 558 pages, 6,996 chunks, and 40 draft dev questions. Independent annotation review and 80 genuinely held-out questions remain, so every result below is a development diagnostic and no general retrieval advantage is established. Start with the [M11 lesson](docs/paper-comparison.md) and [development observations](reports/m11-development.md).
+**Current state: the held-out evaluation is done.** The corpus holds 30 papers, 558 pages
+and 6,996 chunks, with 40 development questions and 80 results-blinded held-out questions.
+All four retrieval methods have been compared under one evidence budget on both splits, and
+every run reproduces offline from saved artifacts. What remains open is **independent human
+review of the annotations**: the labels are agent-authored, 11 of the 40 development
+questions carry a recorded owner decision, and the held-out 80 have had no human read them.
+Results are therefore reproducible and verified, but not independently annotated.
 
-**The four-method comparison is complete (0.11.6).** A GPU bfloat16 recipe that
-reproduces the CPU reference exactly extracted the whole corpus in ~72 minutes,
-yielding a sparse real graph: 330 entities and 111 assertions from 6,996 chunks.
-Complete evidence at K=5 under one 2,000-token budget, verified offline:
-**BM25 23/40, hybrid 15/40, vector 13/40, graph 7/40**.
+**The held-out comparison is complete.** 80 questions authored by agents with no access to
+any measured result, mechanically verified, sealed, and run once as
+`experiments/runs/m13-heldout-comparison-01`. Complete evidence under one 2,000-token
+budget, verified offline:
 
-The headline is negative. On the 8 questions needing evidence from two documents — exactly
-what this project set out to test — **no method completed a single one**, at either cutoff.
-That survived a label review: 11 annotations were revised or confirmed, three hop labels
-changed, one question reworded, and **not one aggregate moved**.
-BM25 leads every other row, and fusion flips sign: +5 points at K=5, −7.5 at K=10 — now
-explained by [the fusion analysis](reports/m12-fusion-analysis.md).
+| Method | K=5 | K=10 |
+| --- | ---: | ---: |
+| BM25 | **35/80** | **39/80** |
+| Vector | 26/80 | 30/80 |
+| Hybrid | 21/80 | 29/80 |
+| Graph | 6/80 | 6/80 |
 
-A labelled oracle diagnostic explains why, and the answer is not "graphs don't work":
+**The research question has a negative answer.** On the 40 questions needing evidence from
+two documents, dense retrieval, graph traversal and rank fusion each complete **zero**, at
+both cutoffs. BM25 completes 3 at K=5 and 5 at K=10 — the only method that completes any,
+and the simplest one in the set. Graph retrieval does not outperform vector retrieval here;
+it underperforms it everywhere, and both lose to BM25.
 
-- **The annotations are sound.** 0 of 17 multi-document facts are uncoverable.
-- **The failure is recall depth.** 19 of 26 reachable fact/method pairs sit deeper than
-  rank 10. These questions need two facts; typically one lands at rank 1–5 and its partner
-  at rank 26–363, and half a set scores zero.
-- **The graph arm is near-inert**, reaching 1 of 17 facts, with one question linking no
-  entity at all. 111 assertions cannot connect these questions.
+**One development finding did not replicate.** Hybrid beat vector by +5.0 points at K=5 on
+the development set; held-out it loses by 6.2. The development report had called that "a
+direction, not a measured effect", and that caution was warranted.
 
-So the measured lever is retrieval depth and extraction coverage, not method choice. And
-this still does not settle the research question: all 40 labels are unreviewed draft dev
-annotations, there are zero held-out questions, and the extractor recovers 2 of 6 sampled
-draft facts. Details in the [development report](reports/m11-development.md).
+This is one corpus of 30 related papers, one embedding model, one budget, and a graph built
+by an extractor that recovers 2 of 6 sampled facts — so nothing here bounds what graph
+retrieval could do with better extraction. The questions are agent-authored and
+results-blinded rather than independently human-authored. Full numbers, strata, and limits:
+[held-out result](reports/held-out-result.md). Development-phase analysis:
+[project status](reports/project-status.md).
 
 ## Quick start
 
@@ -327,8 +335,9 @@ Read the [M0 design and experiment plan](docs/design.md), [data contracts](docs/
 9. **M8:** Local LLM-assisted extraction, source checks, inference receipts, graph replay, and study documentation — complete; the small controlled pilot is not a real-paper quality benchmark.
 10. **M9:** Local answer proposals, exact citation references, token-budget receipts, offline replay, and study documentation — complete; semantic correctness and abstention reliability are not established.
 11. **M10:** Real-paper acquisition, PDF provenance, 30-paper expansion, 40 draft development questions, coverage audits, and review tooling — implemented. 80 results-blinded held-out questions now exist and are verified but unpromoted; independent annotation review remains open.
-12. **M11:** Frozen real-paper comparison runner, offline source-metric verification, reviewer packets, host-memory gating, a GPU recipe measured against the CPU reference, a complete real-paper model graph, and the verified four-method comparison — complete. Independent annotation review and 80 held-out questions remain, so all results are development diagnostics.
+12. **M11:** Frozen real-paper comparison runner, offline source-metric verification, reviewer packets, host-memory gating, a GPU recipe measured against the CPU reference, a complete real-paper model graph, and the verified four-method comparison — complete.
 13. **M12:** Ablations and error analysis — done for the questions the comparison raised. The multi-hop diagnostic explains the multi-document zeros as recall depth, and [the fusion analysis](reports/m12-fusion-analysis.md) explains the K=5/K=10 sign flip, shows across six configurations that it is not tunable, and resolves it with per-method fusion weights: any `graph_weight` below 1.0 removes the K=10 penalty and keeps the K=5 gain. Nine verified configurations in total.
-14. **M13–M14:** CLI polish, documentation, charts, and release preparation; optional demonstration UI.
+14. **M13:** Held-out evaluation — complete. 80 results-blinded questions authored, mechanically verified, sealed behind an explicit opt-in, and [run once](reports/held-out-result.md). Independent human annotation review remains the one open requirement.
+15. **M14:** Charts, release preparation, and the optional demonstration UI — not started.
 
 Work proceeds one milestone at a time. Code and original fictional fixtures are MIT licensed. Third-party paper content and annotations have [separate licenses and attribution](datasets/papers/research/README.md#licensing-and-changes).
