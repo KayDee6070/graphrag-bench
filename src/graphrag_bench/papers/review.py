@@ -76,20 +76,21 @@ class ReviewSheet(Record):
         return self
 
 
-def _verified_questions(directory: Path) -> tuple[BenchmarkQuestion, ...]:
-    """Read the bundle's own split rather than assuming dev, so a test bundle is reviewable."""
+def _verified_questions(directory: Path) -> tuple[tuple[BenchmarkQuestion, ...], str]:
+    """Return the questions and the bundle's own split, so a test bundle is reviewable."""
     manifest = verify_papers(directory)
-    return load_benchmark(
+    dataset = load_benchmark(
         directory / "ingestion/documents.jsonl",
         directory / "questions.jsonl",
         split=manifest.split,
-    ).questions
+    )
+    return dataset.questions, manifest.split
 
 
 def export_review(directory: Path, output: Path) -> ReviewSheet:
     """Create only pending rows. The reviewer edits a separate, non-overwritten file."""
     try:
-        questions = _verified_questions(directory)
+        questions, _ = _verified_questions(directory)
         sheet = ReviewSheet(
             bundle_sha256=sha256((directory / "manifest.json").read_bytes()).hexdigest(),
             questions=tuple(QuestionReview(question_id=q.question_id) for q in questions),
@@ -104,7 +105,7 @@ def export_review(directory: Path, output: Path) -> ReviewSheet:
 def verify_review(directory: Path, review_path: Path) -> dict[str, object]:
     """Validate self-reported reviewer decisions, not identity or actual independence."""
     try:
-        questions = _verified_questions(directory)
+        questions, split = _verified_questions(directory)
         sheet = ReviewSheet.model_validate_json(review_path.read_bytes())
         expected = sha256((directory / "manifest.json").read_bytes()).hexdigest()
         if sheet.bundle_sha256 != expected:
@@ -119,7 +120,9 @@ def verify_review(directory: Path, review_path: Path) -> dict[str, object]:
             "questions": len(questions),
             "all_questions_approved": counts["approved"] == len(questions),
             "reviewer_identity_authenticated": False,
-            "held_out_questions": 0,
+            # A test bundle's questions are held out by construction; a dev bundle's
+            # are not, no matter how the review turns out.
+            "held_out_questions": len(questions) if split == "test" else 0,
         }
     except (OSError, ValueError) as error:
         raise PaperError(f"cannot verify paper review: {error}") from error
@@ -127,7 +130,7 @@ def verify_review(directory: Path, review_path: Path) -> dict[str, object]:
 
 def audit_papers(directory: Path) -> dict[str, object]:
     """Check available-source coverage, not retrieval performance or semantic support."""
-    questions = _verified_questions(directory)
+    questions, split = _verified_questions(directory)
     batch, _ = load_ingestion(directory / "ingestion")
     uncovered = [
         q.question_id for q in questions if not score_evidence(q, batch.chunks).complete_evidence
@@ -154,5 +157,5 @@ def audit_papers(directory: Path) -> dict[str, object]:
         "uncovered_questions": uncovered,
         "all_source_evidence_coverable": not uncovered,
         "review_status": "pending-independent-review",
-        "held_out_questions": 0,
+        "held_out_questions": len(questions) if split == "test" else 0,
     }

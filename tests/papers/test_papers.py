@@ -400,3 +400,30 @@ def test_a_dev_book_still_prepares_without_the_flag(paper_inputs, tmp_path):
     manifest = prepare(paper_inputs, tmp_path / "dev")
 
     assert manifest.split == "dev"
+
+
+def test_held_out_question_count_follows_the_bundle_split(paper_inputs, tmp_path):
+    """A dev bundle reports zero held-out questions however its review turns out."""
+    from graphrag_bench.papers.review import audit_papers, export_review, verify_review
+
+    dev = tmp_path / "dev"
+    prepare(paper_inputs, dev)
+    export_review(dev, tmp_path / "dev-review.json")
+    assert verify_review(dev, tmp_path / "dev-review.json")["held_out_questions"] == 0
+    assert audit_papers(dev)["held_out_questions"] == 0
+
+    mutate(
+        paper_inputs[1],
+        lambda data: data.update(split="test", authorship="agent-authored-results-blinded"),
+    )
+    held = tmp_path / "held"
+    prepare_papers(
+        *paper_inputs[:3],
+        held,
+        ChunkingConfig(max_chars=512, max_units=5, overlap_units=1),
+        allow_test_split=True,
+    )
+    export_review(held, tmp_path / "held-review.json")
+    summary = verify_review(held, tmp_path / "held-review.json")
+    assert summary["held_out_questions"] == summary["questions"]
+    assert audit_papers(held)["held_out_questions"] == summary["questions"]
