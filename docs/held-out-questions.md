@@ -65,10 +65,19 @@ about shared priors.
 
 ## Current state and the promotion decision
 
-`datasets/papers/research/held-out-drafts.json` holds 40 verified questions: 20 two-paper
-bridge questions (`held-a`) and 20 single-paper lookups (`held-b`), written by two separate
-results-blinded agents. All 40 pass every mechanical check. **Nothing has been run against
-them.**
+`datasets/papers/research/held-out-drafts.json` holds **80 verified questions**, written by
+four separate results-blinded agents in four strata:
+
+| Stratum | n | Shape |
+| --- | ---: | --- |
+| `held-a` | 20 | two-paper bridge: paper A names a component, paper B states its property |
+| `held-b` | 20 | single-paper lookup |
+| `held-c` | 20 | two-paper comparison: both facts independently findable, no hidden bridge |
+| `held-d` | 20 | single-paper lookup drawn from body text rather than abstracts |
+
+40 questions at one hop, 40 at two. All 80 pass every mechanical check, each verified by
+this session independently rather than on the drafting agent's word. **Nothing has been run
+against them.**
 
 It is deliberately not an `AnnotationBook`. `prepare-papers` rejects any annotation file
 declaring `split = "test"`, and that guard exists to stop dev-era labels being relabelled
@@ -83,8 +92,33 @@ therefore needs a deliberate choice:
 Either is defensible. Neither should be chosen by an agent on the owner's behalf, because
 the guard is the mechanism that makes a `test` label mean anything.
 
-The set is 40, not the 80 the milestone plan calls for. The remaining 40 can be drafted the
-same way; the protocol is unchanged and the two drafting prompts are reproducible.
+### Known weak points, self-reported by the drafting agents
+
+Recorded because a spot-check should start here rather than reading at random:
+
+- **`held-c-20`** is the loosest pairing in the comparison batch: SBERT pools a sentence
+  embedding while M3-Embedding describes a query's dense representation. Both are "how one
+  dense vector is derived", which is arguably fair and arguably a stretch.
+- **`held-c-03`** compares a dense embedding model against BM25. Both papers state their own
+  retrieval model, so the question is sound, but the two answers are different kinds of
+  object.
+- **`held-c-02`** quotes GraphRAG saying "when using GPT-4 as the LLM" while the paper
+  elsewhere mentions a `gpt-4-turbo` endpoint. A grader expecting the exact endpoint could
+  quibble.
+- **`held-a-07`** requires mapping an ordered dataset list onto an ordered list of point
+  gains. Exact, but the grader must do that mapping.
+- **`held-a-10`, `held-a-11`, `held-a-12`** identify the bridge target through an
+  author-year citation string printed in paper A. Genuine bridges, but a model with strong
+  parametric knowledge might shortcut without reading paper A.
+- **Several quotes carry PDF damage verbatim** — `B/e.sc /r.sc/t.sc` for BERT in
+  `held-c-05`, `text-embeddi ng-ada-002` in `held-a-18`, `INSTRUCT OR-Base` in `held-b-09`.
+  Byte-exact and unique, but any downstream normaliser that rejoins hyphenation or strips
+  ligatures will break the exact-match assumption.
+
+Papers each stratum avoided for stated reasons are listed in the commit history: FlashRAG
+was dropped from the comparison batch entirely because it reports 38 and 32 benchmark
+datasets in different places, and several parameter counts were avoided for the same
+inconsistency reason.
 
 ## Using the set
 
