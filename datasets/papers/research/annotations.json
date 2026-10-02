@@ -380,7 +380,7 @@
       "sufficient_evidence_sets": [
         [
           {
-            "fact_id": "raptor-encoder",
+            "fact_id": "raptor-leaf-encoder",
             "statement": "RAPTOR embeds initial text chunks using SBERT multi-qa-mpnet-base-cos-v1, and those chunks with their embeddings form the leaf nodes.",
             "spans": [
               {
