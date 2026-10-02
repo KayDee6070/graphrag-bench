@@ -6,6 +6,8 @@ GraphRAG Bench is a small research-engineering project for comparing vector, gra
 
 **Start here: [the held-out result](reports/held-out-result.md)** — the answer and its
 limits. Then [project status](reports/project-status.md) for everything else, in one page.
+[CONTRIBUTIONS.md](CONTRIBUTIONS.md) records who decided what, including where AI assistance
+was used and why the held-out questions were deliberately not written by a human.
 
 **Current state: the held-out evaluation is done.** The corpus holds 30 papers, 558 pages
 and 6,996 chunks, with 40 development questions and 80 results-blinded held-out questions.
