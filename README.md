@@ -8,6 +8,10 @@ answer quality.
 
 **The answer, on an 80-question held-out set run once: no.**
 
+**[See the result and browse every question →](https://kaydee6070.github.io/graphrag-bench/)**
+— each held-out question, the evidence it required, and the passages each method actually
+returned.
+
 ![Complete evidence at K=5 by method and question type on the held-out set. Single-document: BM25 80%, Vector 65%, Hybrid 52.5%, Graph 15%. Multi-document: BM25 7.5%, Vector 0, Hybrid 0, Graph 0.](reports/held-out-result.svg)
 
 On the 40 questions needing two documents, dense retrieval, graph traversal and rank fusion
@@ -42,6 +46,7 @@ have had no human read them.
 
 | | |
 | --- | --- |
+| [Live site](https://kaydee6070.github.io/graphrag-bench/) | the result, plus an explorer over all 80 held-out questions |
 | [The held-out result](reports/held-out-result.md) | the answer, the strata, and the limits |
 | [Project status](reports/project-status.md) | what exists and what is open, in one page |
 | `python scripts/study_m13.py` | a runnable walkthrough of the four ideas it rests on |
