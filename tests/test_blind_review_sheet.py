@@ -95,3 +95,26 @@ def test_several_questions_are_each_blinded():
     _, removed = blind_sheet.blind(doubled)
 
     assert removed == 2
+
+
+def test_the_m13_study_script_runs_and_its_assertions_hold():
+    """The study script is a teaching artifact; every claim it prints is asserted in it."""
+    import subprocess
+    import sys
+
+    result = subprocess.run(
+        [sys.executable, str(ROOT / "scripts/study_m13.py")],
+        capture_output=True,
+        text=True,
+        cwd=ROOT,
+    )
+
+    assert result.returncode == 0, result.stderr
+    for expected in (
+        "complete_evidence=False",
+        "graph@g beats vector@v whenever g < v",
+        "w <= 0.7625",
+        "UPPER BOUND",
+        "Do NOT say: graph RAG does not work",
+    ):
+        assert expected in result.stdout

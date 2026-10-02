@@ -286,6 +286,7 @@ GitHub Actions defines these checks for Python 3.11, 3.12, and 3.13. Fixture fil
 - `scripts/study_m9.py`: the Eren/Lantern Squad lesson on answer claims, missing reports, invented citations, and incomplete support.
 - `scripts/study_m10.py`: real paper receipts, corpus/benchmark separation, and the difference between document count and reasoning hops.
 - `scripts/study_m10_expansion.py`: real bridge questions, shortcuts, source coverage, and independent-review boundaries.
+- `scripts/study_m13.py`: the four ideas the held-out result rests on — why half the evidence scores zero, why no fusion parameter fixes the sign flip, why six known-defective test questions were left unrepaired, and how to state the finding without overclaiming.
 - `scripts/export_extraction_review.py`: pending source-bound reviewer packets for draft extraction checks.
 - `scripts/sweep_alternative_evidence.py`: heuristic sweep for unannotated passages that may answer a question and earn no credit; mostly false positives, use as a reading list.
 - `scripts/blind_review_sheet.py`: removes the annotation author's reasoning from a review worksheet, keeping every question, label, quote, and page link.
