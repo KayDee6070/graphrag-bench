@@ -120,15 +120,19 @@ def check_question(question: dict, by_paper: dict, chunks: list) -> dict:
             f"reasoning_hops is {question['reasoning_hops']} but the smallest "
             f"sufficient set holds {min(sizes)} facts"
         )
-    if question["required_document_count"] != len(papers):
+    # AnnotationBook derives required_document_count and rejects it as an input, so a
+    # draft may legitimately omit it. Check it only when a draft states it.
+    declared_documents = question.get("required_document_count")
+    if declared_documents is not None and declared_documents != len(papers):
         problems.append(
-            f"required_document_count is {question['required_document_count']} "
+            f"required_document_count is {declared_documents} "
             f"but the smallest set spans {len(papers)} papers"
         )
     return {
         "question_id": question["question_id"],
         "problems": problems,
         "chunks_required": runs,
+        "derived_document_count": len(papers),
         "papers": sorted(papers),
     }
 

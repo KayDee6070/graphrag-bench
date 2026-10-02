@@ -107,3 +107,20 @@ def test_the_corpus_loader_maps_catalog_ids_to_documents():
     assert all("text" in document for document in by_paper.values())
     assert len(chunks) == 6996
     assert len(titles) == 30
+
+
+def test_a_draft_may_omit_the_derived_document_count():
+    """AnnotationBook derives the field and rejects it as input, so drafts may omit it."""
+    without = question()
+    without.pop("required_document_count")
+
+    result = verify.check_question(without, BY_PAPER, CHUNKS)
+
+    assert result["problems"] == []
+    assert result["derived_document_count"] == 1
+
+
+def test_a_stated_document_count_is_still_checked():
+    result = verify.check_question(question(documents=7), BY_PAPER, CHUNKS)
+
+    assert any("spans 1 papers" in p for p in result["problems"])
